@@ -234,8 +234,7 @@ loginForm.addEventListener("submit", async (event) => {
     }
   } catch (error) {
     console.error(error);
-    const code = error?.code || "unknown-error";
-    loginMessage.textContent = `firebase error: ${code}`;
+    loginMessage.textContent = `firebase error: ${error?.code || "unknown-error"}`;
   } finally {
     loginButton.disabled = false;
     loginButton.textContent = "sign in";
