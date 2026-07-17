@@ -42,6 +42,10 @@ const communityView = document.querySelector("#community-view");
 const signoutButton = document.querySelector("#community-signout-button");
 const myPublicProfileLink = document.querySelector("#my-public-profile-link");
 const composerAvatar = document.querySelector("#composer-avatar");
+const feedLauncherAvatar = document.querySelector("#feed-launcher-avatar");
+const postModal = document.querySelector("#post-modal");
+const openPostComposerButton = document.querySelector("#open-post-composer");
+const feedComposerLauncher = document.querySelector("#feed-composer-launcher");
 const postForm = document.querySelector("#post-form");
 const editingPostId = document.querySelector("#editing-post-id");
 const postTitle = document.querySelector("#post-title");
@@ -141,6 +145,7 @@ async function loadCurrentProfile(user) {
   }
 
   setAvatar(composerAvatar, currentProfile);
+  setAvatar(feedLauncherAvatar, currentProfile);
   myPublicProfileLink.href = `profile.html?uid=${encodeURIComponent(user.uid)}`;
   myPublicProfileLink.hidden = false;
 }
@@ -175,6 +180,36 @@ function populateBookSelect() {
   postBook.value = books.some((book) => book.id === current) ? current : "";
 }
 
+function openPostModal() {
+  postModal.hidden = false;
+  document.body.classList.add("modal-open");
+  window.setTimeout(() => postBody.focus(), 50);
+}
+
+function closePostModal({ reset = true } = {}) {
+  postModal.hidden = true;
+  document.body.classList.remove("modal-open");
+  if (reset) resetPostForm();
+}
+
+function startNewPost() {
+  resetPostForm();
+  openPostModal();
+}
+
+openPostComposerButton.addEventListener("click", startNewPost);
+feedComposerLauncher.addEventListener("click", startNewPost);
+
+document.querySelectorAll("[data-close-post-modal]").forEach((element) => {
+  element.addEventListener("click", () => closePostModal());
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !postModal.hidden) {
+    closePostModal();
+  }
+});
+
 function resetPostForm() {
   postForm.reset();
   editingPostId.value = "";
@@ -184,7 +219,7 @@ function resetPostForm() {
   postFormMessage.textContent = "";
 }
 
-cancelPostEdit.addEventListener("click", resetPostForm);
+cancelPostEdit.addEventListener("click", () => closePostModal());
 
 postForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -230,7 +265,7 @@ postForm.addEventListener("submit", async (event) => {
       });
       showToast("your post was published.");
     }
-    resetPostForm();
+    closePostModal();
   } catch (error) {
     console.error(error);
     postFormMessage.textContent = `the post could not be saved (${error?.code || "unknown error"}).`;
@@ -252,7 +287,7 @@ function beginPostEdit(post) {
   composerTitle.textContent = "edit your post";
   publishPostButton.textContent = "save changes";
   cancelPostEdit.hidden = false;
-  postForm.scrollIntoView({ behavior: "smooth", block: "start" });
+  openPostModal();
 }
 
 function twoClickDelete(button, action) {

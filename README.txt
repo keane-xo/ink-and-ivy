@@ -1,16 +1,27 @@
-INK AND IVY — REQUEST-SECTION LIMIT REMINDER
+INK AND IVY — COMPACT FEED + READER-PAGE INTERACTIONS
 
-This adds a clearly styled note inside the "request a new book" section.
+THIS UPDATE CHANGES
+- Published posts now appear immediately when the community feed opens.
+- The large post form no longer fills the top of the feed.
+- Readers can click "create post" or the small sharing bar to open the full form in a pop-up.
+- Editing an existing post opens the same pop-up.
+- Readers can like and comment directly on posts from anyone's reader page.
+- Likes and comments update live on both the community feed and reader pages.
+- Spoiler posts still hide the title, body, image, and comments until "reveal post" is clicked.
+- Readers can delete their own comments from reader pages.
 
-It says:
-- Readers may submit up to 2 checkout requests during any rolling 9-week period.
-- Suggestions submitted through the new-book form do not count toward that limit.
+UPLOAD AND REPLACE THESE SIX FILES
+- community.html
+- community.css
+- community.js
+- profile.html
+- profile.css
+- profile.js
 
-UPLOAD AND REPLACE:
-- index.html
-- style.css
-
-No JavaScript or Firebase rule changes are needed.
+No Firebase rules need to change.
 
 After committing, open:
-https://keane-xo.github.io/ink-and-ivy/?v=14
+https://keane-xo.github.io/ink-and-ivy/community.html?v=2
+
+A reader page will use:
+https://keane-xo.github.io/ink-and-ivy/profile.html?uid=THE_READER_UID&v=2

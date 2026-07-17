@@ -34,3 +34,191 @@ h1,h2,h3,p{margin-top:0}h1{margin-bottom:12px;color:var(--brown);font-size:clamp
 .post-photo{width:100%;max-height:520px;object-fit:contain;margin:14px 0;background:var(--paper);border:1px solid var(--line);border-radius:14px}
 .empty{color:#7c6658;font-style:italic}
 @media(max-width:850px){.shelves-grid{grid-template-columns:1fr}.profile-hero{grid-template-columns:1fr;text-align:center}.public-avatar{margin:auto}.section-heading,.profile-header{align-items:flex-start;flex-direction:column}}
+
+
+/* Likes and comments on reader-page posts */
+.profile-post {
+  overflow: hidden;
+  padding: 0;
+}
+
+.profile-post-content {
+  padding: 20px;
+}
+
+.profile-post-content h3 {
+  margin-bottom: 9px;
+  color: var(--brown);
+  font-size: 1.5rem;
+  font-weight: normal;
+}
+
+.profile-post-content .post-body {
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.profile-post-date {
+  display: block;
+  margin-bottom: 13px;
+  color: #887266;
+  font-size: 0.8rem;
+}
+
+.profile-post-social {
+  border-top: 1px solid var(--line);
+}
+
+.profile-social-bar {
+  display: flex;
+  gap: 18px;
+  padding: 13px 20px;
+}
+
+.profile-social-button {
+  padding: 0;
+  color: var(--brown);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.profile-social-button.liked {
+  color: var(--rose);
+}
+
+.profile-comments-area {
+  padding: 0 20px 20px;
+}
+
+.profile-comments-list {
+  display: grid;
+  gap: 10px;
+  margin: 4px 0 15px;
+}
+
+.profile-comment {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  padding: 12px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 13px;
+}
+
+.profile-comment-avatar {
+  width: 37px;
+  height: 37px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--avatar-color, var(--pink));
+  border: 1px solid var(--line);
+  border-radius: 50%;
+}
+
+.profile-comment-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-comment-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.profile-comment-heading a {
+  color: var(--brown);
+  text-decoration: none;
+}
+
+.profile-comment-heading small {
+  color: #887266;
+}
+
+.profile-comment p {
+  margin: 5px 0 0;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.profile-comment-delete {
+  padding: 0;
+  color: var(--rose);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.profile-comment-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 9px;
+}
+
+.profile-comment-form input {
+  width: 100%;
+  margin: 0;
+  padding: 11px 13px;
+  color: var(--dark-brown);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  outline: none;
+}
+
+.profile-comment-form input:focus {
+  border-color: var(--rose);
+  box-shadow: 0 0 0 3px rgba(200, 132, 152, 0.15);
+}
+
+.profile-comment-form button {
+  padding: 10px 15px;
+  color: var(--dark-brown);
+  background: var(--pink);
+  border: 1px solid var(--rose);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.spoiler-box {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.profile-toast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 80;
+  max-width: 330px;
+  padding: 14px 18px;
+  color: var(--paper);
+  background: var(--dark-brown);
+  border-radius: 13px;
+  box-shadow: var(--shadow);
+  opacity: 0;
+  transform: translateY(14px);
+  pointer-events: none;
+  transition: 0.2s ease;
+}
+
+.profile-toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (max-width: 650px) {
+  .profile-comment-form {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-comment-form button {
+    width: 100%;
+  }
+}

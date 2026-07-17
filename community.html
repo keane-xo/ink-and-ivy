@@ -6,8 +6,8 @@
   <meta name="description" content="the private ink and ivy book community.">
   <title>community · ink and ivy</title>
   <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml">
-  <link rel="stylesheet" href="community.css?v=1">
-  <script type="module" src="community.js?v=1"></script>
+  <link rel="stylesheet" href="community.css?v=2">
+  <script type="module" src="community.js?v=2"></script>
 </head>
 <body>
   <header class="community-header">
@@ -55,76 +55,25 @@
       </div>
 
       <section id="feed-panel" class="community-panel">
-        <form id="post-form" class="composer-card">
-          <input id="editing-post-id" type="hidden">
-
-          <div class="composer-heading">
-            <div class="composer-profile">
-              <span id="composer-avatar" class="avatar avatar-medium"></span>
-              <div>
-                <p class="eyebrow">your little book blog</p>
-                <h2 id="composer-title">share something</h2>
-              </div>
-            </div>
-            <button id="cancel-post-edit" class="text-button" type="button" hidden>cancel edit</button>
+        <div class="feed-heading feed-heading-main">
+          <div>
+            <p class="eyebrow">what everyone is reading</p>
+            <h2>recent posts</h2>
           </div>
-
-          <label>
-            optional title
-            <input id="post-title" type="text" maxlength="120" placeholder="a thought, review, or reading update">
-          </label>
-
-          <label>
-            what are you thinking?
-            <textarea id="post-body" rows="6" maxlength="4000" required placeholder="write about a book, a character, a theory, or your reading life..."></textarea>
-          </label>
-
-          <div class="composer-grid">
-            <label>
-              tag a book
-              <select id="post-book">
-                <option value="">no book tagged</option>
-              </select>
-            </label>
-
-            <label>
-              kind of post
-              <select id="post-reading-status">
-                <option value="thoughts">book thoughts</option>
-                <option value="currently reading">currently reading</option>
-                <option value="just finished">just finished</option>
-                <option value="want to read">want to read</option>
-                <option value="review">review</option>
-                <option value="recommendation">recommendation</option>
-              </select>
-            </label>
+          <div class="feed-heading-actions">
+            <button id="refresh-feed-button" class="secondary-button" type="button">refresh</button>
+            <button id="open-post-composer" class="primary-button compact" type="button">create post</button>
           </div>
-
-          <label>
-            optional photo link
-            <input id="post-image-url" type="url" maxlength="1000" placeholder="https://...">
-            <span class="field-help">paste a direct image link. photos are hidden too when spoiler mode is on.</span>
-          </label>
-
-          <div class="composer-checks">
-            <label class="check-label">
-              <input id="post-spoiler" type="checkbox">
-              <span>this post contains spoilers</span>
-            </label>
-            <label class="check-label">
-              <input id="post-book-related" type="checkbox" required>
-              <span>this post is book-related</span>
-            </label>
-          </div>
-
-          <button id="publish-post-button" class="primary-button" type="submit">publish post</button>
-          <p id="post-form-message" class="form-message" aria-live="polite"></p>
-        </form>
-
-        <div class="feed-heading">
-          <h2>recent posts</h2>
-          <button id="refresh-feed-button" class="secondary-button" type="button">refresh</button>
         </div>
+
+        <button id="feed-composer-launcher" class="feed-composer-launcher" type="button">
+          <span id="feed-launcher-avatar" class="avatar avatar-medium"></span>
+          <span class="feed-launcher-copy">
+            <strong>share a book thought...</strong>
+            <small>post a review, reading update, paragraph, or photo</small>
+          </span>
+          <span class="feed-launcher-action">create post</span>
+        </button>
 
         <div id="posts-list" class="posts-list"></div>
         <p id="posts-empty" class="empty-state" hidden>the community feed is waiting for its first post.</p>
@@ -171,6 +120,80 @@
       </section>
     </section>
   </main>
+
+
+  <div id="post-modal" class="modal post-modal" hidden>
+    <div class="modal-backdrop" data-close-post-modal></div>
+    <section class="modal-card post-modal-card" role="dialog" aria-modal="true" aria-labelledby="composer-title">
+      <button class="modal-close" type="button" aria-label="close post form" data-close-post-modal>×</button>
+
+      <form id="post-form" class="composer-card modal-composer-card">
+        <input id="editing-post-id" type="hidden">
+
+        <div class="composer-heading">
+          <div class="composer-profile">
+            <span id="composer-avatar" class="avatar avatar-medium"></span>
+            <div>
+              <p class="eyebrow">your little book blog</p>
+              <h2 id="composer-title">share something</h2>
+            </div>
+          </div>
+          <button id="cancel-post-edit" class="text-button" type="button" hidden>cancel edit</button>
+        </div>
+
+        <label>
+          optional title
+          <input id="post-title" type="text" maxlength="120" placeholder="a thought, review, or reading update">
+        </label>
+
+        <label>
+          what are you thinking?
+          <textarea id="post-body" rows="6" maxlength="4000" required placeholder="write about a book, a character, a theory, or your reading life..."></textarea>
+        </label>
+
+        <div class="composer-grid">
+          <label>
+            tag a book
+            <select id="post-book">
+              <option value="">no book tagged</option>
+            </select>
+          </label>
+
+          <label>
+            kind of post
+            <select id="post-reading-status">
+              <option value="thoughts">book thoughts</option>
+              <option value="currently reading">currently reading</option>
+              <option value="just finished">just finished</option>
+              <option value="want to read">want to read</option>
+              <option value="review">review</option>
+              <option value="recommendation">recommendation</option>
+            </select>
+          </label>
+        </div>
+
+        <label>
+          optional photo link
+          <input id="post-image-url" type="url" maxlength="1000" placeholder="https://...">
+          <span class="field-help">paste a direct image link. photos are hidden too when spoiler mode is on.</span>
+        </label>
+
+        <div class="composer-checks">
+          <label class="check-label">
+            <input id="post-spoiler" type="checkbox">
+            <span>this post contains spoilers</span>
+          </label>
+          <label class="check-label">
+            <input id="post-book-related" type="checkbox" required>
+            <span>this post is book-related</span>
+          </label>
+        </div>
+
+        <button id="publish-post-button" class="primary-button" type="submit">publish post</button>
+        <p id="post-form-message" class="form-message" aria-live="polite"></p>
+      </form>
+    </section>
+  </div>
 
   <div id="report-modal" class="modal" hidden>
     <div class="modal-backdrop" data-close-report></div>

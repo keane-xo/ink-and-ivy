@@ -690,3 +690,108 @@ input:focus, textarea:focus, select:focus {
   .comment-form button { width: 100%; }
   .modal-card { padding: 35px 22px 25px; }
 }
+
+
+/* Compact post launcher and pop-up composer */
+.feed-heading-main {
+  margin-bottom: 14px;
+}
+
+.feed-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.feed-composer-launcher {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+  padding: 15px 17px;
+  color: var(--dark-brown);
+  text-align: left;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 9px 25px rgba(74, 51, 40, 0.05);
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease;
+}
+
+.feed-composer-launcher:hover {
+  transform: translateY(-2px);
+  border-color: var(--rose);
+}
+
+.feed-launcher-copy strong,
+.feed-launcher-copy small {
+  display: block;
+}
+
+.feed-launcher-copy strong {
+  margin-bottom: 4px;
+  color: var(--brown);
+  font-weight: normal;
+  font-size: 1.05rem;
+}
+
+.feed-launcher-copy small {
+  color: #887266;
+  line-height: 1.4;
+}
+
+.feed-launcher-action {
+  padding: 9px 14px;
+  color: var(--dark-brown);
+  background: var(--light-pink);
+  border: 1px solid var(--rose);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.post-modal-card {
+  width: min(100%, 760px);
+  max-height: 92vh;
+  padding: 0;
+  overflow-y: auto;
+}
+
+.modal-composer-card {
+  margin: 0;
+  padding: 34px;
+  border: 0;
+  border-radius: 23px;
+  box-shadow: none;
+}
+
+body.modal-open {
+  overflow: hidden;
+}
+
+@media (max-width: 680px) {
+  .feed-heading-actions {
+    width: 100%;
+  }
+
+  .feed-heading-actions .primary-button,
+  .feed-heading-actions .secondary-button {
+    flex: 1;
+    text-align: center;
+  }
+
+  .feed-composer-launcher {
+    grid-template-columns: auto 1fr;
+  }
+
+  .feed-launcher-action {
+    grid-column: 1 / -1;
+    text-align: center;
+  }
+
+  .modal-composer-card {
+    padding: 32px 20px 22px;
+  }
+}

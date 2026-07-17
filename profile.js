@@ -1,7 +1,9 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 import {
+  addDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -9,7 +11,9 @@ import {
   limit,
   onSnapshot,
   orderBy,
-  query
+  query,
+  serverTimestamp,
+  setDoc
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -33,9 +37,13 @@ const bio = document.querySelector("#public-bio");
 const editOwnLink = document.querySelector("#edit-own-profile-link");
 const postsContainer = document.querySelector("#profile-posts");
 const postsEmpty = document.querySelector("#profile-posts-empty");
+const toast = document.querySelector("#profile-toast");
 
 const profileId = new URLSearchParams(window.location.search).get("uid");
+let currentUser = null;
+let currentProfile = null;
 let books = [];
+const postListeners = new Map();
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -43,10 +51,35 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 }
 
+function showToast(message) {
+  toast.textContent = message;
+  toast.classList.add("show");
+  window.setTimeout(() => toast.classList.remove("show"), 2800);
+}
+
 function avatarMarkup(profile) {
-  return profile.avatarUrl
+  return profile?.avatarUrl
     ? `<img src="${escapeHtml(profile.avatarUrl)}" alt="">`
-    : escapeHtml(profile.avatarEmoji || "📚");
+    : escapeHtml(profile?.avatarEmoji || "📚");
+}
+
+function currentProfileSnapshot() {
+  return {
+    displayName: currentProfile?.displayName || "reader",
+    avatarEmoji: currentProfile?.avatarEmoji || "📚",
+    avatarColor: currentProfile?.avatarColor || "#e8b8c5",
+    avatarUrl: currentProfile?.avatarUrl || ""
+  };
+}
+
+function formatDate(timestamp) {
+  if (!timestamp?.toDate) return "just now";
+  return timestamp.toDate().toLocaleString([], {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  }).toLowerCase();
 }
 
 function renderBookList(elementId, emptyId, ids) {
@@ -66,8 +99,9 @@ function renderBookList(elementId, emptyId, ids) {
 
 function postContent(post) {
   return `
+    <span class="profile-post-date">${formatDate(post.updatedAt || post.createdAt)}</span>
     ${post.title ? `<h3>${escapeHtml(post.title)}</h3>` : ""}
-    <p>${escapeHtml(post.body)}</p>
+    <p class="post-body">${escapeHtml(post.body)}</p>
     ${post.imageUrl ? `<img class="post-photo" src="${escapeHtml(post.imageUrl)}" alt="photo shared with this book post">` : ""}
     <div class="post-meta">
       <span class="pill">${escapeHtml(post.readingStatus || "book thoughts")}</span>
@@ -76,7 +110,158 @@ function postContent(post) {
   `;
 }
 
+function clearPostListeners() {
+  postListeners.forEach((unsubscribe) => unsubscribe());
+  postListeners.clear();
+}
+
+function twoClickDelete(button, action) {
+  if (button.dataset.confirmDelete === "true") {
+    action();
+    return;
+  }
+
+  button.dataset.confirmDelete = "true";
+  const original = button.textContent;
+  button.textContent = "click again to delete";
+
+  window.setTimeout(() => {
+    button.dataset.confirmDelete = "false";
+    button.textContent = original;
+  }, 4000);
+}
+
+function attachPostInteractions(post, article) {
+  const likeButton = article.querySelector("[data-profile-like]");
+  const commentsButton = article.querySelector("[data-profile-comments-count]");
+  const commentsArea = article.querySelector(".profile-comments-area");
+  const commentsList = article.querySelector(".profile-comments-list");
+  const commentForm = article.querySelector(".profile-comment-form");
+
+  const likesUnsubscribe = onSnapshot(
+    collection(db, "posts", post.id, "likes"),
+    (snapshot) => {
+      const liked = snapshot.docs.some((entry) => entry.id === currentUser.uid);
+      likeButton.classList.toggle("liked", liked);
+      likeButton.textContent = `${liked ? "♥" : "♡"} ${snapshot.size}`;
+      likeButton.dataset.liked = String(liked);
+    }
+  );
+  postListeners.set(`likes-${post.id}`, likesUnsubscribe);
+
+  likeButton.addEventListener("click", async () => {
+    const likeRef = doc(db, "posts", post.id, "likes", currentUser.uid);
+
+    try {
+      if (likeButton.dataset.liked === "true") {
+        await deleteDoc(likeRef);
+      } else {
+        await setDoc(likeRef, {
+          userId: currentUser.uid,
+          createdAt: serverTimestamp()
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      showToast("the like could not be updated.");
+    }
+  });
+
+  const commentsUnsubscribe = onSnapshot(
+    query(
+      collection(db, "posts", post.id, "comments"),
+      orderBy("createdAt", "asc"),
+      limit(100)
+    ),
+    (snapshot) => {
+      commentsButton.textContent = `💬 ${snapshot.size}`;
+      commentsList.innerHTML = "";
+
+      snapshot.docs.forEach((entry) => {
+        const comment = { id: entry.id, ...entry.data() };
+        const element = document.createElement("article");
+        element.className = "profile-comment";
+        element.innerHTML = `
+          <span class="profile-comment-avatar" style="--avatar-color:${escapeHtml(comment.avatarColor || "#e8b8c5")}">
+            ${avatarMarkup(comment)}
+          </span>
+          <div>
+            <div class="profile-comment-heading">
+              <span>
+                <a href="profile.html?uid=${encodeURIComponent(comment.userId)}">
+                  <strong>${escapeHtml(comment.displayName || "reader")}</strong>
+                </a>
+                <small>${formatDate(comment.createdAt)}</small>
+              </span>
+              ${comment.userId === currentUser.uid
+                ? '<button class="profile-comment-delete" type="button">delete</button>'
+                : ""}
+            </div>
+            <p>${escapeHtml(comment.text)}</p>
+          </div>
+        `;
+
+        element.querySelector(".profile-comment-delete")?.addEventListener("click", (event) => {
+          twoClickDelete(event.currentTarget, async () => {
+            try {
+              await deleteDoc(doc(db, "posts", post.id, "comments", comment.id));
+              showToast("your comment was deleted.");
+            } catch (error) {
+              console.error(error);
+              showToast("the comment could not be deleted.");
+            }
+          });
+        });
+
+        commentsList.appendChild(element);
+      });
+    }
+  );
+  postListeners.set(`comments-${post.id}`, commentsUnsubscribe);
+
+  commentsButton.addEventListener("click", () => {
+    const spoilerStillHidden = Boolean(article.querySelector(".spoiler-box"));
+
+    if (spoilerStillHidden) {
+      showToast("reveal the spoiler post before opening its comments.");
+      return;
+    }
+
+    commentsArea.hidden = false;
+    commentForm.querySelector("input").focus();
+    commentsArea.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
+
+  commentForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const input = commentForm.querySelector("input");
+    const text = input.value.trim();
+    if (!text) return;
+
+    const button = commentForm.querySelector("button");
+    button.disabled = true;
+
+    try {
+      await addDoc(collection(db, "posts", post.id, "comments"), {
+        userId: currentUser.uid,
+        ...currentProfileSnapshot(),
+        text,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      input.value = "";
+    } catch (error) {
+      console.error(error);
+      showToast("the comment could not be posted.");
+    } finally {
+      button.disabled = false;
+    }
+  });
+}
+
 function renderPosts(allPosts) {
+  clearPostListeners();
+
   const posts = allPosts.filter((post) => post.userId === profileId);
   postsContainer.innerHTML = "";
   postsEmpty.hidden = posts.length !== 0;
@@ -85,21 +270,39 @@ function renderPosts(allPosts) {
     const article = document.createElement("article");
     article.className = "profile-post";
 
-    if (post.spoiler) {
-      article.innerHTML = `
-        <div class="spoiler-box">
-          <strong>spoilers hidden</strong>
-          <p>click only when you are ready to see this post.</p>
-          <button type="button">reveal post</button>
-        </div>
-      `;
-      article.querySelector("button").addEventListener("click", () => {
-        article.innerHTML = postContent(post);
-      });
-    } else {
-      article.innerHTML = postContent(post);
-    }
+    article.innerHTML = `
+      <div class="profile-post-content">
+        ${post.spoiler ? `
+          <div class="spoiler-box">
+            <strong>spoilers hidden</strong>
+            <p>the title, text, photo, and comments are covered.</p>
+            <button type="button">reveal post</button>
+          </div>
+        ` : postContent(post)}
+      </div>
 
+      <div class="profile-post-social">
+        <div class="profile-social-bar">
+          <button class="profile-social-button" data-profile-like type="button">♡ 0</button>
+          <button class="profile-social-button" data-profile-comments-count type="button">💬 0</button>
+        </div>
+
+        <div class="profile-comments-area" ${post.spoiler ? "hidden" : ""}>
+          <div class="profile-comments-list"></div>
+          <form class="profile-comment-form">
+            <input type="text" maxlength="800" required placeholder="write a comment">
+            <button type="submit">post</button>
+          </form>
+        </div>
+      </div>
+    `;
+
+    article.querySelector(".spoiler-box button")?.addEventListener("click", () => {
+      article.querySelector(".profile-post-content").innerHTML = postContent(post);
+      article.querySelector(".profile-comments-area").hidden = false;
+    });
+
+    attachPostInteractions(post, article);
     postsContainer.appendChild(article);
   });
 }
@@ -110,8 +313,9 @@ async function loadPage(user) {
     return;
   }
 
-  const [profileSnapshot, booksSnapshot] = await Promise.all([
+  const [profileSnapshot, currentProfileSnapshotDoc, booksSnapshot] = await Promise.all([
     getDoc(doc(db, "profiles", profileId)),
+    getDoc(doc(db, "profiles", user.uid)),
     getDocs(collection(db, "books"))
   ]);
 
@@ -122,6 +326,15 @@ async function loadPage(user) {
   }
 
   const profile = profileSnapshot.data();
+  currentProfile = currentProfileSnapshotDoc.exists()
+    ? currentProfileSnapshotDoc.data()
+    : {
+        displayName: user.email?.split("@")[0] || "reader",
+        avatarEmoji: "📚",
+        avatarColor: "#e8b8c5",
+        avatarUrl: ""
+      };
+
   books = booksSnapshot.docs.map((entry) => ({ id: entry.id, ...entry.data() }));
 
   avatar.style.setProperty("--avatar-color", profile.avatarColor || "#e8b8c5");
@@ -137,11 +350,18 @@ async function loadPage(user) {
 
   onSnapshot(
     query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(100)),
-    (snapshot) => renderPosts(snapshot.docs.map((entry) => ({ id: entry.id, ...entry.data() })))
+    (snapshot) => {
+      renderPosts(snapshot.docs.map((entry) => ({ id: entry.id, ...entry.data() })));
+    },
+    (error) => {
+      console.error(error);
+      showToast("this reader's posts could not be loaded.");
+    }
   );
 }
 
 onAuthStateChanged(auth, async (user) => {
+  currentUser = user;
   loginView.hidden = Boolean(user);
   profileView.hidden = !user;
 
@@ -152,5 +372,7 @@ onAuthStateChanged(auth, async (user) => {
       console.error(error);
       name.textContent = "this page could not be loaded";
     }
+  } else {
+    clearPostListeners();
   }
 });
