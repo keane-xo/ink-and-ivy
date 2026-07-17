@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="a private reading journal for ink and ivy readers.">
+  <meta name="description" content="a private digital reading journal for ink and ivy readers.">
   <title>reading journal · ink and ivy</title>
   <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml">
-  <link rel="stylesheet" href="journal.css?v=1">
-  <script type="module" src="journal.js?v=1"></script>
+  <link rel="stylesheet" href="journal.css?v=2">
+  <script type="module" src="journal.js?v=2"></script>
 </head>
 <body>
   <header class="journal-header">
@@ -39,149 +39,333 @@
     </section>
 
     <section id="journal-view" class="journal-view" hidden>
-      <div class="journal-hero">
-        <div>
+      <section id="cover-stage" class="cover-stage">
+        <div class="cover-introduction">
           <p class="eyebrow">your private reading life</p>
-          <h1>reading journal</h1>
+          <h1>your journal</h1>
           <p>
-            save thoughts privately as you read. any entry can later be copied
-            into the community feed when you decide to share it.
+            open the cover and write directly across lined pages. every entry
+            remains private until you choose to share it.
           </p>
         </div>
 
-        <aside class="privacy-note">
-          <span aria-hidden="true">🔒</span>
-          <p>
-            journal entries are visible only to you unless you choose
-            <strong>share to community</strong>.
-          </p>
-        </aside>
-      </div>
+        <article id="journal-cover" class="journal-cover" data-pattern="ivy">
+          <div class="journal-spine"></div>
+          <div class="cover-decoration cover-decoration-top"></div>
+          <div class="cover-decoration cover-decoration-bottom"></div>
+          <div class="cover-frame">
+            <span id="cover-emblem" class="cover-emblem" aria-hidden="true">🌿</span>
+            <p id="cover-title" class="cover-title">my reading journal</p>
+            <p id="cover-subtitle" class="cover-subtitle">thoughts between the pages</p>
+            <span id="cover-owner" class="cover-owner">a private ink and ivy journal</span>
+          </div>
+        </article>
 
-      <div class="journal-toolbar">
-        <button id="open-entry-button" class="primary-button compact" type="button">
-          new journal entry
-        </button>
-
-        <div class="journal-filters">
-          <label>
-            entry type
-            <select id="journal-type-filter">
-              <option value="all">all entries</option>
-              <option value="progress">reading progress</option>
-              <option value="thoughts">thoughts</option>
-              <option value="prediction">prediction</option>
-              <option value="quote">favorite quote</option>
-              <option value="character">character notes</option>
-              <option value="final review">final review</option>
-            </select>
-          </label>
-
-          <label>
-            book
-            <select id="journal-book-filter">
-              <option value="all">all books</option>
-            </select>
-          </label>
-
-          <label class="journal-search-label">
-            search
-            <input id="journal-search" type="search" placeholder="search your entries">
-          </label>
+        <div class="cover-actions">
+          <button id="open-journal-button" class="primary-button compact" type="button">
+            open journal
+          </button>
+          <button id="customize-cover-button" class="secondary-button" type="button">
+            customize cover
+          </button>
         </div>
-      </div>
+      </section>
 
-      <button id="entry-launcher" class="entry-launcher" type="button">
-        <span id="launcher-avatar" class="avatar"></span>
-        <span>
-          <strong>what do you want to remember?</strong>
-          <small>save a quote, prediction, progress update, or private thought</small>
-        </span>
-        <span class="launcher-action">write entry</span>
-      </button>
+      <section id="open-journal-view" class="open-journal-view" hidden>
+        <div class="journal-book-toolbar">
+          <div>
+            <p class="eyebrow">private reading journal</p>
+            <h2 id="toolbar-journal-title">my reading journal</h2>
+          </div>
 
-      <div id="journal-entries" class="journal-entries"></div>
-      <p id="journal-empty" class="empty-state" hidden>
-        your journal is waiting for its first entry.
-      </p>
+          <div class="toolbar-actions">
+            <button id="close-journal-button" class="secondary-button" type="button">
+              close journal
+            </button>
+            <button id="customize-cover-inside-button" class="secondary-button" type="button">
+              customize cover
+            </button>
+            <button id="new-entry-button" class="primary-button compact" type="button">
+              new entry
+            </button>
+          </div>
+        </div>
+
+        <div class="open-book">
+          <section class="journal-page contents-page">
+            <div class="page-inner">
+              <div class="contents-heading">
+                <div>
+                  <p class="eyebrow">your pages</p>
+                  <h2>journal entries</h2>
+                </div>
+                <span id="entry-count" class="entry-count">0 entries</span>
+              </div>
+
+              <div class="journal-filters">
+                <label>
+                  type
+                  <select id="journal-type-filter">
+                    <option value="all">all entries</option>
+                    <option value="progress">reading progress</option>
+                    <option value="thoughts">thoughts</option>
+                    <option value="prediction">prediction</option>
+                    <option value="quote">favorite quote</option>
+                    <option value="character">character notes</option>
+                    <option value="final review">final review</option>
+                  </select>
+                </label>
+
+                <label>
+                  book
+                  <select id="journal-book-filter">
+                    <option value="all">all books</option>
+                  </select>
+                </label>
+
+                <label>
+                  search
+                  <input id="journal-search" type="search" placeholder="search your journal">
+                </label>
+              </div>
+
+              <div id="entry-list" class="entry-list"></div>
+              <p id="entry-list-empty" class="empty-state" hidden>
+                your journal is waiting for its first entry.
+              </p>
+
+              <span class="page-number">i</span>
+            </div>
+          </section>
+
+          <section class="journal-page writing-page">
+            <div class="page-inner page-inner-writing">
+              <section id="entry-reading-view" class="entry-reading-view">
+                <div id="blank-page" class="blank-page">
+                  <span aria-hidden="true">✦</span>
+                  <h2>begin on a fresh page</h2>
+                  <p>
+                    choose an entry from the contents page or start writing
+                    something new.
+                  </p>
+                  <button id="blank-page-new-entry" class="primary-button compact" type="button">
+                    write a new entry
+                  </button>
+                </div>
+
+                <article id="entry-display" class="entry-display" hidden>
+                  <div class="entry-display-heading">
+                    <div>
+                      <p id="display-entry-date" class="entry-date"></p>
+                      <h2 id="display-entry-title"></h2>
+                      <p id="display-entry-book" class="entry-book-line"></p>
+                    </div>
+
+                    <div class="entry-actions">
+                      <button id="edit-entry-button" class="text-button" type="button">edit</button>
+                      <button id="delete-entry-button" class="text-button" type="button">delete</button>
+                    </div>
+                  </div>
+
+                  <p id="display-entry-body" class="display-entry-body"></p>
+
+                  <div id="display-entry-meta" class="entry-meta"></div>
+
+                  <div class="entry-share-area">
+                    <p>
+                      sharing creates a separate community post. this private
+                      journal page stays here.
+                    </p>
+                    <button id="share-entry-button" class="share-button" type="button">
+                      share to community
+                    </button>
+                  </div>
+                </article>
+              </section>
+
+              <form id="entry-form" class="journal-writing-form" hidden>
+                <input id="editing-entry-id" type="hidden">
+
+                <div class="editor-heading">
+                  <div>
+                    <p class="eyebrow">writing on a fresh page</p>
+                    <h2 id="entry-form-title">new journal entry</h2>
+                  </div>
+                  <button id="cancel-entry-edit" class="text-button" type="button">
+                    cancel
+                  </button>
+                </div>
+
+                <div class="editor-controls">
+                  <label>
+                    book
+                    <select id="entry-book" required>
+                      <option value="">choose a book</option>
+                    </select>
+                  </label>
+
+                  <label>
+                    entry type
+                    <select id="entry-type" required>
+                      <option value="progress">reading progress</option>
+                      <option value="thoughts">thoughts</option>
+                      <option value="prediction">prediction</option>
+                      <option value="quote">favorite quote</option>
+                      <option value="character">character notes</option>
+                      <option value="final review">final review</option>
+                    </select>
+                  </label>
+                </div>
+
+                <input
+                  id="entry-title"
+                  class="journal-title-input"
+                  type="text"
+                  maxlength="120"
+                  placeholder="entry title"
+                  aria-label="optional entry title"
+                >
+
+                <textarea
+                  id="entry-body"
+                  class="journal-writing-area"
+                  maxlength="5000"
+                  required
+                  placeholder="start writing here..."
+                  aria-label="journal entry"
+                ></textarea>
+
+                <div class="editor-bottom-controls">
+                  <label>
+                    page or chapter
+                    <input id="entry-progress" type="text" maxlength="80" placeholder="optional">
+                  </label>
+
+                  <label>
+                    rating
+                    <select id="entry-rating">
+                      <option value="0">no rating</option>
+                      <option value="1">★</option>
+                      <option value="2">★★</option>
+                      <option value="3">★★★</option>
+                      <option value="4">★★★★</option>
+                      <option value="5">★★★★★</option>
+                    </select>
+                  </label>
+
+                  <label class="check-label">
+                    <input id="entry-spoiler" type="checkbox">
+                    <span>spoilers if shared</span>
+                  </label>
+                </div>
+
+                <div class="editor-save-row">
+                  <span id="entry-word-count">0 words</span>
+                  <button id="save-entry-button" class="primary-button compact" type="submit">
+                    save privately
+                  </button>
+                </div>
+
+                <p id="entry-form-message" class="form-message" aria-live="polite"></p>
+              </form>
+
+              <span id="right-page-number" class="page-number">1</span>
+            </div>
+          </section>
+        </div>
+      </section>
     </section>
   </main>
 
-  <div id="entry-modal" class="modal" hidden>
-    <div class="modal-backdrop" data-close-entry-modal></div>
+  <div id="cover-modal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-cover-modal></div>
 
-    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="entry-form-title">
-      <button class="modal-close" type="button" aria-label="close journal entry form" data-close-entry-modal>×</button>
+    <section class="modal-card cover-customizer" role="dialog" aria-modal="true" aria-labelledby="cover-customizer-title">
+      <button class="modal-close" type="button" aria-label="close cover customizer" data-close-cover-modal>×</button>
 
-      <form id="entry-form">
-        <input id="editing-entry-id" type="hidden">
+      <div class="customizer-heading">
+        <p class="eyebrow">make it yours</p>
+        <h2 id="cover-customizer-title">customize your journal cover</h2>
+      </div>
 
-        <div class="form-heading">
-          <div>
-            <p class="eyebrow">your private notes</p>
-            <h2 id="entry-form-title">new journal entry</h2>
+      <div class="customizer-layout">
+        <article id="cover-preview" class="journal-cover journal-cover-preview" data-pattern="ivy">
+          <div class="journal-spine"></div>
+          <div class="cover-decoration cover-decoration-top"></div>
+          <div class="cover-decoration cover-decoration-bottom"></div>
+          <div class="cover-frame">
+            <span id="preview-cover-emblem" class="cover-emblem" aria-hidden="true">🌿</span>
+            <p id="preview-cover-title" class="cover-title">my reading journal</p>
+            <p id="preview-cover-subtitle" class="cover-subtitle">thoughts between the pages</p>
+            <span id="preview-cover-owner" class="cover-owner">a private ink and ivy journal</span>
           </div>
-          <button id="cancel-entry-edit" class="text-button" type="button" hidden>cancel edit</button>
-        </div>
+        </article>
 
-        <div class="form-grid">
+        <form id="cover-settings-form" class="cover-settings-form">
           <label>
-            book
-            <select id="entry-book" required>
-              <option value="">choose a book</option>
+            cover title
+            <input id="cover-title-input" type="text" maxlength="40">
+          </label>
+
+          <label>
+            subtitle
+            <input id="cover-subtitle-input" type="text" maxlength="80">
+          </label>
+
+          <fieldset>
+            <legend>cover color</legend>
+            <div id="cover-color-options" class="swatch-options">
+              <button class="color-swatch" type="button" data-cover-color="#6f8068" aria-label="sage green"></button>
+              <button class="color-swatch" type="button" data-cover-color="#9d6673" aria-label="dusty rose"></button>
+              <button class="color-swatch" type="button" data-cover-color="#6d5878" aria-label="soft plum"></button>
+              <button class="color-swatch" type="button" data-cover-color="#8a6b4f" aria-label="warm brown"></button>
+              <button class="color-swatch" type="button" data-cover-color="#4f6d78" aria-label="dusty blue"></button>
+              <button class="color-swatch" type="button" data-cover-color="#3f4a3b" aria-label="forest"></button>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>accent color</legend>
+            <div id="accent-color-options" class="swatch-options">
+              <button class="color-swatch" type="button" data-accent-color="#f0d9a8" aria-label="antique gold"></button>
+              <button class="color-swatch" type="button" data-accent-color="#f2c8d3" aria-label="blush pink"></button>
+              <button class="color-swatch" type="button" data-accent-color="#d7e1c8" aria-label="pale green"></button>
+              <button class="color-swatch" type="button" data-accent-color="#d8c6e5" aria-label="lavender"></button>
+              <button class="color-swatch" type="button" data-accent-color="#f4eee0" aria-label="warm cream"></button>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>cover pattern</legend>
+            <div id="cover-pattern-options" class="pattern-options">
+              <button type="button" data-cover-pattern="ivy">ivy</button>
+              <button type="button" data-cover-pattern="floral">floral</button>
+              <button type="button" data-cover-pattern="stars">stars</button>
+              <button type="button" data-cover-pattern="linen">linen</button>
+              <button type="button" data-cover-pattern="plain">plain</button>
+            </div>
+          </fieldset>
+
+          <label>
+            cover emblem
+            <select id="cover-emblem-input">
+              <option value="🌿">🌿 ivy</option>
+              <option value="📚">📚 books</option>
+              <option value="✦">✦ star</option>
+              <option value="🌸">🌸 flower</option>
+              <option value="🦋">🦋 butterfly</option>
+              <option value="🌙">🌙 moon</option>
+              <option value="🕯️">🕯️ candle</option>
+              <option value="☕">☕ tea or coffee</option>
             </select>
           </label>
 
-          <label>
-            entry type
-            <select id="entry-type" required>
-              <option value="progress">reading progress</option>
-              <option value="thoughts">thoughts</option>
-              <option value="prediction">prediction</option>
-              <option value="quote">favorite quote</option>
-              <option value="character">character notes</option>
-              <option value="final review">final review</option>
-            </select>
-          </label>
-        </div>
-
-        <label>
-          optional title
-          <input id="entry-title" type="text" maxlength="120" placeholder="a name for this entry">
-        </label>
-
-        <label>
-          entry
-          <textarea id="entry-body" rows="8" maxlength="5000" required placeholder="write anything you want to remember..."></textarea>
-        </label>
-
-        <div class="form-grid">
-          <label>
-            optional page or chapter
-            <input id="entry-progress" type="text" maxlength="80" placeholder="chapter 12 or page 184">
-          </label>
-
-          <label>
-            optional rating
-            <select id="entry-rating">
-              <option value="0">no rating</option>
-              <option value="1">★</option>
-              <option value="2">★★</option>
-              <option value="3">★★★</option>
-              <option value="4">★★★★</option>
-              <option value="5">★★★★★</option>
-            </select>
-          </label>
-        </div>
-
-        <label class="check-label">
-          <input id="entry-spoiler" type="checkbox">
-          <span>contains spoilers if I share it later</span>
-        </label>
-
-        <button id="save-entry-button" class="primary-button" type="submit">save privately</button>
-        <p id="entry-form-message" class="form-message" aria-live="polite"></p>
-      </form>
+          <button id="save-cover-button" class="primary-button" type="submit">
+            save cover
+          </button>
+          <p id="cover-form-message" class="form-message" aria-live="polite"></p>
+        </form>
+      </div>
     </section>
   </div>
 

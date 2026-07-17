@@ -1,32 +1,38 @@
-INK AND IVY — PRIVATE READING JOURNAL
+INK AND IVY — ACTUAL DIGITAL JOURNAL
 
-THIS IS THE FIRST NEW EXPERIENCE
-The reading journal creates the foundation for future challenges, badges,
-friend recommendations, and yearly recaps.
+THE JOURNAL NOW FEELS LIKE A REAL BOOK
 
-READERS CAN
-- Keep private entries for reading progress, thoughts, predictions, quotes,
-  character notes, and final reviews
-- Attach each entry to a book in the Ink & Ivy catalog
-- Add an optional page/chapter and rating
-- Mark an entry as containing spoilers
-- Search and filter their private journal
-- Edit or delete their entries
-- Copy any entry into the community feed using "share to community"
-- Keep the original journal entry private after sharing
+- Readers first see their own journal cover.
+- The cover opens into a two-page digital journal.
+- The left page is a table of contents with filters and search.
+- The right page is lined paper.
+- New entries are typed directly across the lined page.
+- Saved entries are displayed as handwritten-style journal pages.
+- All existing entry types, book selection, progress, ratings, spoiler toggle,
+  private saving, editing, deleting, filtering, and community sharing remain.
+- The layout stacks neatly on phones.
+
+CUSTOMIZABLE COVER
+
+Each reader can save:
+- A custom cover title
+- A custom subtitle
+- One of 6 cover colors
+- One of 5 accent colors
+- Ivy, floral, stars, linen, or plain pattern
+- One of 8 cover emblems
+
+Cover settings are private and saved to the reader's Firebase account.
 
 STEP 1 — FIREBASE RULES
+
 Open FIRESTORE_RULES.txt.
 Copy everything into Firebase > Firestore Database > Rules.
 Replace the current rules and click Publish.
 
 STEP 2 — GITHUB
-Upload and replace:
-- index.html
-- reader.html
-- community.html
 
-Upload these new files:
+Upload and replace:
 - journal.html
 - journal.css
 - journal.js
@@ -34,6 +40,5 @@ Upload these new files:
 Do not upload FIRESTORE_RULES.txt to GitHub.
 
 STEP 3 — OPEN THE JOURNAL
-https://keane-xo.github.io/ink-and-ivy/journal.html?v=1
 
-The homepage, reader account, and community page will all have a link to it.
+https://keane-xo.github.io/ink-and-ivy/journal.html?v=2

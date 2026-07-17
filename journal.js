@@ -19,6 +19,7 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  setDoc,
   updateDoc
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
@@ -36,13 +37,51 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 setPersistence(auth, browserLocalPersistence).catch(console.error);
 
+const DEFAULT_SETTINGS = {
+  title: "my reading journal",
+  subtitle: "thoughts between the pages",
+  coverColor: "#6f8068",
+  accentColor: "#f0d9a8",
+  pattern: "ivy",
+  emblem: "🌿"
+};
+
 const loginView = document.querySelector("#journal-login-view");
 const journalView = document.querySelector("#journal-view");
 const signoutButton = document.querySelector("#journal-signout-button");
-const launcherAvatar = document.querySelector("#launcher-avatar");
-const openEntryButton = document.querySelector("#open-entry-button");
-const entryLauncher = document.querySelector("#entry-launcher");
-const entryModal = document.querySelector("#entry-modal");
+const coverStage = document.querySelector("#cover-stage");
+const openJournalView = document.querySelector("#open-journal-view");
+const journalCover = document.querySelector("#journal-cover");
+const coverEmblem = document.querySelector("#cover-emblem");
+const coverTitle = document.querySelector("#cover-title");
+const coverSubtitle = document.querySelector("#cover-subtitle");
+const coverOwner = document.querySelector("#cover-owner");
+const toolbarJournalTitle = document.querySelector("#toolbar-journal-title");
+const openJournalButton = document.querySelector("#open-journal-button");
+const closeJournalButton = document.querySelector("#close-journal-button");
+const customizeCoverButton = document.querySelector("#customize-cover-button");
+const customizeCoverInsideButton = document.querySelector("#customize-cover-inside-button");
+const newEntryButton = document.querySelector("#new-entry-button");
+const blankPageNewEntry = document.querySelector("#blank-page-new-entry");
+const entryCount = document.querySelector("#entry-count");
+const entryList = document.querySelector("#entry-list");
+const entryListEmpty = document.querySelector("#entry-list-empty");
+const typeFilter = document.querySelector("#journal-type-filter");
+const bookFilter = document.querySelector("#journal-book-filter");
+const journalSearch = document.querySelector("#journal-search");
+const blankPage = document.querySelector("#blank-page");
+const entryReadingView = document.querySelector("#entry-reading-view");
+const entryDisplay = document.querySelector("#entry-display");
+const displayEntryDate = document.querySelector("#display-entry-date");
+const displayEntryTitle = document.querySelector("#display-entry-title");
+const displayEntryBook = document.querySelector("#display-entry-book");
+const displayEntryBody = document.querySelector("#display-entry-body");
+const displayEntryMeta = document.querySelector("#display-entry-meta");
+const editEntryButton = document.querySelector("#edit-entry-button");
+const deleteEntryButton = document.querySelector("#delete-entry-button");
+const shareEntryButton = document.querySelector("#share-entry-button");
+const rightPageNumber = document.querySelector("#right-page-number");
+
 const entryForm = document.querySelector("#entry-form");
 const editingEntryId = document.querySelector("#editing-entry-id");
 const entryFormTitle = document.querySelector("#entry-form-title");
@@ -56,18 +95,31 @@ const entrySpoiler = document.querySelector("#entry-spoiler");
 const saveEntryButton = document.querySelector("#save-entry-button");
 const cancelEntryEdit = document.querySelector("#cancel-entry-edit");
 const entryFormMessage = document.querySelector("#entry-form-message");
-const journalEntries = document.querySelector("#journal-entries");
-const journalEmpty = document.querySelector("#journal-empty");
-const typeFilter = document.querySelector("#journal-type-filter");
-const bookFilter = document.querySelector("#journal-book-filter");
-const journalSearch = document.querySelector("#journal-search");
+const entryWordCount = document.querySelector("#entry-word-count");
+
+const coverModal = document.querySelector("#cover-modal");
+const coverPreview = document.querySelector("#cover-preview");
+const previewCoverEmblem = document.querySelector("#preview-cover-emblem");
+const previewCoverTitle = document.querySelector("#preview-cover-title");
+const previewCoverSubtitle = document.querySelector("#preview-cover-subtitle");
+const previewCoverOwner = document.querySelector("#preview-cover-owner");
+const coverSettingsForm = document.querySelector("#cover-settings-form");
+const coverTitleInput = document.querySelector("#cover-title-input");
+const coverSubtitleInput = document.querySelector("#cover-subtitle-input");
+const coverEmblemInput = document.querySelector("#cover-emblem-input");
+const saveCoverButton = document.querySelector("#save-cover-button");
+const coverFormMessage = document.querySelector("#cover-form-message");
 const toast = document.querySelector("#journal-toast");
 
 let currentUser = null;
 let currentProfile = null;
 let books = [];
 let entries = [];
+let selectedEntryId = "";
 let unsubscribeEntries = null;
+let settingsExist = false;
+let journalSettings = { ...DEFAULT_SETTINGS };
+let draftSettings = { ...DEFAULT_SETTINGS };
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -84,30 +136,19 @@ function showToast(message) {
   window.setTimeout(() => toast.classList.remove("show"), 3000);
 }
 
-function formatDate(timestamp) {
+function formatDate(timestamp, short = false) {
   if (!timestamp?.toDate) return "just now";
-  return timestamp.toDate().toLocaleString([], {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit"
-  }).toLowerCase();
-}
+  const options = short
+    ? { month: "short", day: "numeric" }
+    : {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+      };
 
-function avatarMarkup(profile) {
-  if (profile?.avatarUrl) {
-    return `<img src="${escapeHtml(profile.avatarUrl)}" alt="">`;
-  }
-  return escapeHtml(profile?.avatarEmoji || "📚");
-}
-
-function setLauncherAvatar() {
-  launcherAvatar.style.setProperty(
-    "--avatar-color",
-    currentProfile?.avatarColor || "#e8b8c5"
-  );
-  launcherAvatar.innerHTML = avatarMarkup(currentProfile);
+  return timestamp.toDate().toLocaleString([], options).toLowerCase();
 }
 
 function profileSnapshot() {
@@ -119,6 +160,183 @@ function profileSnapshot() {
   };
 }
 
+function ownerLabel() {
+  const displayName = currentProfile?.displayName?.trim();
+  return displayName
+    ? `${displayName}'s private journal`
+    : "a private ink and ivy journal";
+}
+
+function applyCoverAppearance(element, settings) {
+  element.style.setProperty("--cover-color", settings.coverColor);
+  element.style.setProperty("--cover-accent", settings.accentColor);
+  element.dataset.pattern = settings.pattern;
+}
+
+function renderCover() {
+  applyCoverAppearance(journalCover, journalSettings);
+  coverEmblem.textContent = journalSettings.emblem;
+  coverTitle.textContent = journalSettings.title;
+  coverSubtitle.textContent = journalSettings.subtitle;
+  coverOwner.textContent = ownerLabel();
+  toolbarJournalTitle.textContent = journalSettings.title;
+}
+
+function renderCoverPreview() {
+  applyCoverAppearance(coverPreview, draftSettings);
+  previewCoverEmblem.textContent = draftSettings.emblem;
+  previewCoverTitle.textContent = draftSettings.title || "my reading journal";
+  previewCoverSubtitle.textContent =
+    draftSettings.subtitle || "thoughts between the pages";
+  previewCoverOwner.textContent = ownerLabel();
+
+  document.querySelectorAll("[data-cover-color]").forEach((button) => {
+    button.classList.toggle(
+      "selected",
+      button.dataset.coverColor === draftSettings.coverColor
+    );
+  });
+
+  document.querySelectorAll("[data-accent-color]").forEach((button) => {
+    button.classList.toggle(
+      "selected",
+      button.dataset.accentColor === draftSettings.accentColor
+    );
+  });
+
+  document.querySelectorAll("[data-cover-pattern]").forEach((button) => {
+    button.classList.toggle(
+      "selected",
+      button.dataset.coverPattern === draftSettings.pattern
+    );
+  });
+}
+
+function openCoverCustomizer() {
+  draftSettings = { ...journalSettings };
+  coverTitleInput.value = draftSettings.title;
+  coverSubtitleInput.value = draftSettings.subtitle;
+  coverEmblemInput.value = draftSettings.emblem;
+  coverFormMessage.textContent = "";
+  renderCoverPreview();
+  coverModal.hidden = false;
+  document.body.classList.add("modal-open");
+}
+
+function closeCoverCustomizer() {
+  coverModal.hidden = true;
+  document.body.classList.remove("modal-open");
+  coverFormMessage.textContent = "";
+}
+
+customizeCoverButton.addEventListener("click", openCoverCustomizer);
+customizeCoverInsideButton.addEventListener("click", openCoverCustomizer);
+
+document.querySelectorAll("[data-close-cover-modal]").forEach((element) => {
+  element.addEventListener("click", closeCoverCustomizer);
+});
+
+document.querySelectorAll("[data-cover-color]").forEach((button) => {
+  button.addEventListener("click", () => {
+    draftSettings.coverColor = button.dataset.coverColor;
+    renderCoverPreview();
+  });
+});
+
+document.querySelectorAll("[data-accent-color]").forEach((button) => {
+  button.addEventListener("click", () => {
+    draftSettings.accentColor = button.dataset.accentColor;
+    renderCoverPreview();
+  });
+});
+
+document.querySelectorAll("[data-cover-pattern]").forEach((button) => {
+  button.addEventListener("click", () => {
+    draftSettings.pattern = button.dataset.coverPattern;
+    renderCoverPreview();
+  });
+});
+
+coverTitleInput.addEventListener("input", () => {
+  draftSettings.title =
+    coverTitleInput.value.trimStart().slice(0, 40) || "my reading journal";
+  renderCoverPreview();
+});
+
+coverSubtitleInput.addEventListener("input", () => {
+  draftSettings.subtitle =
+    coverSubtitleInput.value.trimStart().slice(0, 80) ||
+    "thoughts between the pages";
+  renderCoverPreview();
+});
+
+coverEmblemInput.addEventListener("change", () => {
+  draftSettings.emblem = coverEmblemInput.value;
+  renderCoverPreview();
+});
+
+coverSettingsForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!currentUser) return;
+
+  saveCoverButton.disabled = true;
+  saveCoverButton.textContent = "saving...";
+  coverFormMessage.textContent = "";
+
+  try {
+    const data = {
+      userId: currentUser.uid,
+      title: (coverTitleInput.value.trim() || "my reading journal").slice(0, 40),
+      subtitle: (
+        coverSubtitleInput.value.trim() || "thoughts between the pages"
+      ).slice(0, 80),
+      coverColor: draftSettings.coverColor,
+      accentColor: draftSettings.accentColor,
+      pattern: draftSettings.pattern,
+      emblem: draftSettings.emblem,
+      updatedAt: serverTimestamp()
+    };
+
+    if (!settingsExist) data.createdAt = serverTimestamp();
+
+    await setDoc(
+      doc(db, "profiles", currentUser.uid, "journalSettings", "preferences"),
+      data,
+      { merge: true }
+    );
+
+    settingsExist = true;
+    journalSettings = { ...draftSettings, title: data.title, subtitle: data.subtitle };
+    renderCover();
+    closeCoverCustomizer();
+    showToast("your journal cover was saved.");
+  } catch (error) {
+    console.error(error);
+    coverFormMessage.textContent =
+      `the cover could not be saved (${error?.code || "unknown error"}).`;
+  } finally {
+    saveCoverButton.disabled = false;
+    saveCoverButton.textContent = "save cover";
+  }
+});
+
+function openJournal() {
+  coverStage.hidden = true;
+  openJournalView.hidden = false;
+  renderAll();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function closeJournal() {
+  openJournalView.hidden = true;
+  coverStage.hidden = false;
+  showReadingView();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+openJournalButton.addEventListener("click", openJournal);
+closeJournalButton.addEventListener("click", closeJournal);
+
 function populateBooks() {
   const selectedEntryBook = entryBook.value;
   const selectedFilterBook = bookFilter.value;
@@ -127,10 +345,10 @@ function populateBooks() {
   bookFilter.innerHTML = '<option value="all">all books</option>';
 
   books.forEach((book) => {
-    const entryOption = document.createElement("option");
-    entryOption.value = book.id;
-    entryOption.textContent = `${book.title} — ${book.author || "unknown author"}`;
-    entryBook.appendChild(entryOption);
+    const option = document.createElement("option");
+    option.value = book.id;
+    option.textContent = `${book.title} — ${book.author || "unknown author"}`;
+    entryBook.appendChild(option);
 
     const filterOption = document.createElement("option");
     filterOption.value = book.id;
@@ -147,137 +365,12 @@ function populateBooks() {
     : "all";
 }
 
-function resetEntryForm() {
-  entryForm.reset();
-  editingEntryId.value = "";
-  entryFormTitle.textContent = "new journal entry";
-  saveEntryButton.textContent = "save privately";
-  cancelEntryEdit.hidden = true;
-  entryFormMessage.textContent = "";
-}
-
-function openEntryModal() {
-  entryModal.hidden = false;
-  document.body.classList.add("modal-open");
-  window.setTimeout(() => entryBook.focus(), 50);
-}
-
-function closeEntryModal({ reset = true } = {}) {
-  entryModal.hidden = true;
-  document.body.classList.remove("modal-open");
-  if (reset) resetEntryForm();
-}
-
-function startNewEntry() {
-  resetEntryForm();
-  openEntryModal();
-}
-
-openEntryButton.addEventListener("click", startNewEntry);
-entryLauncher.addEventListener("click", startNewEntry);
-
-document.querySelectorAll("[data-close-entry-modal]").forEach((element) => {
-  element.addEventListener("click", () => closeEntryModal());
-});
-
-document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && !entryModal.hidden) {
-    closeEntryModal();
-  }
-});
-
-cancelEntryEdit.addEventListener("click", () => closeEntryModal());
-
-function beginEdit(entry) {
-  editingEntryId.value = entry.id;
-  entryBook.value = entry.bookId || "";
-  entryType.value = entry.entryType || "thoughts";
-  entryTitle.value = entry.title || "";
-  entryBody.value = entry.body || "";
-  entryProgress.value = entry.progress || "";
-  entryRating.value = String(entry.rating || 0);
-  entrySpoiler.checked = Boolean(entry.spoiler);
-  entryFormTitle.textContent = "edit journal entry";
-  saveEntryButton.textContent = "save changes";
-  cancelEntryEdit.hidden = false;
-  openEntryModal();
-}
-
-function twoClickDelete(button, action) {
-  if (button.dataset.confirmDelete === "true") {
-    action();
-    return;
-  }
-
-  button.dataset.confirmDelete = "true";
-  const original = button.textContent;
-  button.textContent = "click again to delete";
-
-  window.setTimeout(() => {
-    button.dataset.confirmDelete = "false";
-    button.textContent = original;
-  }, 4000);
-}
-
-function statusForPost(entry) {
-  if (entry.entryType === "progress") return "currently reading";
-  if (entry.entryType === "final review") return "review";
-  if (entry.entryType === "prediction") return "book thoughts";
-  if (entry.entryType === "quote") return "book thoughts";
-  return "book thoughts";
-}
-
-async function shareEntry(entry, button) {
-  if (!currentUser || !currentProfile) return;
-
-  button.disabled = true;
-  button.textContent = "sharing...";
-
-  try {
-    const postReference = await addDoc(collection(db, "posts"), {
-      userId: currentUser.uid,
-      ...profileSnapshot(),
-      title: entry.title || "",
-      body: entry.progress
-        ? `${entry.body}\n\nreading progress: ${entry.progress}`
-        : entry.body,
-      imageUrl: "",
-      bookId: entry.bookId || "",
-      bookTitle: entry.bookTitle || "",
-      readingStatus: statusForPost(entry),
-      spoiler: Boolean(entry.spoiler),
-      bookRelatedConfirmed: true,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    });
-
-    await updateDoc(
-      doc(db, "profiles", currentUser.uid, "journalEntries", entry.id),
-      {
-        sharedAt: serverTimestamp(),
-        sharedPostId: postReference.id,
-        updatedAt: serverTimestamp()
-      }
-    );
-
-    showToast("your journal entry was shared to the community.");
-  } catch (error) {
-    console.error(error);
-    showToast("the entry could not be shared.");
-  } finally {
-    button.disabled = false;
-    button.textContent = entry.sharedPostId
-      ? "share again"
-      : "share to community";
-  }
-}
-
-function renderEntries() {
+function visibleEntries() {
   const selectedType = typeFilter.value;
   const selectedBook = bookFilter.value;
   const search = journalSearch.value.trim().toLowerCase();
 
-  const visible = entries.filter((entry) => {
+  return entries.filter((entry) => {
     const matchesType =
       selectedType === "all" || entry.entryType === selectedType;
     const matchesBook =
@@ -292,102 +385,158 @@ function renderEntries() {
 
     return matchesType && matchesBook && searchable.includes(search);
   });
+}
 
-  journalEntries.innerHTML = "";
-  journalEmpty.hidden = visible.length !== 0;
+function activeEntry() {
+  return entries.find((entry) => entry.id === selectedEntryId) || null;
+}
+
+function renderEntryList() {
+  const visible = visibleEntries();
+  entryList.innerHTML = "";
+  entryListEmpty.hidden = visible.length !== 0;
+  entryCount.textContent = `${entries.length} ${entries.length === 1 ? "entry" : "entries"}`;
 
   if (!visible.length) {
-    journalEmpty.textContent = entries.length
+    entryListEmpty.textContent = entries.length
       ? "no journal entries match those filters."
       : "your journal is waiting for its first entry.";
   }
 
   visible.forEach((entry) => {
-    const article = document.createElement("article");
-    article.className = "journal-entry";
-
-    const rating = Number(entry.rating || 0);
-    const displayTitle =
-      entry.title ||
-      `${entry.entryType || "journal entry"} · ${entry.bookTitle || "book"}`;
-
-    article.innerHTML = `
-      <div class="entry-top">
-        <div>
-          <h2>${escapeHtml(displayTitle)}</h2>
-          <small>${formatDate(entry.updatedAt || entry.createdAt)}</small>
-        </div>
-
-        <div class="entry-actions">
-          <button class="entry-action" data-edit-entry type="button">edit</button>
-          <button class="entry-action" data-delete-entry type="button">delete</button>
-        </div>
-      </div>
-
-      <div class="entry-content">
-        <p class="entry-body">${escapeHtml(entry.body)}</p>
-
-        <div class="entry-meta">
-          <span class="pill">${escapeHtml(entry.entryType || "thoughts")}</span>
-          <span class="pill">📖 ${escapeHtml(entry.bookTitle || "book")}</span>
-          ${entry.progress ? `<span class="pill">${escapeHtml(entry.progress)}</span>` : ""}
-          ${rating ? `<span class="pill">${"★".repeat(rating)}</span>` : ""}
-          ${entry.spoiler ? '<span class="pill">spoilers</span>' : ""}
-          ${entry.sharedAt ? '<span class="pill entry-shared">shared</span>' : ""}
-        </div>
-      </div>
-
-      <div class="share-row">
-        <p>
-          sharing creates a separate community post. your original journal entry
-          stays private.
-        </p>
-        <button class="share-button" data-share-entry type="button">
-          ${entry.sharedPostId ? "share again" : "share to community"}
-        </button>
-      </div>
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "entry-list-button";
+    button.classList.toggle("active", entry.id === selectedEntryId);
+    button.innerHTML = `
+      <span>
+        <strong>${escapeHtml(
+          entry.title ||
+          `${entry.entryType || "journal entry"} · ${entry.bookTitle || "book"}`
+        )}</strong>
+        <small>${escapeHtml(entry.bookTitle || "book")} · ${escapeHtml(entry.entryType || "thoughts")}</small>
+      </span>
+      <time>${formatDate(entry.updatedAt || entry.createdAt, true)}</time>
     `;
 
-    article.querySelector("[data-edit-entry]").addEventListener(
-      "click",
-      () => beginEdit(entry)
-    );
+    button.addEventListener("click", () => {
+      selectedEntryId = entry.id;
+      showReadingView();
+      renderEntryList();
+      renderActivePage();
+    });
 
-    article.querySelector("[data-delete-entry]").addEventListener(
-      "click",
-      (event) => {
-        twoClickDelete(event.currentTarget, async () => {
-          try {
-            await deleteDoc(
-              doc(
-                db,
-                "profiles",
-                currentUser.uid,
-                "journalEntries",
-                entry.id
-              )
-            );
-            showToast("your journal entry was deleted.");
-          } catch (error) {
-            console.error(error);
-            showToast("the entry could not be deleted.");
-          }
-        });
-      }
-    );
-
-    article.querySelector("[data-share-entry]").addEventListener(
-      "click",
-      (event) => shareEntry(entry, event.currentTarget)
-    );
-
-    journalEntries.appendChild(article);
+    entryList.appendChild(button);
   });
 }
 
+function showReadingView() {
+  entryForm.hidden = true;
+  entryReadingView.hidden = false;
+  entryFormMessage.textContent = "";
+}
+
+function showEditor() {
+  entryReadingView.hidden = true;
+  entryForm.hidden = false;
+  window.setTimeout(() => entryBody.focus(), 50);
+}
+
+function resetEntryForm() {
+  entryForm.reset();
+  editingEntryId.value = "";
+  entryFormTitle.textContent = "new journal entry";
+  saveEntryButton.textContent = "save privately";
+  entryFormMessage.textContent = "";
+  updateWordCount();
+}
+
+function startNewEntry() {
+  resetEntryForm();
+  rightPageNumber.textContent = entries.length + 1;
+  showEditor();
+}
+
+newEntryButton.addEventListener("click", startNewEntry);
+blankPageNewEntry.addEventListener("click", startNewEntry);
+
+function beginEdit(entry) {
+  editingEntryId.value = entry.id;
+  entryBook.value = entry.bookId || "";
+  entryType.value = entry.entryType || "thoughts";
+  entryTitle.value = entry.title || "";
+  entryBody.value = entry.body || "";
+  entryProgress.value = entry.progress || "";
+  entryRating.value = String(entry.rating || 0);
+  entrySpoiler.checked = Boolean(entry.spoiler);
+  entryFormTitle.textContent = "edit journal entry";
+  saveEntryButton.textContent = "save changes";
+  updateWordCount();
+  showEditor();
+}
+
+cancelEntryEdit.addEventListener("click", () => {
+  resetEntryForm();
+  showReadingView();
+  renderActivePage();
+});
+
+function updateWordCount() {
+  const text = entryBody.value.trim();
+  const count = text ? text.split(/\s+/).filter(Boolean).length : 0;
+  entryWordCount.textContent = `${count} ${count === 1 ? "word" : "words"}`;
+}
+
+entryBody.addEventListener("input", updateWordCount);
+
+function renderActivePage() {
+  if (!openJournalView || openJournalView.hidden) return;
+
+  const entry = activeEntry();
+  const index = entry
+    ? Math.max(0, entries.findIndex((item) => item.id === entry.id))
+    : 0;
+
+  rightPageNumber.textContent = entry ? index + 1 : entries.length + 1;
+
+  if (!entry) {
+    blankPage.hidden = false;
+    entryDisplay.hidden = true;
+    return;
+  }
+
+  blankPage.hidden = true;
+  entryDisplay.hidden = false;
+
+  displayEntryDate.textContent = formatDate(entry.updatedAt || entry.createdAt);
+  displayEntryTitle.textContent =
+    entry.title || `${entry.entryType || "journal entry"}`;
+  displayEntryBook.textContent = `${entry.bookTitle || "book"}${
+    entry.progress ? ` · ${entry.progress}` : ""
+  }`;
+  displayEntryBody.textContent = entry.body || "";
+
+  const rating = Number(entry.rating || 0);
+  displayEntryMeta.innerHTML = `
+    <span class="pill">${escapeHtml(entry.entryType || "thoughts")}</span>
+    ${rating ? `<span class="pill">${"★".repeat(rating)}</span>` : ""}
+    ${entry.spoiler ? '<span class="pill">spoilers</span>' : ""}
+    ${entry.sharedAt ? '<span class="pill">shared</span>' : ""}
+  `;
+
+  shareEntryButton.textContent = entry.sharedPostId
+    ? "share again"
+    : "share to community";
+}
+
+function renderAll() {
+  renderEntryList();
+  renderActivePage();
+}
+
 [typeFilter, bookFilter, journalSearch].forEach((element) => {
-  element.addEventListener("input", renderEntries);
-  element.addEventListener("change", renderEntries);
+  element.addEventListener("input", renderEntryList);
+  element.addEventListener("change", renderEntryList);
 });
 
 entryForm.addEventListener("submit", async (event) => {
@@ -398,7 +547,7 @@ entryForm.addEventListener("submit", async (event) => {
   const body = entryBody.value.trim();
 
   if (!selectedBook) {
-    entryFormMessage.textContent = "choose a book for this entry.";
+    entryFormMessage.textContent = "choose a book for this page.";
     return;
   }
 
@@ -439,9 +588,10 @@ entryForm.addEventListener("submit", async (event) => {
         ),
         data
       );
-      showToast("your journal entry was updated.");
+      selectedEntryId = editingEntryId.value;
+      showToast("your journal page was updated.");
     } else {
-      await addDoc(
+      const reference = await addDoc(
         collection(db, "profiles", currentUser.uid, "journalEntries"),
         {
           ...data,
@@ -449,26 +599,118 @@ entryForm.addEventListener("submit", async (event) => {
           createdAt: serverTimestamp()
         }
       );
-      showToast("your journal entry was saved privately.");
+      selectedEntryId = reference.id;
+      showToast("your journal page was saved privately.");
     }
 
-    closeEntryModal();
+    resetEntryForm();
+    showReadingView();
   } catch (error) {
     console.error(error);
     entryFormMessage.textContent =
-      `the entry could not be saved (${error?.code || "unknown error"}).`;
+      `the page could not be saved (${error?.code || "unknown error"}).`;
   } finally {
     saveEntryButton.disabled = false;
-    saveEntryButton.textContent = editingEntryId.value
-      ? "save changes"
-      : "save privately";
+    saveEntryButton.textContent = "save privately";
   }
 });
 
-async function loadReader(user) {
-  const [profileDocument, booksSnapshot] = await Promise.all([
+editEntryButton.addEventListener("click", () => {
+  const entry = activeEntry();
+  if (entry) beginEdit(entry);
+});
+
+function twoClickDelete(button, action) {
+  if (button.dataset.confirmDelete === "true") {
+    action();
+    return;
+  }
+
+  button.dataset.confirmDelete = "true";
+  const original = button.textContent;
+  button.textContent = "click again to delete";
+
+  window.setTimeout(() => {
+    button.dataset.confirmDelete = "false";
+    button.textContent = original;
+  }, 4000);
+}
+
+deleteEntryButton.addEventListener("click", (event) => {
+  const entry = activeEntry();
+  if (!entry) return;
+
+  twoClickDelete(event.currentTarget, async () => {
+    try {
+      await deleteDoc(
+        doc(db, "profiles", currentUser.uid, "journalEntries", entry.id)
+      );
+      selectedEntryId = "";
+      showToast("your journal page was deleted.");
+    } catch (error) {
+      console.error(error);
+      showToast("the page could not be deleted.");
+    }
+  });
+});
+
+function statusForPost(entry) {
+  if (entry.entryType === "progress") return "currently reading";
+  if (entry.entryType === "final review") return "review";
+  return "book thoughts";
+}
+
+shareEntryButton.addEventListener("click", async () => {
+  const entry = activeEntry();
+  if (!entry || !currentUser || !currentProfile) return;
+
+  shareEntryButton.disabled = true;
+  shareEntryButton.textContent = "sharing...";
+
+  try {
+    const postReference = await addDoc(collection(db, "posts"), {
+      userId: currentUser.uid,
+      ...profileSnapshot(),
+      title: entry.title || "",
+      body: entry.progress
+        ? `${entry.body}\n\nreading progress: ${entry.progress}`
+        : entry.body,
+      imageUrl: "",
+      bookId: entry.bookId || "",
+      bookTitle: entry.bookTitle || "",
+      readingStatus: statusForPost(entry),
+      spoiler: Boolean(entry.spoiler),
+      bookRelatedConfirmed: true,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+
+    await updateDoc(
+      doc(db, "profiles", currentUser.uid, "journalEntries", entry.id),
+      {
+        sharedAt: serverTimestamp(),
+        sharedPostId: postReference.id,
+        updatedAt: serverTimestamp()
+      }
+    );
+
+    showToast("your journal page was shared to the community.");
+  } catch (error) {
+    console.error(error);
+    showToast("the page could not be shared.");
+  } finally {
+    shareEntryButton.disabled = false;
+    shareEntryButton.textContent = entry.sharedPostId
+      ? "share again"
+      : "share to community";
+  }
+});
+
+async function loadJournalData(user) {
+  const [profileDocument, booksSnapshot, settingsDocument] = await Promise.all([
     getDoc(doc(db, "profiles", user.uid)),
-    getDocs(collection(db, "books"))
+    getDocs(collection(db, "books")),
+    getDoc(doc(db, "profiles", user.uid, "journalSettings", "preferences"))
   ]);
 
   if (!profileDocument.exists()) {
@@ -483,8 +725,13 @@ async function loadReader(user) {
       String(a.title || "").localeCompare(String(b.title || ""))
     );
 
-  setLauncherAvatar();
+  settingsExist = settingsDocument.exists();
+  journalSettings = settingsExist
+    ? { ...DEFAULT_SETTINGS, ...settingsDocument.data() }
+    : { ...DEFAULT_SETTINGS };
+
   populateBooks();
+  renderCover();
 
   unsubscribeEntries?.();
   unsubscribeEntries = onSnapshot(
@@ -498,15 +745,33 @@ async function loadReader(user) {
         id: entry.id,
         ...entry.data()
       }));
-      renderEntries();
+
+      if (
+        selectedEntryId &&
+        !entries.some((entry) => entry.id === selectedEntryId)
+      ) {
+        selectedEntryId = "";
+      }
+
+      if (!selectedEntryId && entries.length) {
+        selectedEntryId = entries[0].id;
+      }
+
+      renderAll();
     },
     (error) => {
       console.error(error);
-      journalEmpty.hidden = false;
-      journalEmpty.textContent = "your journal could not be loaded.";
+      entryListEmpty.hidden = false;
+      entryListEmpty.textContent = "your journal could not be loaded.";
     }
   );
 }
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !coverModal.hidden) {
+    closeCoverCustomizer();
+  }
+});
 
 signoutButton.addEventListener("click", () => signOut(auth));
 
@@ -519,14 +784,14 @@ onAuthStateChanged(auth, async (user) => {
   unsubscribeEntries?.();
   unsubscribeEntries = null;
   entries = [];
+  selectedEntryId = "";
 
   if (user) {
     try {
-      await loadReader(user);
+      await loadJournalData(user);
     } catch (error) {
       console.error(error);
-      journalEmpty.hidden = false;
-      journalEmpty.textContent = "your journal could not be opened.";
+      showToast("your journal could not be opened.");
     }
   }
 });
