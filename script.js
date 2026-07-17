@@ -44,6 +44,9 @@ let reviewsUnsubscribe = null;
 let currentUserReview = null;
 
 const MAX_CHECKOUTS = 3;
+const MAX_REQUESTS_PER_WINDOW = 2;
+const REQUEST_WINDOW_DAYS = 63;
+const REQUEST_WINDOW_MS = REQUEST_WINDOW_DAYS * 24 * 60 * 60 * 1000;
 const ACTIVE_CHECKOUT_STATUSES = new Set(["pending", "approved"]);
 
 const bookGrid = document.querySelector("#book-grid");
@@ -116,6 +119,40 @@ function formatDate(timestamp) {
     day: "numeric",
     year: "numeric"
   }).toLowerCase();
+}
+
+function formatPolicyDate(date) {
+  return date.toLocaleDateString([], {
+    month: "long",
+    day: "numeric",
+    year: "numeric"
+  }).toLowerCase();
+}
+
+function checkoutRequestDate(item) {
+  if (!item.createdAt?.toDate) return null;
+  const date = item.createdAt.toDate();
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function recentCheckoutRequests(items) {
+  const cutoff = Date.now() - REQUEST_WINDOW_MS;
+
+  return items
+    .filter((item) => {
+      if (item.requestType !== "checkout") return false;
+      const date = checkoutRequestDate(item);
+      return date && date.getTime() >= cutoff;
+    })
+    .sort((a, b) => checkoutRequestDate(a) - checkoutRequestDate(b));
+}
+
+function nextCheckoutRequestDate(items) {
+  const recent = recentCheckoutRequests(items);
+  if (recent.length < MAX_REQUESTS_PER_WINDOW) return null;
+
+  const oldestCountedRequest = checkoutRequestDate(recent[0]);
+  return new Date(oldestCountedRequest.getTime() + REQUEST_WINDOW_MS);
 }
 
 function avatarMarkup(profile) {
@@ -419,7 +456,7 @@ function openBorrowingModal(book) {
   } else {
     requestModalCopy.textContent =
       requestType === "checkout"
-        ? `request ${book.title}. approved checkouts are due in 14 days.`
+        ? `request ${book.title}. approved checkouts are due in 14 days, and each reader may submit two checkout requests in any nine-week period.`
         : `join the waitlist for ${book.title}.`;
     confirmRequestButton.textContent =
       requestType === "checkout" ? "send request" : "join waitlist";
@@ -517,6 +554,15 @@ borrowingRequestForm.addEventListener("submit", async (event) => {
       if (usedSlots >= MAX_CHECKOUTS) {
         borrowingFormMessage.textContent =
           "you already have three checkout requests or active loans. complete one before requesting another.";
+        return;
+      }
+
+      const recentRequests = recentCheckoutRequests(existingRequests);
+
+      if (recentRequests.length >= MAX_REQUESTS_PER_WINDOW) {
+        const nextDate = nextCheckoutRequestDate(existingRequests);
+        borrowingFormMessage.textContent =
+          `you have already used your two checkout requests for this nine-week period. you can request another book on ${formatPolicyDate(nextDate)}.`;
         return;
       }
     }

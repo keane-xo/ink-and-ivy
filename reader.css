@@ -642,3 +642,32 @@ legend {
     grid-template-columns: 1fr;
   }
 }
+
+
+.loan-policy-stats {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.next-request-date {
+  margin: -5px 0 18px;
+  padding: 11px 14px;
+  color: var(--brown);
+  background: var(--light-pink);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  line-height: 1.5;
+}
+
+@media (max-width: 700px) {
+  .loan-policy-stats {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .loan-slot-count {
+    flex: 1 1 145px;
+  }
+}

@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>reader profile · ink and ivy</title>
   <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml">
-<link rel="stylesheet" href="reader.css?v=11">
-  <script type="module" src="reader.js?v=11"></script>
+<link rel="stylesheet" href="reader.css?v=12">
+  <script type="module" src="reader.js?v=12"></script>
 </head>
 <body>
   <header class="reader-header">
@@ -86,17 +86,25 @@
             <p class="eyebrow">your library activity</p>
             <h2 id="my-loans-title">my checkouts & waitlists</h2>
           </div>
-          <div class="loan-slot-count">
-            <strong id="loan-slot-count">0 / 3</strong>
-            <span>checkout slots used</span>
+          <div class="loan-policy-stats">
+            <div class="loan-slot-count">
+              <strong id="loan-slot-count">0 / 3</strong>
+              <span>checkout slots used</span>
+            </div>
+            <div class="loan-slot-count">
+              <strong id="request-window-count">0 / 2</strong>
+              <span>requests in 9 weeks</span>
+            </div>
           </div>
         </div>
 
         <p class="loan-policy-copy">
           you may have up to three pending checkout requests or active loans at once.
+          you may submit two new checkout requests in any rolling nine-week period.
           every approved checkout is due 14 days after approval.
         </p>
 
+        <p id="next-request-date" class="next-request-date"></p>
         <div id="my-loans-list" class="my-loans-list"></div>
         <p id="my-loans-empty" class="reading-list-empty" hidden>
           you do not have any active checkouts or waitlists.

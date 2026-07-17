@@ -1,45 +1,32 @@
-INK AND IVY — 3-BOOK LIMIT + 14-DAY CHECKOUTS
+INK AND IVY — TWO REQUESTS PER NINE WEEKS
 
 THIS UPDATE ADDS
-- Reader accounts are required for checkout and waitlist requests
-- A maximum of 3 pending checkout requests or active loans per reader
-- A second limit check when the admin approves a checkout
-- Automatic due dates exactly 14 days after approval
-- Automatic book status changes:
-  approve checkout -> out reading
-  mark returned -> available
-- Overdue labels and an overdue admin filter
-- A private “my checkouts & waitlists” section on each reader’s account page
-- Duplicate requests for the same book are blocked
+- A maximum of two new checkout requests in any rolling nine-week period
+- A clear message showing the next date a reader may request a checkout
+- A reader-account counter showing requests used out of two
+- The existing three-active-book limit and 14-day due dates remain unchanged
+- Waitlist joins and new-book suggestions do not use the two-request allowance
 
-INSTALLATION
+WHAT COUNTS
+Every checkout request submitted during the previous 63 days counts, even if it
+was later approved, completed, or declined. This prevents repeated request
+submissions from bypassing the limit.
 
-1. FIREBASE RULES
-Open FIRESTORE_RULES.txt.
-Copy everything into Firebase > Firestore Database > Rules.
-Replace the current rules and click Publish.
-
-2. GITHUB
-Upload and replace these nine files:
+UPLOAD THESE SIX FILES TO GITHUB
 - index.html
 - style.css
 - script.js
 - reader.html
 - reader.css
 - reader.js
-- admin.html
-- admin.css
-- admin.js
 
-Do not upload FIRESTORE_RULES.txt.
+Replace the current versions and commit the changes.
 
-3. REFRESH
-After committing, wait about one minute.
-Open the homepage with ?v=11 if needed:
-https://keane-xo.github.io/ink-and-ivy/?v=11
+NO FIREBASE RULE CHANGE IS NEEDED.
 
-Open the admin with:
-https://keane-xo.github.io/ink-and-ivy/admin.html?v=11
+AFTER COMMITTING
+Open:
+https://keane-xo.github.io/ink-and-ivy/?v=12
 
-IMPORTANT
-Older checkout records created before reader accounts were attached may not appear on a reader’s private checkout list because they do not contain that reader’s account ID. The admin can still manage those records normally. If an older approved checkout has no due date, the admin now has a “set 14-day due date” button.
+Reader account:
+https://keane-xo.github.io/ink-and-ivy/reader.html?v=12

@@ -54,6 +54,8 @@ const readingListSearch = document.querySelector("#reading-list-search");
 const readingListBooks = document.querySelector("#reading-list-books");
 const readingListEmpty = document.querySelector("#reading-list-empty");
 const loanSlotCount = document.querySelector("#loan-slot-count");
+const requestWindowCount = document.querySelector("#request-window-count");
+const nextRequestDate = document.querySelector("#next-request-date");
 const myLoansList = document.querySelector("#my-loans-list");
 const myLoansEmpty = document.querySelector("#my-loans-empty");
 const toast = document.querySelector("#toast");
@@ -70,6 +72,9 @@ let currentlyReadingBookIds = new Set();
 let loansUnsubscribe = null;
 
 const MAX_CHECKOUTS = 3;
+const MAX_REQUESTS_PER_WINDOW = 2;
+const REQUEST_WINDOW_DAYS = 63;
+const REQUEST_WINDOW_MS = REQUEST_WINDOW_DAYS * 24 * 60 * 60 * 1000;
 const ACTIVE_CHECKOUT_STATUSES = new Set(["pending", "approved"]);
 
 const returnPage = new URLSearchParams(window.location.search).get("return");
@@ -84,6 +89,32 @@ function formatLoanDate(timestamp) {
     day: "numeric",
     year: "numeric"
   }).toLowerCase();
+}
+
+function formatRequestDate(date) {
+  return date.toLocaleDateString([], {
+    month: "long",
+    day: "numeric",
+    year: "numeric"
+  }).toLowerCase();
+}
+
+function requestCreatedDate(item) {
+  if (!item.createdAt?.toDate) return null;
+  const date = item.createdAt.toDate();
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function recentCheckoutRequests(items) {
+  const cutoff = Date.now() - REQUEST_WINDOW_MS;
+
+  return items
+    .filter((item) => {
+      if (item.requestType !== "checkout") return false;
+      const date = requestCreatedDate(item);
+      return date && date.getTime() >= cutoff;
+    })
+    .sort((a, b) => requestCreatedDate(a) - requestCreatedDate(b));
 }
 
 function loanIsOverdue(item) {
@@ -109,6 +140,30 @@ function renderMyLoans(items) {
   ).length;
 
   loanSlotCount.textContent = `${usedSlots} / ${MAX_CHECKOUTS}`;
+
+  const recentRequests = recentCheckoutRequests(items);
+  const displayedRequestCount = Math.min(
+    recentRequests.length,
+    MAX_REQUESTS_PER_WINDOW
+  );
+  requestWindowCount.textContent =
+    `${displayedRequestCount} / ${MAX_REQUESTS_PER_WINDOW}`;
+
+  if (recentRequests.length >= MAX_REQUESTS_PER_WINDOW) {
+    const oldestCountedRequest = requestCreatedDate(recentRequests[0]);
+    const availableDate = new Date(
+      oldestCountedRequest.getTime() + REQUEST_WINDOW_MS
+    );
+    nextRequestDate.textContent =
+      `your next checkout request becomes available on ${formatRequestDate(availableDate)}.`;
+  } else {
+    const remaining = MAX_REQUESTS_PER_WINDOW - recentRequests.length;
+    nextRequestDate.textContent =
+      remaining === 1
+        ? "you may submit one more checkout request right now."
+        : "you may submit two checkout requests right now.";
+  }
+
   myLoansList.innerHTML = "";
   myLoansEmpty.hidden = activeItems.length !== 0;
 
