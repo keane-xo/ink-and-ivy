@@ -1280,3 +1280,28 @@ body.modal-open {
     min-height: auto;
   }
 }
+
+
+/* Limit reminder beside the new-book suggestion form */
+.request-limit-reminder {
+  margin-top: 24px;
+  padding: 18px 20px;
+  background: var(--light-pink);
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--rose);
+  border-radius: 14px;
+}
+
+.request-limit-reminder strong {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--brown);
+  font-size: 1.05rem;
+  font-weight: normal;
+}
+
+.request-limit-reminder p {
+  margin: 0;
+  color: #715f53;
+  line-height: 1.6;
+}
