@@ -47,6 +47,7 @@ const profileBioPreview = document.querySelector("#profile-bio-preview");
 const toast = document.querySelector("#toast");
 
 let currentUser = null;
+let profileExists = false;
 let selectedAvatar = "📚";
 let selectedColor = "#e8b8c5";
 
@@ -165,7 +166,9 @@ signupForm.addEventListener("submit", async (event) => {
 
 async function loadProfile(user) {
   const snapshot = await getDoc(doc(db, "profiles", user.uid));
-  const profile = snapshot.exists()
+  profileExists = snapshot.exists();
+
+  const profile = profileExists
     ? snapshot.data()
     : {
         displayName: user.email?.split("@")[0] || "reader",
@@ -234,23 +237,31 @@ profileForm.addEventListener("submit", async (event) => {
   profileMessage.textContent = "";
 
   try {
+    const profileData = {
+      displayName,
+      avatarEmoji: selectedAvatar,
+      avatarColor: selectedColor,
+      avatarUrl,
+      bio,
+      updatedAt: serverTimestamp()
+    };
+
+    if (!profileExists) {
+      profileData.createdAt = serverTimestamp();
+    }
+
     await setDoc(
       doc(db, "profiles", currentUser.uid),
-      {
-        displayName,
-        avatarEmoji: selectedAvatar,
-        avatarColor: selectedColor,
-        avatarUrl,
-        bio,
-        updatedAt: serverTimestamp()
-      },
+      profileData,
       { merge: true }
     );
 
+    profileExists = true;
     showToast("your profile was saved.");
   } catch (error) {
     console.error(error);
-    profileMessage.textContent = "your profile could not be saved.";
+    profileMessage.textContent =
+      `your profile could not be saved (${error?.code || "unknown error"}).`;
   } finally {
     button.disabled = false;
     button.textContent = "save profile";
