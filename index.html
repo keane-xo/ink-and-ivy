@@ -3,290 +3,157 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+  <meta name="description" content="ink and ivy — a private lending library for curious readers.">
   <title>ink and ivy</title>
-
-  <style>
-    :root {
-      --cream: #fbf4e8;
-      --soft-cream: #fffaf2;
-      --pink: #e8b8c2;
-      --light-pink: #f5dce2;
-      --brown: #6f4f3d;
-      --dark-brown: #4b3428;
-      --green: #53624d;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html {
-      scroll-behavior: smooth;
-    }
-
-    body {
-      margin: 0;
-      background-color: var(--cream);
-      color: var(--dark-brown);
-      font-family: Georgia, "Times New Roman", serif;
-      text-transform: lowercase;
-    }
-
-    header {
-      padding: 20px 8%;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background-color: var(--soft-cream);
-      border-bottom: 1px solid #dfcdbd;
-    }
-
-    .logo {
-      margin: 0;
-      color: var(--brown);
-      font-size: 28px;
-      letter-spacing: 0.04em;
-    }
-
-    nav a {
-      margin-left: 22px;
-      color: var(--brown);
-      text-decoration: none;
-      font-size: 15px;
-    }
-
-    nav a:hover {
-      color: var(--green);
-    }
-
-    .hero {
-      min-height: 72vh;
-      padding: 80px 8%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      background-color: var(--cream);
-    }
-
-    .hero-content {
-      max-width: 760px;
-    }
-
-    .small-heading {
-      margin-bottom: 12px;
-      color: var(--green);
-      font-size: 14px;
-      letter-spacing: 0.2em;
-    }
-
-    h1 {
-      margin: 0 0 22px;
-      color: var(--brown);
-      font-size: clamp(58px, 10vw, 104px);
-      font-weight: normal;
-      line-height: 0.95;
-    }
-
-    .tagline {
-      margin: 0 auto 34px;
-      max-width: 640px;
-      color: var(--dark-brown);
-      font-size: clamp(21px, 3vw, 30px);
-      line-height: 1.55;
-    }
-
-    .button {
-      display: inline-block;
-      padding: 15px 27px;
-      background-color: var(--pink);
-      color: var(--dark-brown);
-      border: 1px solid #d7a4ae;
-      border-radius: 999px;
-      text-decoration: none;
-      font-family: Arial, sans-serif;
-      font-weight: bold;
-    }
-
-    .button:hover {
-      background-color: var(--light-pink);
-    }
-
-    .section {
-      padding: 70px 8%;
-      text-align: center;
-    }
-
-    .pink-section {
-      background-color: var(--light-pink);
-    }
-
-    .section h2 {
-      margin-top: 0;
-      color: var(--brown);
-      font-size: 36px;
-      font-weight: normal;
-    }
-
-    .section-intro {
-      max-width: 620px;
-      margin: 0 auto 36px;
-      font-size: 18px;
-      line-height: 1.7;
-    }
-
-    .card-grid {
-      max-width: 1000px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 22px;
-    }
-
-    .card {
-      padding: 34px 24px;
-      background-color: var(--soft-cream);
-      border: 1px solid #dfcdbd;
-      border-radius: 18px;
-      box-shadow: 0 10px 25px rgba(75, 52, 40, 0.06);
-    }
-
-    .card-icon {
-      display: block;
-      margin-bottom: 14px;
-      font-size: 34px;
-    }
-
-    .card h3 {
-      margin-bottom: 10px;
-      color: var(--brown);
-      font-size: 21px;
-      font-weight: normal;
-    }
-
-    .card p {
-      margin: 0;
-      line-height: 1.6;
-    }
-
-    .quote-section {
-      padding: 70px 8%;
-      background-color: var(--soft-cream);
-      text-align: center;
-    }
-
-    .quote-section p {
-      max-width: 700px;
-      margin: 0 auto;
-      color: var(--brown);
-      font-size: 30px;
-      font-style: italic;
-      line-height: 1.5;
-    }
-
-    footer {
-      padding: 28px;
-      background-color: var(--brown);
-      color: var(--soft-cream);
-      text-align: center;
-      font-family: Arial, sans-serif;
-      font-size: 14px;
-    }
-
-    @media (max-width: 760px) {
-      header {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 14px;
-      }
-
-      nav a {
-        margin: 0 18px 0 0;
-      }
-
-      .hero {
-        min-height: 64vh;
-        padding-top: 60px;
-        padding-bottom: 60px;
-      }
-
-      .card-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .quote-section p {
-        font-size: 24px;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
 </head>
-
 <body>
-  <header>
-    <h2 class="logo">ink and ivy <span style="color: var(--green);">❧</span></h2>
+  <header class="site-header">
+    <a class="brand" href="#home" aria-label="ink and ivy home">
+      <span class="brand-mark" aria-hidden="true">🌿</span>
+      <span>ink and ivy</span>
+    </a>
 
-    <nav>
+    <button class="menu-button" type="button" aria-expanded="false" aria-controls="main-nav">
+      menu
+    </button>
+
+    <nav id="main-nav" class="main-nav" aria-label="main navigation">
       <a href="#shelves">the shelves</a>
+      <a href="#how-it-works">how it works</a>
       <a href="#request">request a book</a>
-      <a href="#login">reader login</a>
+      <button class="nav-button" type="button" data-coming-soon="reader login">reader login</button>
     </nav>
   </header>
 
   <main>
-    <section class="hero">
+    <section class="hero" id="home">
+      <div class="hero-decoration hero-decoration-left" aria-hidden="true">❧</div>
       <div class="hero-content">
-        <p class="small-heading">❧ a private lending library ❧</p>
-
+        <p class="eyebrow">a little library for curious readers</p>
         <h1>ink and ivy</h1>
+        <p class="tagline">explore new worlds. live different lives. one book at a time.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#shelves">browse the shelves</a>
+          <a class="button button-secondary" href="#request">request a book</a>
+        </div>
+      </div>
+      <div class="hero-decoration hero-decoration-right" aria-hidden="true">❧</div>
+    </section>
 
-        <p class="tagline">
-          explore new worlds. live different lives. one book at a time.
+    <section class="intro-note" aria-label="welcome note">
+      <div class="note-card">
+        <span class="note-mark" aria-hidden="true">🌿</span>
+        <p>
+          welcome to ink and ivy, a small lending library created to help friends discover
+          stories, share favorites, and always have another world waiting on the shelf.
         </p>
-
-        <a class="button" href="#shelves">
-          browse the shelves
-        </a>
       </div>
     </section>
 
-    <section class="section pink-section" id="shelves">
-      <h2>step into your next story</h2>
+    <section class="catalog-section" id="shelves">
+      <div class="section-heading">
+        <p class="eyebrow">find your next story</p>
+        <h2>browse the shelves</h2>
+        <p>search by title or author, then filter by genre or availability.</p>
+      </div>
 
-      <p class="section-intro">
-        discover new books, save the ones you love, and find the next world waiting for you.
-      </p>
+      <div class="catalog-controls">
+        <label class="search-wrap">
+          <span class="sr-only">search books</span>
+          <input id="search-input" type="search" placeholder="which world are you looking for today?">
+        </label>
 
-      <div class="card-grid">
-        <article class="card">
-          <span class="card-icon">📚</span>
-          <h3>browse the shelves</h3>
-          <p>search books by title, author, genre, or availability.</p>
+        <label>
+          <span class="sr-only">filter by genre</span>
+          <select id="genre-filter">
+            <option value="all">all genres</option>
+          </select>
+        </label>
+
+        <label>
+          <span class="sr-only">filter by availability</span>
+          <select id="status-filter">
+            <option value="all">all books</option>
+            <option value="available">on the shelf</option>
+            <option value="borrowed">out reading</option>
+          </select>
+        </label>
+      </div>
+
+      <p id="results-count" class="results-count" aria-live="polite"></p>
+      <div id="book-grid" class="book-grid"></div>
+      <p id="empty-state" class="empty-state" hidden>no books match that search yet.</p>
+    </section>
+
+    <section class="how-section" id="how-it-works">
+      <div class="section-heading">
+        <p class="eyebrow">simple and friendly</p>
+        <h2>how it works</h2>
+      </div>
+
+      <div class="step-grid">
+        <article class="step-card">
+          <span>01</span>
+          <h3>choose a story</h3>
+          <p>browse the shelves and find a book you would love to read.</p>
         </article>
-
-        <article class="card">
-          <span class="card-icon">🌸</span>
-          <h3>place a hold</h3>
-          <p>reserve a book and join the waiting list when it is already out reading.</p>
+        <article class="step-card">
+          <span>02</span>
+          <h3>place a request</h3>
+          <p>ask to borrow it, or join the waitlist if it is already out reading.</p>
         </article>
-
-        <article class="card" id="request">
-          <span class="card-icon">✒️</span>
-          <h3>request a new book</h3>
-          <p>suggest a story you would love to see added to ink and ivy.</p>
+        <article class="step-card">
+          <span>03</span>
+          <h3>return and repeat</h3>
+          <p>bring it back when you are finished and begin your next adventure.</p>
         </article>
       </div>
     </section>
 
-    <section class="quote-section">
-      <p>
-        every book is another life waiting to be lived.
-      </p>
+    <section class="request-section" id="request">
+      <div class="request-copy">
+        <p class="eyebrow">something missing?</p>
+        <h2>request a new book</h2>
+        <p>
+          suggest a title you would love to see added to ink and ivy. this form is ready
+          for the design now; we will connect it to the database next.
+        </p>
+      </div>
+
+      <form id="request-form" class="request-form">
+        <label>
+          your name
+          <input type="text" name="name" required>
+        </label>
+
+        <label>
+          book title
+          <input type="text" name="title" required>
+        </label>
+
+        <label>
+          author
+          <input type="text" name="author">
+        </label>
+
+        <label>
+          why should we add it?
+          <textarea name="reason" rows="4"></textarea>
+        </label>
+
+        <button class="button button-primary" type="submit">send request</button>
+        <p id="form-message" class="form-message" aria-live="polite"></p>
+      </form>
     </section>
   </main>
 
-  <footer id="login">
-    ink and ivy · stories are meant to be shared
+  <footer>
+    <span aria-hidden="true">🌿</span>
+    <p>ink and ivy · stories are meant to be shared</p>
   </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </body>
 </html>
