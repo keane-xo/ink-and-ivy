@@ -17,7 +17,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC1d0xo61Z0U9mReJnw7s5Z3x0HFrrfB2k",
+  apiKey: "AIzaSyC1dOxo61Z0U9mReJnw7s5Z3x0HFrrfB2k",
   authDomain: "ink-and-ivy-d0ff3.firebaseapp.com",
   projectId: "ink-and-ivy-d0ff3",
   storageBucket: "ink-and-ivy-d0ff3.firebasestorage.app",
