@@ -306,36 +306,22 @@ textarea:focus {
 }
 
 .book-cover {
-  height: 310px;
+  min-height: 230px;
   display: grid;
   place-items: center;
-  overflow: hidden;
-  padding: 14px;
+  padding: 20px;
   background: linear-gradient(145deg, #f3cbd5, #f8eadf);
-}
-
-.book-cover img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  border-radius: 8px;
-  filter: drop-shadow(0 10px 12px rgba(74, 51, 40, 0.18));
-}
-
-.cover-fallback {
   color: var(--brown);
   text-align: center;
 }
 
-.cover-fallback span {
+.book-cover span {
   display: block;
   margin-bottom: 10px;
   font-size: 2rem;
 }
 
-.cover-fallback strong {
-  display: block;
+.book-cover strong {
   max-width: 160px;
   font-size: 1.2rem;
   line-height: 1.3;
@@ -581,9 +567,5 @@ footer p {
 
   .note-card {
     padding: 26px 22px;
-  }
-
-  .book-cover {
-    height: 360px;
   }
 }

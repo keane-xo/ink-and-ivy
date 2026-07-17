@@ -3,57 +3,49 @@ const books = [
     title: "the hunger games",
     author: "suzanne collins",
     genre: "dystopian",
-    status: "available",
-    cover: "https://covers.openlibrary.org/b/isbn/9780439023481-L.jpg"
+    status: "available"
   },
   {
     title: "the inheritance games",
     author: "jennifer lynn barnes",
     genre: "mystery",
-    status: "borrowed",
-    cover: "https://covers.openlibrary.org/b/isbn/9781368052405-L.jpg"
+    status: "borrowed"
   },
   {
     title: "little women",
     author: "louisa may alcott",
     genre: "classic",
-    status: "available",
-    cover: "https://covers.openlibrary.org/b/isbn/9780147514011-L.jpg"
+    status: "available"
   },
   {
     title: "six of crows",
     author: "leigh bardugo",
     genre: "fantasy",
-    status: "available",
-    cover: "https://covers.openlibrary.org/b/isbn/9781250076960-L.jpg"
+    status: "available"
   },
   {
     title: "the summer i turned pretty",
     author: "jenny han",
     genre: "romance",
-    status: "borrowed",
-    cover: "https://covers.openlibrary.org/b/isbn/9781416968290-L.jpg"
+    status: "borrowed"
   },
   {
     title: "a good girl's guide to murder",
     author: "holly jackson",
     genre: "mystery",
-    status: "available",
-    cover: "https://covers.openlibrary.org/b/isbn/9781984896360-L.jpg"
+    status: "available"
   },
   {
     title: "the book thief",
     author: "markus zusak",
     genre: "historical fiction",
-    status: "available",
-    cover: "https://covers.openlibrary.org/b/isbn/9780375842207-L.jpg"
+    status: "available"
   },
   {
     title: "the cruel prince",
     author: "holly black",
     genre: "fantasy",
-    status: "borrowed",
-    cover: "https://covers.openlibrary.org/b/isbn/9780316310277-L.jpg"
+    status: "borrowed"
   }
 ];
 
@@ -113,13 +105,7 @@ function renderBooks() {
 
     card.innerHTML = `
       <div class="book-cover">
-        <img
-          src="${book.cover}"
-          alt="cover of ${book.title} by ${book.author}"
-          loading="lazy"
-          onerror="this.hidden=true; this.nextElementSibling.hidden=false;"
-        >
-        <div class="cover-fallback" hidden>
+        <div>
           <span aria-hidden="true">📖</span>
           <strong>${book.title}</strong>
         </div>
@@ -164,7 +150,7 @@ menuButton.addEventListener("click", () => {
 document.querySelector("#request-form").addEventListener("submit", (event) => {
   event.preventDefault();
   document.querySelector("#form-message").textContent =
-    "your request form works visually. we will save requests to firebase next.";
+    "your request form works visually. we will save requests next.";
   event.currentTarget.reset();
 });
 
