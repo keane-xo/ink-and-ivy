@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>ink and ivy</title>
+
+  <style>
+    body {
+      margin: 0;
+      background-color: #f8efe9;
+      color: #2f3e34;
+      font-family: Georgia, "Times New Roman", serif;
+      text-transform: lowercase;
+    }
+
+    header {
+      padding: 22px 8%;
+      background-color: #f3c9d2;
+      border-bottom: 1px solid #d8aeb8;
+    }
+
+    .logo {
+      margin: 0;
+      color: #274834;
+      font-size: 28px;
+    }
+
+    .hero {
+      min-height: 70vh;
+      padding: 60px 8%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .hero-content {
+      max-width: 700px;
+    }
+
+    h1 {
+      margin-bottom: 18px;
+      color: #274834;
+      font-size: 72px;
+    }
+
+    .tagline {
+      margin-bottom: 30px;
+      color: #6d4f58;
+      font-size: 24px;
+      line-height: 1.6;
+    }
+
+    .button {
+      display: inline-block;
+      padding: 14px 24px;
+      background-color: #274834;
+      color: white;
+      border-radius: 30px;
+      text-decoration: none;
+      font-family: Arial, sans-serif;
+    }
+
+    .books {
+      padding: 55px 8%;
+      background-color: #dce5dc;
+      text-align: center;
+    }
+
+    .books h2 {
+      color: #274834;
+      font-size: 34px;
+    }
+
+    footer {
+      padding: 24px;
+      background-color: #274834;
+      color: white;
+      text-align: center;
+      font-family: Arial, sans-serif;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 48px;
+      }
+
+      .tagline {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h2 class="logo">ink and ivy</h2>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-content">
+        <h1>ink and ivy</h1>
+
+        <p class="tagline">
+          explore new worlds. live different lives. one book at a time.
+        </p>
+
+        <a class="button" href="#books">
+          browse the shelves
+        </a>
+      </div>
+    </section>
+
+    <section class="books" id="books">
+      <h2>the shelves are growing</h2>
+
+      <p>
+        browse books, place holds, and request new stories soon.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    ink and ivy · stories are meant to be shared
+  </footer>
+</body>
+</html>
