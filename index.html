@@ -6,8 +6,8 @@
   <meta name="description" content="ink and ivy — a private lending library for curious readers.">
   <title>ink and ivy</title>
   <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml">
-<link rel="stylesheet" href="style.css?v=14">
-  <script type="module" src="script.js?v=12"></script>
+<link rel="stylesheet" href="style.css?v=15">
+  <script type="module" src="script.js?v=15"></script>
 </head>
 <body>
   <header class="site-header">
@@ -23,7 +23,7 @@
     <nav id="main-nav" class="main-nav" aria-label="main navigation">
       <a href="#shelves">the shelves</a>
       <a href="#how-it-works">how it works</a>
-      <a href="#request">request a book</a>
+      <a href="#request">suggest a new title</a>
       <a href="community.html">community</a>
       <a id="reader-account-link" class="reader-account-link" href="reader.html"><span id="reader-nav-avatar" class="reader-nav-avatar" hidden></span><span id="reader-nav-label">reader login</span></a>
     </nav>
@@ -38,7 +38,7 @@
         <p class="tagline">explore new worlds. live different lives. one book at a time.</p>
         <div class="hero-actions">
           <a class="button button-primary" href="#shelves">browse the shelves</a>
-          <a class="button button-secondary" href="#request">request a book</a>
+          <a class="button button-secondary" href="#request">suggest a new title</a>
         </div>
       </div>
       <div class="hero-decoration hero-decoration-right" aria-hidden="true">❧</div>
@@ -74,8 +74,8 @@
 
         <article>
           <strong>2</strong>
-          <h3>requests every 9 weeks</h3>
-          <p>you may submit up to two new checkout requests during any rolling nine-week period.</p>
+          <h3>new titles every 9 weeks</h3>
+          <p>you may suggest up to two books to be added to the library during any rolling nine-week period.</p>
         </article>
 
         <article>
@@ -86,7 +86,8 @@
       </div>
 
       <p class="borrowing-policy-note">
-        joining a waitlist or suggesting a new title does not use one of your two checkout requests.
+        the two-per-nine-weeks limit is only for suggesting new titles to add to the library.
+        it does not limit checkout requests for books already on the shelves.
       </p>
     </section>
 
@@ -140,7 +141,7 @@
         <article class="step-card">
           <span>02</span>
           <h3>place a request</h3>
-          <p>sign in to request a book. each reader may have up to three checkout requests or active loans at once, with no more than two new checkout requests in any nine-week period.</p>
+          <p>sign in to request a book that is already on the shelves. each reader may have up to three pending checkout requests or active loans at once.</p>
         </article>
         <article class="step-card">
           <span>03</span>
@@ -153,18 +154,24 @@
     <section class="request-section" id="request">
       <div class="request-copy">
         <p class="eyebrow">something missing?</p>
-        <h2>request a new book</h2>
+        <h2>suggest a new book for the library</h2>
         <p>
-          suggest a title you would love to see added to ink and ivy. your suggestion
-          will be sent directly to the private library desk.
+          use this form to recommend a title that is not currently in ink and ivy
+          so it can be considered for addition to the library.
         </p>
 
-        <aside class="request-limit-reminder" aria-label="checkout request limit reminder">
-          <strong>checkout request limit</strong>
+        <aside class="request-limit-reminder" aria-label="new-title suggestion limit">
+          <strong>this is not a checkout request</strong>
           <p>
-            readers may submit up to two checkout requests during any rolling
-            nine-week period. suggestions sent through this form do not count
-            toward that limit.
+            this form is only for suggesting a new book to add to the library.
+            to check out a book that is already available, choose it from the shelves above.
+          </p>
+          <p>
+            each reader may submit up to two new-title suggestions during any
+            rolling nine-week period.
+          </p>
+          <p id="suggestion-limit-status" class="suggestion-limit-status">
+            sign in to see how many new-title suggestions you have available.
           </p>
         </aside>
       </div>
@@ -190,7 +197,7 @@
           <textarea name="reason" rows="4"></textarea>
         </label>
 
-        <button class="button button-primary" type="submit">send request</button>
+        <button class="button button-primary" type="submit">send suggestion</button>
         <p id="form-message" class="form-message" aria-live="polite"></p>
       </form>
     </section>

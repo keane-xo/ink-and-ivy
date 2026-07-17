@@ -44,9 +44,10 @@ let reviewsUnsubscribe = null;
 let currentUserReview = null;
 
 const MAX_CHECKOUTS = 3;
-const MAX_REQUESTS_PER_WINDOW = 2;
-const REQUEST_WINDOW_DAYS = 63;
-const REQUEST_WINDOW_MS = REQUEST_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+const MAX_TITLE_SUGGESTIONS_PER_WINDOW = 2;
+const TITLE_SUGGESTION_WINDOW_DAYS = 63;
+const TITLE_SUGGESTION_WINDOW_MS =
+  TITLE_SUGGESTION_WINDOW_DAYS * 24 * 60 * 60 * 1000;
 const ACTIVE_CHECKOUT_STATUSES = new Set(["pending", "approved"]);
 
 const bookGrid = document.querySelector("#book-grid");
@@ -58,6 +59,8 @@ const emptyState = document.querySelector("#empty-state");
 const toast = document.querySelector("#toast");
 const requestForm = document.querySelector("#request-form");
 const formMessage = document.querySelector("#form-message");
+const suggestionLimitStatus = document.querySelector("#suggestion-limit-status");
+const suggestionNameInput = requestForm.elements.name;
 
 const requestModal = document.querySelector("#request-modal");
 const requestModalTitle = document.querySelector("#request-modal-title");
@@ -129,30 +132,83 @@ function formatPolicyDate(date) {
   }).toLowerCase();
 }
 
-function checkoutRequestDate(item) {
+function suggestionDate(item) {
   if (!item.createdAt?.toDate) return null;
   const date = item.createdAt.toDate();
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-function recentCheckoutRequests(items) {
-  const cutoff = Date.now() - REQUEST_WINDOW_MS;
+function recentTitleSuggestions(items) {
+  const cutoff = Date.now() - TITLE_SUGGESTION_WINDOW_MS;
 
   return items
     .filter((item) => {
-      if (item.requestType !== "checkout") return false;
-      const date = checkoutRequestDate(item);
+      const date = suggestionDate(item);
       return date && date.getTime() >= cutoff;
     })
-    .sort((a, b) => checkoutRequestDate(a) - checkoutRequestDate(b));
+    .sort((a, b) => suggestionDate(a) - suggestionDate(b));
 }
 
-function nextCheckoutRequestDate(items) {
-  const recent = recentCheckoutRequests(items);
-  if (recent.length < MAX_REQUESTS_PER_WINDOW) return null;
+function nextTitleSuggestionDate(items) {
+  const recent = recentTitleSuggestions(items);
+  if (recent.length < MAX_TITLE_SUGGESTIONS_PER_WINDOW) return null;
 
-  const oldestCountedRequest = checkoutRequestDate(recent[0]);
-  return new Date(oldestCountedRequest.getTime() + REQUEST_WINDOW_MS);
+  const oldestCountedSuggestion = suggestionDate(recent[0]);
+  return new Date(
+    oldestCountedSuggestion.getTime() + TITLE_SUGGESTION_WINDOW_MS
+  );
+}
+
+async function getReaderBookSuggestions() {
+  if (!currentUser) return [];
+
+  const snapshot = await getDocs(
+    query(
+      collection(db, "bookSuggestions"),
+      where("userId", "==", currentUser.uid)
+    )
+  );
+
+  return snapshot.docs.map((entry) => ({
+    id: entry.id,
+    ...entry.data()
+  }));
+}
+
+async function updateSuggestionLimitStatus() {
+  if (!currentUser || !currentProfile) {
+    suggestionLimitStatus.textContent =
+      "sign in to suggest a new title and see your remaining allowance.";
+    suggestionNameInput.value = "";
+    return;
+  }
+
+  suggestionNameInput.value = currentProfile.displayName || "";
+
+  try {
+    const suggestions = await getReaderBookSuggestions();
+    const recent = recentTitleSuggestions(suggestions);
+    const remaining = Math.max(
+      0,
+      MAX_TITLE_SUGGESTIONS_PER_WINDOW - recent.length
+    );
+
+    if (remaining > 0) {
+      suggestionLimitStatus.textContent =
+        remaining === 1
+          ? "you may suggest one more new title right now."
+          : "you may suggest two new titles right now.";
+      return;
+    }
+
+    const availableDate = nextTitleSuggestionDate(suggestions);
+    suggestionLimitStatus.textContent =
+      `you have used both new-title suggestions. your next suggestion becomes available on ${formatPolicyDate(availableDate)}.`;
+  } catch (error) {
+    console.error(error);
+    suggestionLimitStatus.textContent =
+      "your new-title suggestion allowance could not be loaded.";
+  }
 }
 
 function avatarMarkup(profile) {
@@ -214,6 +270,7 @@ async function loadCurrentProfile(user) {
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
   await loadCurrentProfile(user);
+  await updateSuggestionLimitStatus();
   if (selectedBook) subscribeToReviews(selectedBook);
 });
 
@@ -456,7 +513,7 @@ function openBorrowingModal(book) {
   } else {
     requestModalCopy.textContent =
       requestType === "checkout"
-        ? `request ${book.title}. approved checkouts are due in 14 days, and each reader may submit two checkout requests in any nine-week period.`
+        ? `request ${book.title}. approved checkouts are due in 14 days, and each reader may have up to three pending checkout requests or active loans at once.`
         : `join the waitlist for ${book.title}.`;
     confirmRequestButton.textContent =
       requestType === "checkout" ? "send request" : "join waitlist";
@@ -557,14 +614,6 @@ borrowingRequestForm.addEventListener("submit", async (event) => {
         return;
       }
 
-      const recentRequests = recentCheckoutRequests(existingRequests);
-
-      if (recentRequests.length >= MAX_REQUESTS_PER_WINDOW) {
-        const nextDate = nextCheckoutRequestDate(existingRequests);
-        borrowingFormMessage.textContent =
-          `you have already used your two checkout requests for this nine-week period. you can request another book on ${formatPolicyDate(nextDate)}.`;
-        return;
-      }
     }
 
     confirmRequestButton.textContent = "sending...";
@@ -751,9 +800,17 @@ menuButton.addEventListener("click", () => {
 requestForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
+  if (!currentUser || !currentProfile) {
+    window.location.href = "reader.html?return=index.html";
+    return;
+  }
+
   const submitButton = requestForm.querySelector('button[type="submit"]');
   const formData = new FormData(requestForm);
-  const name = String(formData.get("name") || "").trim();
+  const name =
+    String(formData.get("name") || "").trim() ||
+    currentProfile.displayName ||
+    "reader";
   const title = String(formData.get("title") || "").trim();
   const author = String(formData.get("author") || "").trim();
   const reason = String(formData.get("reason") || "").trim();
@@ -764,11 +821,24 @@ requestForm.addEventListener("submit", async (event) => {
   }
 
   submitButton.disabled = true;
-  submitButton.textContent = "sending...";
+  submitButton.textContent = "checking...";
   formMessage.textContent = "";
 
   try {
+    const suggestions = await getReaderBookSuggestions();
+    const recent = recentTitleSuggestions(suggestions);
+
+    if (recent.length >= MAX_TITLE_SUGGESTIONS_PER_WINDOW) {
+      const availableDate = nextTitleSuggestionDate(suggestions);
+      formMessage.textContent =
+        `you have already suggested two new titles during this nine-week period. you may suggest another title on ${formatPolicyDate(availableDate)}.`;
+      return;
+    }
+
+    submitButton.textContent = "sending...";
+
     await addDoc(collection(db, "bookSuggestions"), {
+      userId: currentUser.uid,
       name,
       title,
       author,
@@ -777,14 +847,18 @@ requestForm.addEventListener("submit", async (event) => {
       createdAt: serverTimestamp()
     });
 
-    formMessage.textContent = "your book suggestion was sent successfully.";
+    formMessage.textContent =
+      "your new-title suggestion was sent to the library desk.";
     requestForm.reset();
+    suggestionNameInput.value = currentProfile.displayName || name;
+    await updateSuggestionLimitStatus();
   } catch (error) {
     console.error(error);
-    formMessage.textContent = "your suggestion could not be sent. please try again.";
+    formMessage.textContent =
+      "your new-title suggestion could not be sent. please try again.";
   } finally {
     submitButton.disabled = false;
-    submitButton.textContent = "send request";
+    submitButton.textContent = "send suggestion";
   }
 });
 

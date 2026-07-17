@@ -1,27 +1,48 @@
-INK AND IVY — COMPACT FEED + READER-PAGE INTERACTIONS
+INK AND IVY — NEW-TITLE SUGGESTION LIMIT CLARIFICATION
 
-THIS UPDATE CHANGES
-- Published posts now appear immediately when the community feed opens.
-- The large post form no longer fills the top of the feed.
-- Readers can click "create post" or the small sharing bar to open the full form in a pop-up.
-- Editing an existing post opens the same pop-up.
-- Readers can like and comment directly on posts from anyone's reader page.
-- Likes and comments update live on both the community feed and reader pages.
-- Spoiler posts still hide the title, body, image, and comments until "reveal post" is clicked.
-- Readers can delete their own comments from reader pages.
+CORRECTION
+The two-per-nine-weeks limit now applies to NEW BOOKS A READER WANTS ADDED
+TO THE LIBRARY.
 
-UPLOAD AND REPLACE THESE SIX FILES
-- community.html
-- community.css
-- community.js
-- profile.html
-- profile.css
-- profile.js
+It does NOT limit checkout requests for books already on the shelves.
 
-No Firebase rules need to change.
+THE RULES ARE NOW
+- Up to 3 pending checkout requests or active loans at one time
+- Approved checkouts last 14 days
+- Up to 2 new-title suggestions in any rolling 9-week period
+- Waitlist joins do not use the new-title suggestion allowance
 
-After committing, open:
-https://keane-xo.github.io/ink-and-ivy/community.html?v=2
+THE WEBSITE NOW MAKES THIS CLEAR
+- "request a new book" is renamed "suggest a new title"
+- The suggestion form says it is not a checkout form
+- The reader-account 0/2 counter says "new titles suggested in 9 weeks"
+- The reader account explains that the 0/2 rule does not limit checkouts
+- The website now enforces the 2-in-9-weeks limit on title suggestions
 
-A reader page will use:
-https://keane-xo.github.io/ink-and-ivy/profile.html?uid=THE_READER_UID&v=2
+STEP 1 — FIREBASE RULES
+Open FIRESTORE_RULES.txt.
+Copy everything into Firebase > Firestore Database > Rules.
+Replace the current rules and click Publish.
+
+STEP 2 — GITHUB
+Upload and replace:
+- index.html
+- style.css
+- script.js
+- reader.html
+- reader.css
+- reader.js
+
+Do not upload FIRESTORE_RULES.txt to GitHub.
+
+STEP 3 — REFRESH
+Homepage:
+https://keane-xo.github.io/ink-and-ivy/?v=15
+
+Reader account:
+https://keane-xo.github.io/ink-and-ivy/reader.html?v=15
+
+NOTE
+Older title suggestions made before this update do not contain a reader account ID,
+so they cannot be counted automatically toward an individual reader's 9-week limit.
+New suggestions will be counted correctly.

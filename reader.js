@@ -70,11 +70,15 @@ let favoriteBookIds = new Set();
 let tbrBookIds = new Set();
 let currentlyReadingBookIds = new Set();
 let loansUnsubscribe = null;
+let suggestionsUnsubscribe = null;
+let latestLoans = [];
+let latestSuggestions = [];
 
 const MAX_CHECKOUTS = 3;
-const MAX_REQUESTS_PER_WINDOW = 2;
-const REQUEST_WINDOW_DAYS = 63;
-const REQUEST_WINDOW_MS = REQUEST_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+const MAX_TITLE_SUGGESTIONS_PER_WINDOW = 2;
+const TITLE_SUGGESTION_WINDOW_DAYS = 63;
+const TITLE_SUGGESTION_WINDOW_MS =
+  TITLE_SUGGESTION_WINDOW_DAYS * 24 * 60 * 60 * 1000;
 const ACTIVE_CHECKOUT_STATUSES = new Set(["pending", "approved"]);
 
 const returnPage = new URLSearchParams(window.location.search).get("return");
@@ -99,22 +103,21 @@ function formatRequestDate(date) {
   }).toLowerCase();
 }
 
-function requestCreatedDate(item) {
+function suggestionCreatedDate(item) {
   if (!item.createdAt?.toDate) return null;
   const date = item.createdAt.toDate();
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-function recentCheckoutRequests(items) {
-  const cutoff = Date.now() - REQUEST_WINDOW_MS;
+function recentTitleSuggestions(items) {
+  const cutoff = Date.now() - TITLE_SUGGESTION_WINDOW_MS;
 
   return items
     .filter((item) => {
-      if (item.requestType !== "checkout") return false;
-      const date = requestCreatedDate(item);
+      const date = suggestionCreatedDate(item);
       return date && date.getTime() >= cutoff;
     })
-    .sort((a, b) => requestCreatedDate(a) - requestCreatedDate(b));
+    .sort((a, b) => suggestionCreatedDate(a) - suggestionCreatedDate(b));
 }
 
 function loanIsOverdue(item) {
@@ -126,7 +129,7 @@ function loanIsOverdue(item) {
   );
 }
 
-function renderMyLoans(items) {
+function renderMyLoans(items, suggestions = []) {
   const activeItems = items
     .filter((item) => ACTIVE_CHECKOUT_STATUSES.has(item.status))
     .sort((a, b) => {
@@ -141,27 +144,30 @@ function renderMyLoans(items) {
 
   loanSlotCount.textContent = `${usedSlots} / ${MAX_CHECKOUTS}`;
 
-  const recentRequests = recentCheckoutRequests(items);
-  const displayedRequestCount = Math.min(
-    recentRequests.length,
-    MAX_REQUESTS_PER_WINDOW
+  const recentSuggestions = recentTitleSuggestions(suggestions);
+  const displayedSuggestionCount = Math.min(
+    recentSuggestions.length,
+    MAX_TITLE_SUGGESTIONS_PER_WINDOW
   );
   requestWindowCount.textContent =
-    `${displayedRequestCount} / ${MAX_REQUESTS_PER_WINDOW}`;
+    `${displayedSuggestionCount} / ${MAX_TITLE_SUGGESTIONS_PER_WINDOW}`;
 
-  if (recentRequests.length >= MAX_REQUESTS_PER_WINDOW) {
-    const oldestCountedRequest = requestCreatedDate(recentRequests[0]);
+  if (recentSuggestions.length >= MAX_TITLE_SUGGESTIONS_PER_WINDOW) {
+    const oldestCountedSuggestion = suggestionCreatedDate(
+      recentSuggestions[0]
+    );
     const availableDate = new Date(
-      oldestCountedRequest.getTime() + REQUEST_WINDOW_MS
+      oldestCountedSuggestion.getTime() + TITLE_SUGGESTION_WINDOW_MS
     );
     nextRequestDate.textContent =
-      `your next checkout request becomes available on ${formatRequestDate(availableDate)}.`;
+      `your next new-title suggestion becomes available on ${formatRequestDate(availableDate)}. this applies only to books you want added to the library, not checkout requests.`;
   } else {
-    const remaining = MAX_REQUESTS_PER_WINDOW - recentRequests.length;
+    const remaining =
+      MAX_TITLE_SUGGESTIONS_PER_WINDOW - recentSuggestions.length;
     nextRequestDate.textContent =
       remaining === 1
-        ? "you may submit one more checkout request right now."
-        : "you may submit two checkout requests right now.";
+        ? "you may suggest one more new title for the library right now. this does not limit checkout requests."
+        : "you may suggest two new titles for the library right now. this does not limit checkout requests.";
   }
 
   myLoansList.innerHTML = "";
@@ -202,25 +208,49 @@ function renderMyLoans(items) {
   });
 }
 
-function subscribeToMyLoans(user) {
+function renderLibraryActivity() {
+  renderMyLoans(latestLoans, latestSuggestions);
+}
+
+function subscribeToLibraryActivity(user) {
   loansUnsubscribe?.();
+  suggestionsUnsubscribe?.();
+
   loansUnsubscribe = onSnapshot(
     query(
       collection(db, "checkoutRequests"),
       where("userId", "==", user.uid)
     ),
     (snapshot) => {
-      renderMyLoans(
-        snapshot.docs.map((entry) => ({
-          id: entry.id,
-          ...entry.data()
-        }))
-      );
+      latestLoans = snapshot.docs.map((entry) => ({
+        id: entry.id,
+        ...entry.data()
+      }));
+      renderLibraryActivity();
     },
     (error) => {
       console.error(error);
       myLoansEmpty.hidden = false;
       myLoansEmpty.textContent = "your checkout activity could not be loaded.";
+    }
+  );
+
+  suggestionsUnsubscribe = onSnapshot(
+    query(
+      collection(db, "bookSuggestions"),
+      where("userId", "==", user.uid)
+    ),
+    (snapshot) => {
+      latestSuggestions = snapshot.docs.map((entry) => ({
+        id: entry.id,
+        ...entry.data()
+      }));
+      renderLibraryActivity();
+    },
+    (error) => {
+      console.error(error);
+      nextRequestDate.textContent =
+        "your new-title suggestion allowance could not be loaded.";
     }
   );
 }
@@ -551,11 +581,15 @@ onAuthStateChanged(auth, async (user) => {
   publicProfileLink.hidden = !user;
 
   loansUnsubscribe?.();
+  suggestionsUnsubscribe?.();
   loansUnsubscribe = null;
+  suggestionsUnsubscribe = null;
+  latestLoans = [];
+  latestSuggestions = [];
 
   if (user) {
     try {
-      subscribeToMyLoans(user);
+      subscribeToLibraryActivity(user);
       await Promise.all([loadBooks(), loadProfile(user)]);
       if (returnPage && allowedReturnPages.has(returnPage)) {
         window.location.href = returnPage;
@@ -565,6 +599,6 @@ onAuthStateChanged(auth, async (user) => {
       profileMessage.textContent = "your profile could not be loaded.";
     }
   } else {
-    renderMyLoans([]);
+    renderMyLoans([], []);
   }
 });
