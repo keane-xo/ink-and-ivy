@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="ink and ivy — a private lending library for curious readers.">
   <title>ink and ivy</title>
-  <link rel="stylesheet" href="style.css">
-  <script type="module" src="script.js"></script>
+  <link rel="stylesheet" href="style.css?v=6">
+  <script type="module" src="script.js?v=6"></script>
 </head>
 <body>
   <header class="site-header">
@@ -117,8 +117,8 @@
         <p class="eyebrow">something missing?</p>
         <h2>request a new book</h2>
         <p>
-          suggest a title you would love to see added to ink and ivy. this form is ready
-          for the design now; we will connect it to the database next.
+          suggest a title you would love to see added to ink and ivy. your suggestion
+          will be sent directly to the private library desk.
         </p>
       </div>
 
@@ -154,6 +154,61 @@
     <p>ink and ivy · stories are meant to be shared</p>
   </footer>
 
+
+
+  <div id="book-details-modal" class="book-details-modal" hidden>
+    <div class="book-details-backdrop" data-close-book-details></div>
+
+    <section
+      class="book-details-card"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="book-details-title"
+    >
+      <button
+        class="book-details-close"
+        type="button"
+        aria-label="close book details"
+        data-close-book-details
+      >
+        ×
+      </button>
+
+      <div class="book-details-layout">
+        <div class="detail-cover-wrap">
+          <img id="book-details-cover" class="detail-cover" alt="">
+          <div id="book-details-cover-fallback" class="detail-cover-fallback" hidden>
+            <span aria-hidden="true">📖</span>
+            <strong id="book-details-cover-title"></strong>
+          </div>
+        </div>
+
+        <div class="book-details-copy">
+          <p id="book-details-genre" class="eyebrow"></p>
+          <h2 id="book-details-title"></h2>
+          <p id="book-details-author" class="book-details-author"></p>
+
+          <div class="book-details-meta">
+            <span id="book-details-status" class="pill"></span>
+          </div>
+
+          <section class="detail-section">
+            <h3>about this book</h3>
+            <p id="book-details-summary"></p>
+          </section>
+
+          <section class="detail-section nya-note-section">
+            <h3>nya's note</h3>
+            <p id="book-details-note"></p>
+          </section>
+
+          <button id="book-details-request-button" class="button button-primary" type="button">
+            request checkout
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
 
   <div id="request-modal" class="request-modal" hidden>
     <div class="request-modal-backdrop" data-close-modal></div>

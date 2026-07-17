@@ -379,3 +379,166 @@ select:focus {
     max-width: none;
   }
 }
+
+
+.summary-grid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.panel-intro {
+  margin: 8px 0 0;
+  color: #7c6658;
+  line-height: 1.55;
+}
+
+.books-panel-heading {
+  align-items: flex-start;
+}
+
+.book-manager-layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.85fr) minmax(360px, 1.15fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.book-form {
+  position: sticky;
+  top: 24px;
+  padding: 25px;
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+}
+
+.book-form textarea {
+  width: 100%;
+  margin-top: 7px;
+  padding: 13px 15px;
+  resize: vertical;
+  background: white;
+  color: var(--dark-brown);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  outline: none;
+  font: inherit;
+  text-transform: lowercase;
+}
+
+.book-form textarea:focus {
+  border-color: var(--rose);
+  box-shadow: 0 0 0 3px rgba(200, 132, 152, 0.15);
+}
+
+.form-heading,
+.book-list-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.form-heading h3,
+.book-list-heading h3,
+.admin-book-card h3 {
+  margin: 0;
+  color: var(--brown);
+  font-weight: normal;
+}
+
+.form-heading h3 {
+  font-size: 1.8rem;
+}
+
+.book-list-heading h3 {
+  font-size: 1.45rem;
+}
+
+.book-list-heading span {
+  color: #7c6658;
+  font-family: Arial, sans-serif;
+  font-size: 0.82rem;
+}
+
+.text-button {
+  padding: 0;
+  background: transparent;
+  color: var(--rose);
+  border: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.two-column-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 13px;
+}
+
+.field-help {
+  display: block;
+  margin-top: 7px;
+  color: #7c6658;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.admin-book-list {
+  display: grid;
+  gap: 13px;
+}
+
+.admin-book-card {
+  padding: 19px;
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.admin-book-card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  align-items: flex-start;
+}
+
+.admin-book-card h3 {
+  margin-bottom: 6px;
+  font-size: 1.28rem;
+}
+
+.admin-book-card p {
+  margin: 4px 0;
+}
+
+.admin-book-card .request-actions {
+  margin-top: 14px;
+  justify-content: flex-start;
+  max-width: none;
+}
+
+@media (max-width: 960px) {
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .book-manager-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .book-form {
+    position: static;
+  }
+}
+
+@media (max-width: 560px) {
+  .summary-grid,
+  .two-column-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-book-card-top {
+    flex-direction: column;
+  }
+}

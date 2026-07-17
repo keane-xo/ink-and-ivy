@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
   <title>ink and ivy admin</title>
-  <link rel="stylesheet" href="admin.css?v=2">
-  <script type="module" src="admin.js?v=5"></script>
+  <link rel="stylesheet" href="admin.css?v=6">
+  <script type="module" src="admin.js?v=6"></script>
 </head>
 <body>
   <header class="admin-header">
@@ -46,7 +46,7 @@
       <div class="dashboard-heading">
         <div>
           <p class="eyebrow">private library desk</p>
-          <h1>request dashboard</h1>
+          <h1>library dashboard</h1>
         </div>
         <button id="refresh-button" class="small-button" type="button">refresh</button>
       </div>
@@ -64,11 +64,16 @@
           <span id="pending-suggestions">0</span>
           <p>book suggestions</p>
         </article>
+        <article>
+          <span id="book-count">0</span>
+          <p>books on the shelves</p>
+        </article>
       </div>
 
       <div class="tabs" role="tablist" aria-label="request categories">
         <button class="tab active" type="button" data-tab="borrowing">checkout & waitlist</button>
         <button class="tab" type="button" data-tab="suggestions">book suggestions</button>
+        <button class="tab" type="button" data-tab="books">manage books</button>
       </div>
 
       <section id="borrowing-panel" class="panel">
@@ -97,6 +102,84 @@
         </div>
         <div id="suggestion-list" class="request-list"></div>
         <p id="suggestion-empty" class="empty" hidden>no suggestions here yet.</p>
+      </section>
+
+
+      <section id="books-panel" class="panel" hidden>
+        <div class="panel-heading books-panel-heading">
+          <div>
+            <h2>manage the shelves</h2>
+            <p class="panel-intro">add, edit, or remove books. covers appear only inside each book's detail popup.</p>
+          </div>
+          <button id="import-books-button" class="small-button" type="button">import starter catalog</button>
+        </div>
+
+        <div class="book-manager-layout">
+          <form id="book-form" class="book-form">
+            <input id="editing-book-id" type="hidden">
+
+            <div class="form-heading">
+              <div>
+                <p class="eyebrow">catalog editor</p>
+                <h3 id="book-form-title">add a book</h3>
+              </div>
+              <button id="cancel-book-edit" class="text-button" type="button" hidden>cancel edit</button>
+            </div>
+
+            <label>
+              title
+              <input id="book-title" type="text" maxlength="150" required>
+            </label>
+
+            <label>
+              author
+              <input id="book-author" type="text" maxlength="120" required>
+            </label>
+
+            <div class="two-column-fields">
+              <label>
+                genre
+                <input id="book-genre" type="text" maxlength="60" required>
+              </label>
+
+              <label>
+                availability
+                <select id="book-status" required>
+                  <option value="available">on the shelf</option>
+                  <option value="borrowed">out reading</option>
+                </select>
+              </label>
+            </div>
+
+            <label>
+              cover image link
+              <input id="book-cover-url" type="url" placeholder="https://...">
+              <span class="field-help">the cover stays hidden in the catalog and appears only after the book is clicked.</span>
+            </label>
+
+            <label>
+              summary
+              <textarea id="book-summary" rows="5" maxlength="2000" required></textarea>
+            </label>
+
+            <label>
+              nya's note
+              <textarea id="book-nya-note" rows="4" maxlength="1500" placeholder="your personal thoughts after reading..."></textarea>
+            </label>
+
+            <button id="save-book-button" class="primary-button" type="submit">add book</button>
+            <p id="book-form-message" class="message" aria-live="polite"></p>
+          </form>
+
+          <div>
+            <div class="book-list-heading">
+              <h3>current catalog</h3>
+              <span id="book-list-count">0 books</span>
+            </div>
+            <div id="admin-book-list" class="admin-book-list"></div>
+            <p id="books-empty" class="empty" hidden>no books have been added yet.</p>
+          </div>
+        </div>
       </section>
     </section>
   </main>

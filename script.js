@@ -3,6 +3,7 @@ import {
   addDoc,
   collection,
   getFirestore,
+  onSnapshot,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
@@ -18,16 +19,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const books = [
-  { title: "the hunger games", author: "suzanne collins", genre: "dystopian", status: "available" },
-  { title: "the inheritance games", author: "jennifer lynn barnes", genre: "mystery", status: "borrowed" },
-  { title: "little women", author: "louisa may alcott", genre: "classic", status: "available" },
-  { title: "six of crows", author: "leigh bardugo", genre: "fantasy", status: "available" },
-  { title: "the summer i turned pretty", author: "jenny han", genre: "romance", status: "borrowed" },
-  { title: "a good girl's guide to murder", author: "holly jackson", genre: "mystery", status: "available" },
-  { title: "the book thief", author: "markus zusak", genre: "historical fiction", status: "available" },
-  { title: "the cruel prince", author: "holly black", genre: "fantasy", status: "borrowed" }
-];
+let books = [];
+let selectedBook = null;
 
 const bookGrid = document.querySelector("#book-grid");
 const searchInput = document.querySelector("#search-input");
@@ -38,6 +31,7 @@ const emptyState = document.querySelector("#empty-state");
 const toast = document.querySelector("#toast");
 const requestForm = document.querySelector("#request-form");
 const formMessage = document.querySelector("#form-message");
+
 const requestModal = document.querySelector("#request-modal");
 const requestModalTitle = document.querySelector("#request-modal-title");
 const requestModalCopy = document.querySelector("#request-modal-copy");
@@ -46,8 +40,26 @@ const borrowingFormMessage = document.querySelector("#borrowing-form-message");
 const readerNameInput = document.querySelector("#reader-name");
 const confirmRequestButton = document.querySelector("#confirm-request-button");
 
-let selectedBook = null;
-let selectedRequestButton = null;
+const detailsModal = document.querySelector("#book-details-modal");
+const detailsTitle = document.querySelector("#book-details-title");
+const detailsAuthor = document.querySelector("#book-details-author");
+const detailsGenre = document.querySelector("#book-details-genre");
+const detailsStatus = document.querySelector("#book-details-status");
+const detailsSummary = document.querySelector("#book-details-summary");
+const detailsNote = document.querySelector("#book-details-note");
+const detailsCover = document.querySelector("#book-details-cover");
+const detailsCoverFallback = document.querySelector("#book-details-cover-fallback");
+const detailsCoverTitle = document.querySelector("#book-details-cover-title");
+const detailsRequestButton = document.querySelector("#book-details-request-button");
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
 
 function showToast(message) {
   toast.textContent = message;
@@ -55,8 +67,11 @@ function showToast(message) {
   window.setTimeout(() => toast.classList.remove("show"), 3200);
 }
 
-function addGenreOptions() {
-  const genres = [...new Set(books.map((book) => book.genre))].sort();
+function rebuildGenreOptions() {
+  const currentValue = genreFilter.value;
+  const genres = [...new Set(books.map((book) => book.genre).filter(Boolean))].sort();
+
+  genreFilter.innerHTML = '<option value="all">all genres</option>';
 
   genres.forEach((genre) => {
     const option = document.createElement("option");
@@ -64,13 +79,63 @@ function addGenreOptions() {
     option.textContent = genre;
     genreFilter.appendChild(option);
   });
+
+  genreFilter.value = genres.includes(currentValue) ? currentValue : "all";
 }
 
-function openBorrowingModal(book, button) {
+function openBookDetails(book) {
   selectedBook = book;
-  selectedRequestButton = button;
 
+  detailsTitle.textContent = book.title;
+  detailsAuthor.textContent = `by ${book.author || "unknown author"}`;
+  detailsGenre.textContent = book.genre || "uncategorized";
+  detailsSummary.textContent =
+    book.summary || "a summary has not been added to this book yet.";
+  detailsNote.textContent =
+    book.nyaNote || "nya's note has not been added yet.";
+
+  const isAvailable = book.status === "available";
+  detailsStatus.textContent = isAvailable ? "🌿 on the shelf" : "📖 out reading";
+  detailsStatus.className = `pill status-${book.status || "available"}`;
+  detailsRequestButton.textContent =
+    isAvailable ? "request checkout" : "join the waitlist";
+
+  detailsCoverTitle.textContent = book.title;
+
+  if (book.coverUrl) {
+    detailsCover.hidden = false;
+    detailsCoverFallback.hidden = true;
+    detailsCover.src = book.coverUrl;
+    detailsCover.alt = `cover of ${book.title} by ${book.author || "unknown author"}`;
+  } else {
+    detailsCover.hidden = true;
+    detailsCoverFallback.hidden = false;
+    detailsCover.removeAttribute("src");
+    detailsCover.alt = "";
+  }
+
+  detailsModal.hidden = false;
+  document.body.classList.add("modal-open");
+}
+
+function closeBookDetails() {
+  detailsModal.hidden = true;
+  document.body.classList.remove("modal-open");
+}
+
+detailsCover.addEventListener("error", () => {
+  detailsCover.hidden = true;
+  detailsCoverFallback.hidden = false;
+});
+
+document.querySelectorAll("[data-close-book-details]").forEach((element) => {
+  element.addEventListener("click", closeBookDetails);
+});
+
+function openBorrowingModal(book) {
+  selectedBook = book;
   const requestType = book.status === "available" ? "checkout" : "waitlist";
+
   requestModalTitle.textContent =
     requestType === "checkout" ? "request this book" : "join the waitlist";
   requestModalCopy.textContent =
@@ -91,18 +156,27 @@ function openBorrowingModal(book, button) {
 function closeBorrowingModal() {
   requestModal.hidden = true;
   document.body.classList.remove("modal-open");
-  selectedBook = null;
-  selectedRequestButton = null;
   borrowingFormMessage.textContent = "";
 }
+
+detailsRequestButton.addEventListener("click", () => {
+  if (!selectedBook) return;
+  const book = selectedBook;
+  closeBookDetails();
+  openBorrowingModal(book);
+});
 
 document.querySelectorAll("[data-close-modal]").forEach((element) => {
   element.addEventListener("click", closeBorrowingModal);
 });
 
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && !requestModal.hidden) {
+  if (event.key !== "Escape") return;
+
+  if (!requestModal.hidden) {
     closeBorrowingModal();
+  } else if (!detailsModal.hidden) {
+    closeBookDetails();
   }
 });
 
@@ -130,7 +204,7 @@ borrowingRequestForm.addEventListener("submit", async (event) => {
     await addDoc(collection(db, "checkoutRequests"), {
       name: cleanName,
       bookTitle: selectedBook.title,
-      author: selectedBook.author,
+      author: selectedBook.author || "",
       requestType,
       status: "pending",
       createdAt: serverTimestamp()
@@ -160,8 +234,10 @@ function renderBooks() {
   const selectedStatus = statusFilter.value;
 
   const filteredBooks = books.filter((book) => {
+    const title = String(book.title || "").toLowerCase();
+    const author = String(book.author || "").toLowerCase();
     const matchesSearch =
-      book.title.includes(searchTerm) || book.author.includes(searchTerm);
+      title.includes(searchTerm) || author.includes(searchTerm);
     const matchesGenre =
       selectedGenre === "all" || book.genre === selectedGenre;
     const matchesStatus =
@@ -172,37 +248,53 @@ function renderBooks() {
 
   bookGrid.innerHTML = "";
   emptyState.hidden = filteredBooks.length !== 0;
-  resultsCount.textContent = `${filteredBooks.length} ${filteredBooks.length === 1 ? "book" : "books"} found`;
+  resultsCount.textContent =
+    `${filteredBooks.length} ${filteredBooks.length === 1 ? "book" : "books"} found`;
 
   filteredBooks.forEach((book) => {
     const card = document.createElement("article");
     card.className = "book-card";
+    card.tabIndex = 0;
+    card.setAttribute("role", "button");
+    card.setAttribute("aria-label", `view details for ${book.title}`);
 
-    const statusText =
-      book.status === "available" ? "🌿 on the shelf" : "📖 out reading";
-    const buttonText =
-      book.status === "available" ? "request checkout" : "join the waitlist";
+    const isAvailable = book.status === "available";
+    const statusText = isAvailable ? "🌿 on the shelf" : "📖 out reading";
+    const buttonText = isAvailable ? "request checkout" : "join the waitlist";
 
     card.innerHTML = `
       <div class="book-cover">
         <div>
           <span aria-hidden="true">📖</span>
-          <strong>${book.title}</strong>
+          <strong>${escapeHtml(book.title)}</strong>
         </div>
       </div>
       <div class="book-info">
-        <h3>${book.title}</h3>
-        <p class="book-author">by ${book.author}</p>
+        <h3>${escapeHtml(book.title)}</h3>
+        <p class="book-author">by ${escapeHtml(book.author || "unknown author")}</p>
         <div class="book-meta">
-          <span class="pill">${book.genre}</span>
-          <span class="pill status-${book.status}">${statusText}</span>
+          <span class="pill">${escapeHtml(book.genre || "uncategorized")}</span>
+          <span class="pill status-${escapeHtml(book.status || "available")}">${statusText}</span>
         </div>
         <button class="book-action" type="button">${buttonText}</button>
       </div>
     `;
 
+    card.addEventListener("click", () => openBookDetails(book));
+    card.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        openBookDetails(book);
+      }
+    });
+
     const actionButton = card.querySelector(".book-action");
-    actionButton.addEventListener("click", () => openBorrowingModal(book, actionButton));
+    actionButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      openBorrowingModal(book);
+    });
+    actionButton.addEventListener("keydown", (event) => event.stopPropagation());
+
     bookGrid.appendChild(card);
   });
 }
@@ -265,5 +357,22 @@ requestForm.addEventListener("submit", async (event) => {
   }
 });
 
-addGenreOptions();
-renderBooks();
+bookGrid.innerHTML = '<p class="catalog-loading">opening the shelves...</p>';
+
+onSnapshot(
+  collection(db, "books"),
+  (snapshot) => {
+    books = snapshot.docs
+      .map((entry) => ({ id: entry.id, ...entry.data() }))
+      .sort((a, b) => String(a.title || "").localeCompare(String(b.title || "")));
+
+    rebuildGenreOptions();
+    renderBooks();
+  },
+  (error) => {
+    console.error(error);
+    bookGrid.innerHTML =
+      '<p class="catalog-loading">the shelves could not be loaded. please try again soon.</p>';
+    resultsCount.textContent = "";
+  }
+);
