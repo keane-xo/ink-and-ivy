@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>reader profile · ink and ivy</title>
+  <link rel="stylesheet" href="reader.css?v=1">
+  <script type="module" src="reader.js?v=1"></script>
+</head>
+<body>
+  <header class="reader-header">
+    <a class="brand" href="index.html">
+      <span aria-hidden="true">🌿</span>
+      <span>ink and ivy</span>
+    </a>
+    <a class="back-link" href="index.html">back to the shelves</a>
+  </header>
+
+  <main>
+    <section id="auth-view" class="auth-view">
+      <div class="auth-card">
+        <span class="large-leaf" aria-hidden="true">🌿</span>
+        <p class="eyebrow">your corner of the library</p>
+        <h1>reader account</h1>
+        <p class="intro">sign in to rate books, leave comments, and customize your profile.</p>
+
+        <div class="auth-tabs">
+          <button class="auth-tab active" type="button" data-auth-tab="signin">sign in</button>
+          <button class="auth-tab" type="button" data-auth-tab="signup">create account</button>
+        </div>
+
+        <form id="signin-form" class="auth-form">
+          <label>
+            email
+            <input id="signin-email" type="email" autocomplete="email" required>
+          </label>
+          <label>
+            password
+            <input id="signin-password" type="password" autocomplete="current-password" required>
+          </label>
+          <button class="primary-button" type="submit">sign in</button>
+          <p id="signin-message" class="message" aria-live="polite"></p>
+        </form>
+
+        <form id="signup-form" class="auth-form" hidden>
+          <label>
+            display name
+            <input id="signup-name" type="text" maxlength="40" required>
+          </label>
+          <label>
+            email
+            <input id="signup-email" type="email" autocomplete="email" required>
+          </label>
+          <label>
+            password
+            <input id="signup-password" type="password" autocomplete="new-password" minlength="6" required>
+          </label>
+          <label>
+            confirm password
+            <input id="signup-confirm-password" type="password" autocomplete="new-password" minlength="6" required>
+          </label>
+          <button class="primary-button" type="submit">create account</button>
+          <p id="signup-message" class="message" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+
+    <section id="profile-view" class="profile-view" hidden>
+      <div class="profile-heading">
+        <div>
+          <p class="eyebrow">your corner of ink and ivy</p>
+          <h1>reader profile</h1>
+        </div>
+        <button id="reader-signout-button" class="secondary-button" type="button">sign out</button>
+      </div>
+
+      <div class="profile-layout">
+        <aside class="profile-preview-card">
+          <div id="profile-avatar-preview" class="profile-avatar-preview">📚</div>
+          <h2 id="profile-name-preview">reader</h2>
+          <p id="profile-bio-preview">a little corner for books and thoughts.</p>
+          <span class="profile-badge">ink and ivy reader</span>
+        </aside>
+
+        <form id="profile-form" class="profile-form">
+          <div class="form-heading">
+            <div>
+              <p class="eyebrow">make it yours</p>
+              <h2>customize your profile</h2>
+            </div>
+          </div>
+
+          <label>
+            display name
+            <input id="profile-display-name" type="text" maxlength="40" required>
+          </label>
+
+          <fieldset>
+            <legend>choose your profile icon</legend>
+            <div id="avatar-options" class="avatar-options">
+              <button type="button" data-avatar="📚">📚</button>
+              <button type="button" data-avatar="🌿">🌿</button>
+              <button type="button" data-avatar="🌸">🌸</button>
+              <button type="button" data-avatar="🦋">🦋</button>
+              <button type="button" data-avatar="🍓">🍓</button>
+              <button type="button" data-avatar="☕">☕</button>
+              <button type="button" data-avatar="🌙">🌙</button>
+              <button type="button" data-avatar="⭐">⭐</button>
+              <button type="button" data-avatar="🐚">🐚</button>
+              <button type="button" data-avatar="🎀">🎀</button>
+              <button type="button" data-avatar="🍒">🍒</button>
+              <button type="button" data-avatar="🕯️">🕯️</button>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>choose a background color</legend>
+            <div id="color-options" class="color-options">
+              <button type="button" data-color="#e8b8c5" style="--swatch:#e8b8c5" aria-label="blush pink"></button>
+              <button type="button" data-color="#f2d6bd" style="--swatch:#f2d6bd" aria-label="peach cream"></button>
+              <button type="button" data-color="#d8c5e8" style="--swatch:#d8c5e8" aria-label="soft lavender"></button>
+              <button type="button" data-color="#bfd8c0" style="--swatch:#bfd8c0" aria-label="sage green"></button>
+              <button type="button" data-color="#bdd8e8" style="--swatch:#bdd8e8" aria-label="powder blue"></button>
+              <button type="button" data-color="#ead8a8" style="--swatch:#ead8a8" aria-label="warm gold"></button>
+              <button type="button" data-color="#d9b7a8" style="--swatch:#d9b7a8" aria-label="cocoa rose"></button>
+              <button type="button" data-color="#f4e4cf" style="--swatch:#f4e4cf" aria-label="vanilla cream"></button>
+            </div>
+          </fieldset>
+
+          <label>
+            optional profile image link
+            <input id="profile-avatar-url" type="url" placeholder="https://...">
+            <span class="field-help">leave this blank to use your icon. a direct image link will appear as your pfp.</span>
+          </label>
+
+          <label>
+            short bio
+            <textarea id="profile-bio" rows="4" maxlength="240" placeholder="favorite genres, current reads, or anything you want your friends to know..."></textarea>
+          </label>
+
+          <button id="save-profile-button" class="primary-button" type="submit">save profile</button>
+          <p id="profile-message" class="message" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

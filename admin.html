@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
   <title>ink and ivy admin</title>
-  <link rel="stylesheet" href="admin.css?v=6">
-  <script type="module" src="admin.js?v=6"></script>
+  <link rel="stylesheet" href="admin.css?v=7">
+  <script type="module" src="admin.js?v=7"></script>
 </head>
 <body>
   <header class="admin-header">
@@ -68,12 +68,17 @@
           <span id="book-count">0</span>
           <p>books on the shelves</p>
         </article>
+        <article>
+          <span id="review-count">0</span>
+          <p>reader reviews</p>
+        </article>
       </div>
 
       <div class="tabs" role="tablist" aria-label="request categories">
         <button class="tab active" type="button" data-tab="borrowing">checkout & waitlist</button>
         <button class="tab" type="button" data-tab="suggestions">book suggestions</button>
         <button class="tab" type="button" data-tab="books">manage books</button>
+        <button class="tab" type="button" data-tab="reviews">reader reviews</button>
       </div>
 
       <section id="borrowing-panel" class="panel">
@@ -180,6 +185,18 @@
             <p id="books-empty" class="empty" hidden>no books have been added yet.</p>
           </div>
         </div>
+      </section>
+
+
+      <section id="reviews-panel" class="panel" hidden>
+        <div class="panel-heading">
+          <div>
+            <h2>reader reviews</h2>
+            <p class="panel-intro">see ratings and remove a comment if necessary.</p>
+          </div>
+        </div>
+        <div id="admin-review-list" class="request-list"></div>
+        <p id="admin-reviews-empty" class="empty" hidden>no reader reviews yet.</p>
       </section>
     </section>
   </main>

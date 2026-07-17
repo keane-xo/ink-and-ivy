@@ -10,6 +10,7 @@ import {
 import {
   addDoc,
   collection,
+  collectionGroup,
   deleteDoc,
   doc,
   getDocs,
@@ -135,10 +136,13 @@ const bookFormMessage = document.querySelector("#book-form-message");
 const adminBookList = document.querySelector("#admin-book-list");
 const booksEmpty = document.querySelector("#books-empty");
 const importBooksButton = document.querySelector("#import-books-button");
+const adminReviewList = document.querySelector("#admin-review-list");
+const adminReviewsEmpty = document.querySelector("#admin-reviews-empty");
 
 let borrowingRequests = [];
 let bookSuggestions = [];
 let books = [];
+let readerReviews = [];
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -182,6 +186,7 @@ function updateCounts() {
     bookSuggestions.filter((item) => item.status === "pending").length;
 
   document.querySelector("#book-count").textContent = books.length;
+  document.querySelector("#review-count").textContent = readerReviews.length;
 }
 
 function renderBorrowing() {
@@ -280,6 +285,56 @@ function renderSuggestions() {
     });
 
     suggestionList.appendChild(card);
+  });
+}
+
+
+function reviewAvatarMarkup(review) {
+  if (review.avatarUrl) {
+    return `<img src="${escapeHtml(review.avatarUrl)}" alt="">`;
+  }
+
+  return escapeHtml(review.avatarEmoji || "📚");
+}
+
+function renderAdminReviews() {
+  adminReviewList.innerHTML = "";
+  adminReviewsEmpty.hidden = readerReviews.length !== 0;
+
+  readerReviews.forEach((review) => {
+    const card = document.createElement("article");
+    card.className = "admin-review-card";
+
+    card.innerHTML = `
+      <span class="admin-review-avatar" style="--avatar-color:${escapeHtml(review.avatarColor || "#e8b8c5")}">
+        ${reviewAvatarMarkup(review)}
+      </span>
+      <div>
+        <h3>${escapeHtml(review.bookTitle || "unknown book")}</h3>
+        <p><strong>${escapeHtml(review.displayName || "reader")}</strong></p>
+        <p class="admin-review-stars">${"★".repeat(Number(review.rating || 0))}${"☆".repeat(Math.max(0, 5 - Number(review.rating || 0)))}</p>
+        ${review.comment ? `<p class="admin-review-comment">${escapeHtml(review.comment)}</p>` : ""}
+        <p class="meta">${formatDate(review.updatedAt || review.createdAt)}</p>
+      </div>
+      <div class="request-actions">
+        <button class="action-button danger" data-delete-review type="button">delete</button>
+      </div>
+    `;
+
+    card.querySelector("[data-delete-review]").addEventListener("click", async () => {
+      if (!window.confirm("delete this reader review?")) return;
+
+      try {
+        await deleteDoc(doc(db, "books", review.bookId, "reviews", review.userId));
+        showToast("review deleted.");
+        await loadData();
+      } catch (error) {
+        console.error(error);
+        showToast("the review could not be deleted.");
+      }
+    });
+
+    adminReviewList.appendChild(card);
   });
 }
 
@@ -445,10 +500,11 @@ async function loadData() {
   refreshButton.textContent = "loading...";
 
   try {
-    const [borrowingSnapshot, suggestionSnapshot, booksSnapshot] = await Promise.all([
+    const [borrowingSnapshot, suggestionSnapshot, booksSnapshot, reviewsSnapshot] = await Promise.all([
       getDocs(query(collection(db, "checkoutRequests"), orderBy("createdAt", "desc"))),
       getDocs(query(collection(db, "bookSuggestions"), orderBy("createdAt", "desc"))),
-      getDocs(collection(db, "books"))
+      getDocs(collection(db, "books")),
+      getDocs(collectionGroup(db, "reviews"))
     ]);
 
     borrowingRequests = borrowingSnapshot.docs.map((entry) => ({
@@ -465,10 +521,19 @@ async function loadData() {
       .map((entry) => ({ id: entry.id, ...entry.data() }))
       .sort((a, b) => String(a.title || "").localeCompare(String(b.title || "")));
 
+    readerReviews = reviewsSnapshot.docs
+      .map((entry) => ({ id: entry.id, ...entry.data() }))
+      .sort((a, b) => {
+        const aTime = a.updatedAt?.seconds || 0;
+        const bTime = b.updatedAt?.seconds || 0;
+        return bTime - aTime;
+      });
+
     updateCounts();
     renderBorrowing();
     renderSuggestions();
     renderBooks();
+    renderAdminReviews();
   } catch (error) {
     console.error(error);
     showToast("the dashboard could not load.");

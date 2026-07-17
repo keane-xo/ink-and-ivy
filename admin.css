@@ -542,3 +542,74 @@ select:focus {
     flex-direction: column;
   }
 }
+
+
+.summary-grid {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.admin-review-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  align-items: start;
+  padding: 19px;
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.admin-review-avatar {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--avatar-color, var(--pink));
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  font-size: 1.35rem;
+}
+
+.admin-review-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-review-card h3 {
+  margin: 0 0 5px;
+  color: var(--brown);
+  font-weight: normal;
+}
+
+.admin-review-stars {
+  color: #b88732;
+  letter-spacing: 0.04em;
+}
+
+.admin-review-comment {
+  margin: 9px 0;
+  white-space: pre-wrap;
+  line-height: 1.55;
+}
+
+@media (max-width: 1050px) {
+  .summary-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 650px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-review-card {
+    grid-template-columns: auto 1fr;
+  }
+
+  .admin-review-card .request-actions {
+    grid-column: 1 / -1;
+  }
+}

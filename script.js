@@ -1,10 +1,22 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
 import {
+  browserLocalPersistence,
+  getAuth,
+  onAuthStateChanged,
+  setPersistence
+} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+import {
   addDoc,
   collection,
+  deleteDoc,
+  doc,
+  getDoc,
   getFirestore,
   onSnapshot,
-  serverTimestamp
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -17,10 +29,17 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 const db = getFirestore(app);
+setPersistence(auth, browserLocalPersistence).catch(console.error);
 
 let books = [];
 let selectedBook = null;
+let currentUser = null;
+let currentProfile = null;
+let selectedRating = 0;
+let reviewsUnsubscribe = null;
+let currentUserReview = null;
 
 const bookGrid = document.querySelector("#book-grid");
 const searchInput = document.querySelector("#search-input");
@@ -52,6 +71,24 @@ const detailsCoverFallback = document.querySelector("#book-details-cover-fallbac
 const detailsCoverTitle = document.querySelector("#book-details-cover-title");
 const detailsRequestButton = document.querySelector("#book-details-request-button");
 
+const readerAccountLink = document.querySelector("#reader-account-link");
+const readerNavAvatar = document.querySelector("#reader-nav-avatar");
+const readerNavLabel = document.querySelector("#reader-nav-label");
+
+const ratingSummary = document.querySelector("#book-rating-summary");
+const averageStars = document.querySelector("#book-average-stars");
+const reviewsList = document.querySelector("#book-reviews-list");
+const reviewsEmpty = document.querySelector("#book-reviews-empty");
+const reviewLoginPrompt = document.querySelector("#review-login-prompt");
+const reviewForm = document.querySelector("#review-form");
+const reviewFormAvatar = document.querySelector("#review-form-avatar");
+const reviewFormName = document.querySelector("#review-form-name");
+const reviewComment = document.querySelector("#review-comment");
+const reviewStarButtons = [...document.querySelectorAll("#review-star-buttons button")];
+const reviewFormMessage = document.querySelector("#review-form-message");
+const saveReviewButton = document.querySelector("#save-review-button");
+const deleteReviewButton = document.querySelector("#delete-review-button");
+
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -67,6 +104,77 @@ function showToast(message) {
   window.setTimeout(() => toast.classList.remove("show"), 3200);
 }
 
+function formatDate(timestamp) {
+  if (!timestamp?.toDate) return "just now";
+  return timestamp.toDate().toLocaleDateString([], {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  }).toLowerCase();
+}
+
+function avatarMarkup(profile) {
+  const emoji = escapeHtml(profile?.avatarEmoji || "📚");
+  const imageUrl = String(profile?.avatarUrl || "").trim();
+
+  if (imageUrl) {
+    return `<img src="${escapeHtml(imageUrl)}" alt="">`;
+  }
+
+  return emoji;
+}
+
+function applyAvatar(element, profile) {
+  element.style.setProperty("--avatar-color", profile?.avatarColor || "#e8b8c5");
+  element.innerHTML = avatarMarkup(profile);
+}
+
+function updateReaderNavigation() {
+  if (currentUser && currentProfile) {
+    readerNavLabel.textContent = currentProfile.displayName || "my profile";
+    readerNavAvatar.hidden = false;
+    applyAvatar(readerNavAvatar, currentProfile);
+  } else {
+    readerNavLabel.textContent = "reader login";
+    readerNavAvatar.hidden = true;
+    readerNavAvatar.innerHTML = "";
+  }
+}
+
+async function loadCurrentProfile(user) {
+  if (!user) {
+    currentProfile = null;
+    updateReaderNavigation();
+    updateReviewFormState();
+    return;
+  }
+
+  try {
+    const snapshot = await getDoc(doc(db, "profiles", user.uid));
+    currentProfile = snapshot.exists()
+      ? snapshot.data()
+      : {
+          displayName: user.email?.split("@")[0] || "reader",
+          avatarEmoji: "📚",
+          avatarColor: "#e8b8c5",
+          avatarUrl: "",
+          bio: ""
+        };
+  } catch (error) {
+    console.error(error);
+    currentProfile = null;
+  }
+
+  updateReaderNavigation();
+  updateReviewFormState();
+}
+
+onAuthStateChanged(auth, async (user) => {
+  currentUser = user;
+  await loadCurrentProfile(user);
+  if (selectedBook) subscribeToReviews(selectedBook);
+});
+
 function rebuildGenreOptions() {
   const currentValue = genreFilter.value;
   const genres = [...new Set(books.map((book) => book.genre).filter(Boolean))].sort();
@@ -81,6 +189,135 @@ function rebuildGenreOptions() {
   });
 
   genreFilter.value = genres.includes(currentValue) ? currentValue : "all";
+}
+
+function setSelectedRating(rating) {
+  selectedRating = rating;
+  reviewStarButtons.forEach((button) => {
+    const value = Number(button.dataset.rating);
+    button.textContent = value <= rating ? "★" : "☆";
+    button.classList.toggle("selected", value <= rating);
+    button.setAttribute("aria-checked", String(value === rating));
+  });
+}
+
+reviewStarButtons.forEach((button) => {
+  button.addEventListener("click", () => setSelectedRating(Number(button.dataset.rating)));
+  button.addEventListener("mouseenter", () => {
+    const preview = Number(button.dataset.rating);
+    reviewStarButtons.forEach((item) => {
+      item.textContent = Number(item.dataset.rating) <= preview ? "★" : "☆";
+    });
+  });
+});
+
+document.querySelector("#review-star-buttons").addEventListener("mouseleave", () => {
+  setSelectedRating(selectedRating);
+});
+
+function updateReviewFormState() {
+  const canReview = Boolean(currentUser && currentProfile);
+  reviewLoginPrompt.hidden = canReview;
+  reviewForm.hidden = !canReview;
+
+  if (!canReview) return;
+
+  reviewFormName.textContent = currentProfile.displayName || "reader";
+  applyAvatar(reviewFormAvatar, currentProfile);
+
+  if (currentUserReview) {
+    setSelectedRating(Number(currentUserReview.rating || 0));
+    reviewComment.value = currentUserReview.comment || "";
+    saveReviewButton.textContent = "save changes";
+    deleteReviewButton.hidden = false;
+  } else {
+    setSelectedRating(0);
+    reviewComment.value = "";
+    saveReviewButton.textContent = "post review";
+    deleteReviewButton.hidden = true;
+  }
+}
+
+function renderReviews(reviews) {
+  reviewsList.innerHTML = "";
+  reviewsEmpty.hidden = reviews.length !== 0;
+
+  const total = reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0);
+  const average = reviews.length ? total / reviews.length : 0;
+  const rounded = Math.round(average);
+
+  averageStars.textContent =
+    "★".repeat(rounded) + "☆".repeat(Math.max(0, 5 - rounded));
+  ratingSummary.textContent = reviews.length
+    ? `${average.toFixed(1)} out of 5 · ${reviews.length} ${reviews.length === 1 ? "rating" : "ratings"}`
+    : "no ratings yet";
+
+  currentUserReview = currentUser
+    ? reviews.find((review) => review.userId === currentUser.uid) || null
+    : null;
+
+  reviews.forEach((review) => {
+    const card = document.createElement("article");
+    card.className = "review-card";
+
+    const profile = {
+      avatarEmoji: review.avatarEmoji,
+      avatarColor: review.avatarColor,
+      avatarUrl: review.avatarUrl
+    };
+
+    card.innerHTML = `
+      <span class="comment-avatar" style="--avatar-color: ${escapeHtml(profile.avatarColor || "#e8b8c5")}">
+        ${avatarMarkup(profile)}
+      </span>
+      <div>
+        <div class="review-card-heading">
+          <strong>${escapeHtml(review.displayName || "reader")}</strong>
+          <span class="review-stars" aria-label="${Number(review.rating || 0)} out of 5 stars">
+            ${"★".repeat(Number(review.rating || 0))}${"☆".repeat(Math.max(0, 5 - Number(review.rating || 0)))}
+          </span>
+        </div>
+        ${review.comment ? `<p>${escapeHtml(review.comment)}</p>` : ""}
+        <span class="review-date">${formatDate(review.updatedAt || review.createdAt)}</span>
+      </div>
+    `;
+
+    reviewsList.appendChild(card);
+  });
+
+  updateReviewFormState();
+}
+
+function subscribeToReviews(book) {
+  if (reviewsUnsubscribe) {
+    reviewsUnsubscribe();
+    reviewsUnsubscribe = null;
+  }
+
+  reviewsList.innerHTML = "";
+  reviewsEmpty.hidden = false;
+  currentUserReview = null;
+  updateReviewFormState();
+
+  const reviewsQuery = query(
+    collection(db, "books", book.id, "reviews"),
+    orderBy("updatedAt", "desc")
+  );
+
+  reviewsUnsubscribe = onSnapshot(
+    reviewsQuery,
+    (snapshot) => {
+      const reviews = snapshot.docs.map((entry) => ({
+        id: entry.id,
+        ...entry.data()
+      }));
+      renderReviews(reviews);
+    },
+    (error) => {
+      console.error(error);
+      ratingSummary.textContent = "reviews could not be loaded";
+    }
+  );
 }
 
 function openBookDetails(book) {
@@ -114,6 +351,7 @@ function openBookDetails(book) {
     detailsCover.alt = "";
   }
 
+  subscribeToReviews(book);
   detailsModal.hidden = false;
   document.body.classList.add("modal-open");
 }
@@ -121,6 +359,11 @@ function openBookDetails(book) {
 function closeBookDetails() {
   detailsModal.hidden = true;
   document.body.classList.remove("modal-open");
+
+  if (reviewsUnsubscribe) {
+    reviewsUnsubscribe();
+    reviewsUnsubscribe = null;
+  }
 }
 
 detailsCover.addEventListener("error", () => {
@@ -146,6 +389,7 @@ function openBorrowingModal(book) {
     requestType === "checkout" ? "send request" : "join waitlist";
 
   borrowingRequestForm.reset();
+  if (currentProfile?.displayName) readerNameInput.value = currentProfile.displayName;
   borrowingFormMessage.textContent = "";
   requestModal.hidden = false;
   document.body.classList.add("modal-open");
@@ -228,6 +472,73 @@ borrowingRequestForm.addEventListener("submit", async (event) => {
   }
 });
 
+reviewForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  if (!currentUser || !currentProfile || !selectedBook) return;
+
+  if (!selectedRating) {
+    reviewFormMessage.textContent = "choose a star rating first.";
+    return;
+  }
+
+  const comment = reviewComment.value.trim();
+  saveReviewButton.disabled = true;
+  saveReviewButton.textContent = "saving...";
+  reviewFormMessage.textContent = "";
+
+  try {
+    const reviewRef = doc(
+      db,
+      "books",
+      selectedBook.id,
+      "reviews",
+      currentUser.uid
+    );
+
+    await setDoc(
+      reviewRef,
+      {
+        userId: currentUser.uid,
+        bookId: selectedBook.id,
+        bookTitle: selectedBook.title,
+        displayName: currentProfile.displayName,
+        avatarEmoji: currentProfile.avatarEmoji || "📚",
+        avatarColor: currentProfile.avatarColor || "#e8b8c5",
+        avatarUrl: currentProfile.avatarUrl || "",
+        rating: selectedRating,
+        comment,
+        createdAt: currentUserReview?.createdAt || serverTimestamp(),
+        updatedAt: serverTimestamp()
+      },
+      { merge: true }
+    );
+
+    showToast(currentUserReview ? "your review was updated." : "your review was posted.");
+  } catch (error) {
+    console.error(error);
+    reviewFormMessage.textContent = "your review could not be saved.";
+  } finally {
+    saveReviewButton.disabled = false;
+    saveReviewButton.textContent = currentUserReview ? "save changes" : "post review";
+  }
+});
+
+deleteReviewButton.addEventListener("click", async () => {
+  if (!currentUser || !selectedBook || !currentUserReview) return;
+  if (!window.confirm("delete your review?")) return;
+
+  try {
+    await deleteDoc(
+      doc(db, "books", selectedBook.id, "reviews", currentUser.uid)
+    );
+    showToast("your review was deleted.");
+  } catch (error) {
+    console.error(error);
+    reviewFormMessage.textContent = "your review could not be deleted.";
+  }
+});
+
 function renderBooks() {
   const searchTerm = searchInput.value.trim().toLowerCase();
   const selectedGenre = genreFilter.value;
@@ -302,12 +613,6 @@ function renderBooks() {
 searchInput.addEventListener("input", renderBooks);
 genreFilter.addEventListener("change", renderBooks);
 statusFilter.addEventListener("change", renderBooks);
-
-document.querySelectorAll("[data-coming-soon]").forEach((button) => {
-  button.addEventListener("click", () => {
-    showToast(`${button.dataset.comingSoon} will be added later.`);
-  });
-});
 
 const menuButton = document.querySelector(".menu-button");
 const mainNav = document.querySelector("#main-nav");

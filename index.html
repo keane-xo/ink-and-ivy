@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="ink and ivy — a private lending library for curious readers.">
   <title>ink and ivy</title>
-  <link rel="stylesheet" href="style.css?v=6">
-  <script type="module" src="script.js?v=6"></script>
+  <link rel="stylesheet" href="style.css?v=7">
+  <script type="module" src="script.js?v=7"></script>
 </head>
 <body>
   <header class="site-header">
@@ -23,7 +23,7 @@
       <a href="#shelves">the shelves</a>
       <a href="#how-it-works">how it works</a>
       <a href="#request">request a book</a>
-      <button class="nav-button" type="button" data-coming-soon="reader login">reader login</button>
+      <a id="reader-account-link" class="reader-account-link" href="reader.html"><span id="reader-nav-avatar" class="reader-nav-avatar" hidden></span><span id="reader-nav-label">reader login</span></a>
     </nav>
   </header>
 
@@ -202,7 +202,59 @@
             <p id="book-details-note"></p>
           </section>
 
-          <button id="book-details-request-button" class="button button-primary" type="button">
+
+          <section class="detail-section community-section">
+            <div class="community-heading">
+              <div>
+                <h3>reader reviews</h3>
+                <p id="book-rating-summary" class="rating-summary">no ratings yet</p>
+              </div>
+              <div id="book-average-stars" class="average-stars" aria-hidden="true">☆☆☆☆☆</div>
+            </div>
+
+            <div id="book-reviews-list" class="book-reviews-list"></div>
+            <p id="book-reviews-empty" class="reviews-empty">no one has reviewed this book yet.</p>
+
+            <div id="review-login-prompt" class="review-login-prompt">
+              <p>sign in to leave a comment and star rating.</p>
+              <a class="button button-secondary" href="reader.html">reader login</a>
+            </div>
+
+            <form id="review-form" class="review-form" hidden>
+              <div class="review-form-profile">
+                <span id="review-form-avatar" class="comment-avatar"></span>
+                <div>
+                  <strong id="review-form-name"></strong>
+                  <p>share your thoughts</p>
+                </div>
+              </div>
+
+              <fieldset class="star-rating-fieldset">
+                <legend>your rating</legend>
+                <div id="review-star-buttons" class="review-star-buttons" role="radiogroup" aria-label="choose a rating">
+                  <button type="button" data-rating="1" aria-label="1 star">☆</button>
+                  <button type="button" data-rating="2" aria-label="2 stars">☆</button>
+                  <button type="button" data-rating="3" aria-label="3 stars">☆</button>
+                  <button type="button" data-rating="4" aria-label="4 stars">☆</button>
+                  <button type="button" data-rating="5" aria-label="5 stars">☆</button>
+                </div>
+              </fieldset>
+
+              <label>
+                your comment
+                <textarea id="review-comment" rows="4" maxlength="1000" placeholder="what did you think?"></textarea>
+              </label>
+
+              <div class="review-form-actions">
+                <button id="delete-review-button" class="text-button danger-text" type="button" hidden>delete my review</button>
+                <button id="save-review-button" class="button button-primary" type="submit">post review</button>
+              </div>
+
+              <p id="review-form-message" class="form-message" aria-live="polite"></p>
+            </form>
+          </section>
+
+          <button id="book-details-request-button" class="button button-primary detail-request-button" type="button">
             request checkout
           </button>
         </div>
