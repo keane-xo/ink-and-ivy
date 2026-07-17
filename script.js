@@ -3,49 +3,57 @@ const books = [
     title: "the hunger games",
     author: "suzanne collins",
     genre: "dystopian",
-    status: "available"
+    status: "available",
+    cover: "https://covers.openlibrary.org/b/isbn/9780439023481-L.jpg"
   },
   {
     title: "the inheritance games",
     author: "jennifer lynn barnes",
     genre: "mystery",
-    status: "borrowed"
+    status: "borrowed",
+    cover: "https://covers.openlibrary.org/b/isbn/9781368052405-L.jpg"
   },
   {
     title: "little women",
     author: "louisa may alcott",
     genre: "classic",
-    status: "available"
+    status: "available",
+    cover: "https://covers.openlibrary.org/b/isbn/9780147514011-L.jpg"
   },
   {
     title: "six of crows",
     author: "leigh bardugo",
     genre: "fantasy",
-    status: "available"
+    status: "available",
+    cover: "https://covers.openlibrary.org/b/isbn/9781250076960-L.jpg"
   },
   {
     title: "the summer i turned pretty",
     author: "jenny han",
     genre: "romance",
-    status: "borrowed"
+    status: "borrowed",
+    cover: "https://covers.openlibrary.org/b/isbn/9781416968290-L.jpg"
   },
   {
     title: "a good girl's guide to murder",
     author: "holly jackson",
     genre: "mystery",
-    status: "available"
+    status: "available",
+    cover: "https://covers.openlibrary.org/b/isbn/9781984896360-L.jpg"
   },
   {
     title: "the book thief",
     author: "markus zusak",
     genre: "historical fiction",
-    status: "available"
+    status: "available",
+    cover: "https://covers.openlibrary.org/b/isbn/9780375842207-L.jpg"
   },
   {
     title: "the cruel prince",
     author: "holly black",
     genre: "fantasy",
-    status: "borrowed"
+    status: "borrowed",
+    cover: "https://covers.openlibrary.org/b/isbn/9780316310277-L.jpg"
   }
 ];
 
@@ -105,7 +113,13 @@ function renderBooks() {
 
     card.innerHTML = `
       <div class="book-cover">
-        <div>
+        <img
+          src="${book.cover}"
+          alt="cover of ${book.title} by ${book.author}"
+          loading="lazy"
+          onerror="this.hidden=true; this.nextElementSibling.hidden=false;"
+        >
+        <div class="cover-fallback" hidden>
           <span aria-hidden="true">📖</span>
           <strong>${book.title}</strong>
         </div>
