@@ -1,16 +1,39 @@
-INK AND IVY — POSITIVE SUGGESTION WORDING
+INK AND IVY — PRIVATE READING JOURNAL
 
-This changes the pink information box so it only explains what the form is for.
+THIS IS THE FIRST NEW EXPERIENCE
+The reading journal creates the foundation for future challenges, badges,
+friend recommendations, and yearly recaps.
 
-The box now says:
-- New-title suggestion guidelines
-- Use this form to suggest a book you would like added to the Ink & Ivy library
-- Each reader may submit up to two new-title suggestions during any rolling nine-week period
+READERS CAN
+- Keep private entries for reading progress, thoughts, predictions, quotes,
+  character notes, and final reviews
+- Attach each entry to a book in the Ink & Ivy catalog
+- Add an optional page/chapter and rating
+- Mark an entry as containing spoilers
+- Search and filter their private journal
+- Edit or delete their entries
+- Copy any entry into the community feed using "share to community"
+- Keep the original journal entry private after sharing
 
-UPLOAD AND REPLACE:
+STEP 1 — FIREBASE RULES
+Open FIRESTORE_RULES.txt.
+Copy everything into Firebase > Firestore Database > Rules.
+Replace the current rules and click Publish.
+
+STEP 2 — GITHUB
+Upload and replace:
 - index.html
+- reader.html
+- community.html
 
-No CSS, JavaScript, or Firebase changes are needed.
+Upload these new files:
+- journal.html
+- journal.css
+- journal.js
 
-After committing, open:
-https://keane-xo.github.io/ink-and-ivy/?v=16
+Do not upload FIRESTORE_RULES.txt to GitHub.
+
+STEP 3 — OPEN THE JOURNAL
+https://keane-xo.github.io/ink-and-ivy/journal.html?v=1
+
+The homepage, reader account, and community page will all have a link to it.

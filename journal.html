@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="a private reading journal for ink and ivy readers.">
+  <title>reading journal · ink and ivy</title>
+  <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml">
+  <link rel="stylesheet" href="journal.css?v=1">
+  <script type="module" src="journal.js?v=1"></script>
+</head>
+<body>
+  <header class="journal-header">
+    <a class="brand" href="index.html">
+      <span aria-hidden="true">🌿</span>
+      <span>ink and ivy</span>
+    </a>
+
+    <nav>
+      <a href="index.html">the shelves</a>
+      <a href="community.html">community</a>
+      <a href="reader.html">reader account</a>
+      <button id="journal-signout-button" type="button" hidden>sign out</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="journal-login-view" class="login-view">
+      <div class="login-card">
+        <span class="large-leaf" aria-hidden="true">🌿</span>
+        <p class="eyebrow">a private place for your thoughts</p>
+        <h1>reading journal</h1>
+        <p>
+          sign in to keep quotes, predictions, progress notes, private reviews,
+          and everything you want to remember while reading.
+        </p>
+        <a class="primary-link" href="reader.html?return=journal.html">reader login</a>
+      </div>
+    </section>
+
+    <section id="journal-view" class="journal-view" hidden>
+      <div class="journal-hero">
+        <div>
+          <p class="eyebrow">your private reading life</p>
+          <h1>reading journal</h1>
+          <p>
+            save thoughts privately as you read. any entry can later be copied
+            into the community feed when you decide to share it.
+          </p>
+        </div>
+
+        <aside class="privacy-note">
+          <span aria-hidden="true">🔒</span>
+          <p>
+            journal entries are visible only to you unless you choose
+            <strong>share to community</strong>.
+          </p>
+        </aside>
+      </div>
+
+      <div class="journal-toolbar">
+        <button id="open-entry-button" class="primary-button compact" type="button">
+          new journal entry
+        </button>
+
+        <div class="journal-filters">
+          <label>
+            entry type
+            <select id="journal-type-filter">
+              <option value="all">all entries</option>
+              <option value="progress">reading progress</option>
+              <option value="thoughts">thoughts</option>
+              <option value="prediction">prediction</option>
+              <option value="quote">favorite quote</option>
+              <option value="character">character notes</option>
+              <option value="final review">final review</option>
+            </select>
+          </label>
+
+          <label>
+            book
+            <select id="journal-book-filter">
+              <option value="all">all books</option>
+            </select>
+          </label>
+
+          <label class="journal-search-label">
+            search
+            <input id="journal-search" type="search" placeholder="search your entries">
+          </label>
+        </div>
+      </div>
+
+      <button id="entry-launcher" class="entry-launcher" type="button">
+        <span id="launcher-avatar" class="avatar"></span>
+        <span>
+          <strong>what do you want to remember?</strong>
+          <small>save a quote, prediction, progress update, or private thought</small>
+        </span>
+        <span class="launcher-action">write entry</span>
+      </button>
+
+      <div id="journal-entries" class="journal-entries"></div>
+      <p id="journal-empty" class="empty-state" hidden>
+        your journal is waiting for its first entry.
+      </p>
+    </section>
+  </main>
+
+  <div id="entry-modal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-entry-modal></div>
+
+    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="entry-form-title">
+      <button class="modal-close" type="button" aria-label="close journal entry form" data-close-entry-modal>×</button>
+
+      <form id="entry-form">
+        <input id="editing-entry-id" type="hidden">
+
+        <div class="form-heading">
+          <div>
+            <p class="eyebrow">your private notes</p>
+            <h2 id="entry-form-title">new journal entry</h2>
+          </div>
+          <button id="cancel-entry-edit" class="text-button" type="button" hidden>cancel edit</button>
+        </div>
+
+        <div class="form-grid">
+          <label>
+            book
+            <select id="entry-book" required>
+              <option value="">choose a book</option>
+            </select>
+          </label>
+
+          <label>
+            entry type
+            <select id="entry-type" required>
+              <option value="progress">reading progress</option>
+              <option value="thoughts">thoughts</option>
+              <option value="prediction">prediction</option>
+              <option value="quote">favorite quote</option>
+              <option value="character">character notes</option>
+              <option value="final review">final review</option>
+            </select>
+          </label>
+        </div>
+
+        <label>
+          optional title
+          <input id="entry-title" type="text" maxlength="120" placeholder="a name for this entry">
+        </label>
+
+        <label>
+          entry
+          <textarea id="entry-body" rows="8" maxlength="5000" required placeholder="write anything you want to remember..."></textarea>
+        </label>
+
+        <div class="form-grid">
+          <label>
+            optional page or chapter
+            <input id="entry-progress" type="text" maxlength="80" placeholder="chapter 12 or page 184">
+          </label>
+
+          <label>
+            optional rating
+            <select id="entry-rating">
+              <option value="0">no rating</option>
+              <option value="1">★</option>
+              <option value="2">★★</option>
+              <option value="3">★★★</option>
+              <option value="4">★★★★</option>
+              <option value="5">★★★★★</option>
+            </select>
+          </label>
+        </div>
+
+        <label class="check-label">
+          <input id="entry-spoiler" type="checkbox">
+          <span>contains spoilers if I share it later</span>
+        </label>
+
+        <button id="save-entry-button" class="primary-button" type="submit">save privately</button>
+        <p id="entry-form-message" class="form-message" aria-live="polite"></p>
+      </form>
+    </section>
+  </div>
+
+  <div id="journal-toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
