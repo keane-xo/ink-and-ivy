@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="the private ink and ivy book community.">
+  <title>community · ink and ivy</title>
+  <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml">
+  <link rel="stylesheet" href="community.css?v=1">
+  <script type="module" src="community.js?v=1"></script>
+</head>
+<body>
+  <header class="community-header">
+    <a class="brand" href="index.html">
+      <span aria-hidden="true">🌿</span>
+      <span>ink and ivy</span>
+    </a>
+
+    <nav class="community-nav">
+      <a href="index.html">the shelves</a>
+      <a href="reader.html">customize profile</a>
+      <a id="my-public-profile-link" href="#" hidden>my page</a>
+      <button id="community-signout-button" type="button" hidden>sign out</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="community-login-view" class="community-login-view">
+      <div class="login-card">
+        <span class="large-leaf" aria-hidden="true">🌿</span>
+        <p class="eyebrow">friends and books</p>
+        <h1>the community</h1>
+        <p>sign in to see reader pages, share book thoughts, and join the group chat.</p>
+        <a class="primary-link" href="reader.html?return=community.html">reader login</a>
+      </div>
+    </section>
+
+    <section id="community-view" class="community-view" hidden>
+      <div class="community-hero">
+        <div>
+          <p class="eyebrow">the ink and ivy community</p>
+          <h1>between the pages</h1>
+          <p>a private place for friends to post, read, and talk about books.</p>
+        </div>
+        <div class="standards-note">
+          <span aria-hidden="true">🌿</span>
+          <p>keep posts and chat book-related. hide spoilers and report anything that needs attention.</p>
+        </div>
+      </div>
+
+      <div class="community-tabs" role="tablist" aria-label="community sections">
+        <button class="community-tab active" type="button" data-community-tab="feed">community feed</button>
+        <button class="community-tab" type="button" data-community-tab="readers">reader pages</button>
+        <button class="community-tab" type="button" data-community-tab="chat">book chat</button>
+      </div>
+
+      <section id="feed-panel" class="community-panel">
+        <form id="post-form" class="composer-card">
+          <input id="editing-post-id" type="hidden">
+
+          <div class="composer-heading">
+            <div class="composer-profile">
+              <span id="composer-avatar" class="avatar avatar-medium"></span>
+              <div>
+                <p class="eyebrow">your little book blog</p>
+                <h2 id="composer-title">share something</h2>
+              </div>
+            </div>
+            <button id="cancel-post-edit" class="text-button" type="button" hidden>cancel edit</button>
+          </div>
+
+          <label>
+            optional title
+            <input id="post-title" type="text" maxlength="120" placeholder="a thought, review, or reading update">
+          </label>
+
+          <label>
+            what are you thinking?
+            <textarea id="post-body" rows="6" maxlength="4000" required placeholder="write about a book, a character, a theory, or your reading life..."></textarea>
+          </label>
+
+          <div class="composer-grid">
+            <label>
+              tag a book
+              <select id="post-book">
+                <option value="">no book tagged</option>
+              </select>
+            </label>
+
+            <label>
+              kind of post
+              <select id="post-reading-status">
+                <option value="thoughts">book thoughts</option>
+                <option value="currently reading">currently reading</option>
+                <option value="just finished">just finished</option>
+                <option value="want to read">want to read</option>
+                <option value="review">review</option>
+                <option value="recommendation">recommendation</option>
+              </select>
+            </label>
+          </div>
+
+          <label>
+            optional photo link
+            <input id="post-image-url" type="url" maxlength="1000" placeholder="https://...">
+            <span class="field-help">paste a direct image link. photos are hidden too when spoiler mode is on.</span>
+          </label>
+
+          <div class="composer-checks">
+            <label class="check-label">
+              <input id="post-spoiler" type="checkbox">
+              <span>this post contains spoilers</span>
+            </label>
+            <label class="check-label">
+              <input id="post-book-related" type="checkbox" required>
+              <span>this post is book-related</span>
+            </label>
+          </div>
+
+          <button id="publish-post-button" class="primary-button" type="submit">publish post</button>
+          <p id="post-form-message" class="form-message" aria-live="polite"></p>
+        </form>
+
+        <div class="feed-heading">
+          <h2>recent posts</h2>
+          <button id="refresh-feed-button" class="secondary-button" type="button">refresh</button>
+        </div>
+
+        <div id="posts-list" class="posts-list"></div>
+        <p id="posts-empty" class="empty-state" hidden>the community feed is waiting for its first post.</p>
+      </section>
+
+      <section id="readers-panel" class="community-panel" hidden>
+        <div class="feed-heading">
+          <div>
+            <p class="eyebrow">meet the readers</p>
+            <h2>friends of ink and ivy</h2>
+          </div>
+          <label class="reader-search-label">
+            <span class="sr-only">search readers</span>
+            <input id="reader-search" type="search" placeholder="search names">
+          </label>
+        </div>
+        <div id="readers-grid" class="readers-grid"></div>
+        <p id="readers-empty" class="empty-state" hidden>no readers match that search.</p>
+      </section>
+
+      <section id="chat-panel" class="community-panel chat-panel" hidden>
+        <div class="feed-heading">
+          <div>
+            <p class="eyebrow">one room for everyone</p>
+            <h2>community book chat</h2>
+            <p class="chat-description">talk books, reading, characters, and stories. use spoiler mode when needed.</p>
+          </div>
+        </div>
+
+        <div id="chat-messages" class="chat-messages"></div>
+        <p id="chat-empty" class="empty-state" hidden>say hello to the book chat.</p>
+
+        <form id="chat-form" class="chat-form">
+          <textarea id="chat-text" rows="3" maxlength="600" required placeholder="talk about books..."></textarea>
+          <div class="chat-form-bottom">
+            <label class="check-label">
+              <input id="chat-spoiler" type="checkbox">
+              <span>hide this message as a spoiler</span>
+            </label>
+            <button id="send-chat-button" class="primary-button compact" type="submit">send</button>
+          </div>
+          <p id="chat-form-message" class="form-message" aria-live="polite"></p>
+        </form>
+      </section>
+    </section>
+  </main>
+
+  <div id="report-modal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-report></div>
+    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="report-title">
+      <button class="modal-close" type="button" aria-label="close report form" data-close-report>×</button>
+      <span class="large-leaf" aria-hidden="true">🌿</span>
+      <p class="eyebrow">private report</p>
+      <h2 id="report-title">report content</h2>
+      <p>reports are visible only to the Ink & Ivy admin.</p>
+
+      <form id="report-form">
+        <label>
+          reason
+          <select id="report-reason" required>
+            <option value="">choose a reason</option>
+            <option value="not book-related">not book-related</option>
+            <option value="unhidden spoilers">unhidden spoilers</option>
+            <option value="unkind or inappropriate">unkind or inappropriate</option>
+            <option value="spam">spam</option>
+            <option value="other">other</option>
+          </select>
+        </label>
+
+        <label>
+          optional details
+          <textarea id="report-details" rows="4" maxlength="600"></textarea>
+        </label>
+
+        <button id="submit-report-button" class="primary-button" type="submit">send report</button>
+        <p id="report-message" class="form-message" aria-live="polite"></p>
+      </form>
+    </section>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

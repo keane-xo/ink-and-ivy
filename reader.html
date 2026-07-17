@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>reader profile · ink and ivy</title>
   <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml">
-<link rel="stylesheet" href="reader.css?v=2">
-  <script type="module" src="reader.js?v=2"></script>
+<link rel="stylesheet" href="reader.css?v=10">
+  <script type="module" src="reader.js?v=10"></script>
 </head>
 <body>
   <header class="reader-header">
@@ -14,7 +14,11 @@
       <span aria-hidden="true">🌿</span>
       <span>ink and ivy</span>
     </a>
-    <a class="back-link" href="index.html">back to the shelves</a>
+    <nav class="reader-header-links">
+      <a class="back-link" href="index.html">the shelves</a>
+      <a class="back-link" href="community.html">community</a>
+      <a id="public-profile-link" class="back-link" href="#" hidden>view my public page</a>
+    </nav>
   </header>
 
   <main>
@@ -138,6 +142,34 @@
             short bio
             <textarea id="profile-bio" rows="4" maxlength="240" placeholder="favorite genres, current reads, or anything you want your friends to know..."></textarea>
           </label>
+
+
+          <section class="reading-lists-editor">
+            <div class="form-heading">
+              <div>
+                <p class="eyebrow">your books</p>
+                <h2>reading lists</h2>
+              </div>
+            </div>
+
+            <p class="reading-lists-intro">
+              choose the books that appear on your public profile. a book may belong to more than one list.
+            </p>
+
+            <div class="list-tabs" role="tablist" aria-label="reading list choices">
+              <button class="list-tab active" type="button" data-list-tab="favoriteBookIds">favorites</button>
+              <button class="list-tab" type="button" data-list-tab="tbrBookIds">tbr</button>
+              <button class="list-tab" type="button" data-list-tab="currentlyReadingBookIds">currently reading</button>
+            </div>
+
+            <label class="book-list-search-label">
+              find a book
+              <input id="reading-list-search" type="search" placeholder="search by title or author">
+            </label>
+
+            <div id="reading-list-books" class="reading-list-books"></div>
+            <p id="reading-list-empty" class="reading-list-empty" hidden>no books match that search.</p>
+          </section>
 
           <button id="save-profile-button" class="primary-button" type="submit">save profile</button>
           <p id="profile-message" class="message" aria-live="polite"></p>

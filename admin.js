@@ -135,6 +135,9 @@ const bookFormMessage = document.querySelector("#book-form-message");
 const adminBookList = document.querySelector("#admin-book-list");
 const booksEmpty = document.querySelector("#books-empty");
 const importBooksButton = document.querySelector("#import-books-button");
+const adminReportList = document.querySelector("#admin-report-list");
+const adminReportsEmpty = document.querySelector("#admin-reports-empty");
+const reportFilter = document.querySelector("#report-filter");
 const adminReviewList = document.querySelector("#admin-review-list");
 const adminReviewsEmpty = document.querySelector("#admin-reviews-empty");
 
@@ -142,6 +145,7 @@ let borrowingRequests = [];
 let bookSuggestions = [];
 let books = [];
 let readerReviews = [];
+let communityReports = [];
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -186,6 +190,7 @@ function updateCounts() {
 
   document.querySelector("#book-count").textContent = books.length;
   document.querySelector("#review-count").textContent = readerReviews.length;
+  document.querySelector("#report-count").textContent = communityReports.filter((item) => item.status === "pending").length;
 }
 
 function renderBorrowing() {
@@ -334,6 +339,80 @@ function renderAdminReviews() {
     });
 
     adminReviewList.appendChild(card);
+  });
+}
+
+
+async function removeReportedContent(report) {
+  if (report.targetType === "post") {
+    await deleteDoc(doc(db, "posts", report.targetId));
+  } else if (report.targetType === "comment") {
+    await deleteDoc(doc(db, "posts", report.parentId, "comments", report.targetId));
+  } else if (report.targetType === "chat") {
+    await deleteDoc(doc(db, "chatMessages", report.targetId));
+  } else {
+    throw new Error("unsupported report target");
+  }
+}
+
+function renderReports() {
+  const filter = reportFilter.value;
+  const visible = communityReports.filter(
+    (report) => filter === "all" || report.status === filter
+  );
+
+  adminReportList.innerHTML = "";
+  adminReportsEmpty.hidden = visible.length !== 0;
+
+  visible.forEach((report) => {
+    const card = document.createElement("article");
+    card.className = "admin-report-card";
+    card.innerHTML = `
+      <div class="admin-report-top">
+        <div>
+          <h3>${escapeHtml(report.reason || "community report")}</h3>
+          <p><strong>${escapeHtml(report.targetType || "content")}</strong> · reported by ${escapeHtml(report.reporterName || "reader")}</p>
+          <p class="meta">${formatDate(report.createdAt)} · ${escapeHtml(report.status || "pending")}</p>
+        </div>
+        <span class="status">${escapeHtml(report.status || "pending")}</span>
+      </div>
+      ${report.targetPreview ? `<div class="admin-report-preview">${escapeHtml(report.targetPreview)}</div>` : ""}
+      ${report.details ? `<p class="admin-report-details">${escapeHtml(report.details)}</p>` : ""}
+      <div class="request-actions">
+        ${report.status === "pending" ? `
+          <button class="action-button" data-remove-content type="button">remove content</button>
+          <button class="action-button secondary" data-dismiss-report type="button">dismiss</button>
+        ` : ""}
+        <button class="action-button danger" data-delete-report type="button">delete report</button>
+      </div>
+    `;
+
+    card.querySelector("[data-remove-content]")?.addEventListener("click", async () => {
+      try {
+        await removeReportedContent(report);
+        await updateDoc(doc(db, "reports", report.id), { status: "resolved" });
+        showToast("content removed and report resolved.");
+        await loadData();
+      } catch (error) {
+        console.error(error);
+        showToast("the reported content could not be removed.");
+      }
+    });
+
+    card.querySelector("[data-dismiss-report]")?.addEventListener("click", async () => {
+      await updateDoc(doc(db, "reports", report.id), { status: "dismissed" });
+      showToast("report dismissed.");
+      await loadData();
+    });
+
+    card.querySelector("[data-delete-report]").addEventListener("click", async () => {
+      if (!window.confirm("delete this report permanently?")) return;
+      await deleteDoc(doc(db, "reports", report.id));
+      showToast("report deleted.");
+      await loadData();
+    });
+
+    adminReportList.appendChild(card);
   });
 }
 
@@ -499,10 +578,11 @@ async function loadData() {
   refreshButton.textContent = "loading...";
 
   try {
-    const [borrowingSnapshot, suggestionSnapshot, booksSnapshot] = await Promise.all([
+    const [borrowingSnapshot, suggestionSnapshot, booksSnapshot, reportsSnapshot] = await Promise.all([
       getDocs(query(collection(db, "checkoutRequests"), orderBy("createdAt", "desc"))),
       getDocs(query(collection(db, "bookSuggestions"), orderBy("createdAt", "desc"))),
-      getDocs(collection(db, "books"))
+      getDocs(collection(db, "books")),
+      getDocs(query(collection(db, "reports"), orderBy("createdAt", "desc")))
     ]);
 
     borrowingRequests = borrowingSnapshot.docs.map((entry) => ({
@@ -535,11 +615,17 @@ async function loadData() {
         return bTime - aTime;
       });
 
+    communityReports = reportsSnapshot.docs.map((entry) => ({
+      id: entry.id,
+      ...entry.data()
+    }));
+
     updateCounts();
     renderBorrowing();
     renderSuggestions();
     renderBooks();
     renderAdminReviews();
+    renderReports();
   } catch (error) {
     console.error(error);
     showToast("the dashboard could not load.");
@@ -602,6 +688,7 @@ signOutButton.addEventListener("click", () => signOut(auth));
 refreshButton.addEventListener("click", loadData);
 borrowingFilter.addEventListener("change", renderBorrowing);
 suggestionFilter.addEventListener("change", renderSuggestions);
+reportFilter.addEventListener("change", renderReports);
 
 document.querySelectorAll(".tab").forEach((tab) => {
   tab.addEventListener("click", () => {

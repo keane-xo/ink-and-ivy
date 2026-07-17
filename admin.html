@@ -6,8 +6,8 @@
   <meta name="robots" content="noindex, nofollow">
   <title>ink and ivy admin</title>
   <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml">
-<link rel="stylesheet" href="admin.css?v=7">
-  <script type="module" src="admin.js?v=8"></script>
+<link rel="stylesheet" href="admin.css?v=10">
+  <script type="module" src="admin.js?v=10"></script>
 </head>
 <body>
   <header class="admin-header">
@@ -73,6 +73,10 @@
           <span id="review-count">0</span>
           <p>reader reviews</p>
         </article>
+        <article>
+          <span id="report-count">0</span>
+          <p>open reports</p>
+        </article>
       </div>
 
       <div class="tabs" role="tablist" aria-label="request categories">
@@ -80,6 +84,7 @@
         <button class="tab" type="button" data-tab="suggestions">book suggestions</button>
         <button class="tab" type="button" data-tab="books">manage books</button>
         <button class="tab" type="button" data-tab="reviews">reader reviews</button>
+        <button class="tab" type="button" data-tab="reports">reports</button>
       </div>
 
       <section id="borrowing-panel" class="panel">
@@ -198,6 +203,24 @@
         </div>
         <div id="admin-review-list" class="request-list"></div>
         <p id="admin-reviews-empty" class="empty" hidden>no reader reviews yet.</p>
+      </section>
+
+
+      <section id="reports-panel" class="panel" hidden>
+        <div class="panel-heading">
+          <div>
+            <h2>community reports</h2>
+            <p class="panel-intro">review private reports, dismiss them, or remove the reported content.</p>
+          </div>
+          <select id="report-filter" aria-label="filter community reports">
+            <option value="pending">open reports</option>
+            <option value="dismissed">dismissed</option>
+            <option value="resolved">resolved</option>
+            <option value="all">all reports</option>
+          </select>
+        </div>
+        <div id="admin-report-list" class="request-list"></div>
+        <p id="admin-reports-empty" class="empty" hidden>no reports in this category.</p>
       </section>
     </section>
   </main>

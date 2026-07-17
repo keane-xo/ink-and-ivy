@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>reader page · ink and ivy</title>
+  <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml">
+  <link rel="stylesheet" href="profile.css?v=1">
+  <script type="module" src="profile.js?v=1"></script>
+</head>
+<body>
+  <header class="profile-header">
+    <a class="brand" href="index.html"><span aria-hidden="true">🌿</span><span>ink and ivy</span></a>
+    <nav>
+      <a href="community.html">community</a>
+      <a href="index.html">the shelves</a>
+      <a id="edit-own-profile-link" href="reader.html" hidden>edit my profile</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="profile-login-view" class="profile-login-view">
+      <div class="login-card">
+        <span class="large-leaf" aria-hidden="true">🌿</span>
+        <h1>reader pages are private</h1>
+        <p>sign in to visit your friends' book pages.</p>
+        <a class="primary-link" href="reader.html?return=community.html">reader login</a>
+      </div>
+    </section>
+
+    <section id="public-profile-view" class="public-profile-view" hidden>
+      <div class="profile-hero">
+        <span id="public-avatar" class="public-avatar"></span>
+        <div>
+          <p class="eyebrow">ink and ivy reader</p>
+          <h1 id="public-name">reader</h1>
+          <p id="public-bio"></p>
+        </div>
+      </div>
+
+      <div class="shelves-grid">
+        <section class="profile-shelf">
+          <p class="eyebrow">always recommending</p>
+          <h2>favorite books</h2>
+          <div id="favorite-books" class="book-chip-list"></div>
+          <p id="favorite-empty" class="empty" hidden>no favorites shared yet.</p>
+        </section>
+
+        <section class="profile-shelf">
+          <p class="eyebrow">the ever-growing list</p>
+          <h2>tbr</h2>
+          <div id="tbr-books" class="book-chip-list"></div>
+          <p id="tbr-empty" class="empty" hidden>nothing on the tbr yet.</p>
+        </section>
+
+        <section class="profile-shelf">
+          <p class="eyebrow">between these pages</p>
+          <h2>currently reading</h2>
+          <div id="reading-books" class="book-chip-list"></div>
+          <p id="reading-empty" class="empty" hidden>no current read shared.</p>
+        </section>
+      </div>
+
+      <section class="blog-section">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">their little book blog</p>
+            <h2>recent posts</h2>
+          </div>
+          <a class="secondary-link" href="community.html">open community feed</a>
+        </div>
+        <div id="profile-posts" class="profile-posts"></div>
+        <p id="profile-posts-empty" class="empty" hidden>no posts yet.</p>
+      </section>
+    </section>
+  </main>
+</body>
+</html>

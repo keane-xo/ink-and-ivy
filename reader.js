@@ -9,8 +9,10 @@ import {
   signOut
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 import {
+  collection,
   doc,
   getDoc,
+  getDocs,
   getFirestore,
   serverTimestamp,
   setDoc
@@ -44,12 +46,24 @@ const profileBio = document.querySelector("#profile-bio");
 const profileAvatarPreview = document.querySelector("#profile-avatar-preview");
 const profileNamePreview = document.querySelector("#profile-name-preview");
 const profileBioPreview = document.querySelector("#profile-bio-preview");
+const publicProfileLink = document.querySelector("#public-profile-link");
+const readingListSearch = document.querySelector("#reading-list-search");
+const readingListBooks = document.querySelector("#reading-list-books");
+const readingListEmpty = document.querySelector("#reading-list-empty");
 const toast = document.querySelector("#toast");
 
 let currentUser = null;
 let profileExists = false;
 let selectedAvatar = "📚";
 let selectedColor = "#e8b8c5";
+let books = [];
+let activeList = "favoriteBookIds";
+let favoriteBookIds = new Set();
+let tbrBookIds = new Set();
+let currentlyReadingBookIds = new Set();
+
+const returnPage = new URLSearchParams(window.location.search).get("return");
+const allowedReturnPages = new Set(["community.html"]);
 
 function showToast(message) {
   toast.textContent = message;
@@ -59,14 +73,21 @@ function showToast(message) {
 
 function friendlyAuthError(error) {
   const code = error?.code || "";
-
   if (code.includes("email-already-in-use")) return "that email already has an account.";
   if (code.includes("invalid-email")) return "enter a valid email address.";
   if (code.includes("weak-password")) return "use a password with at least 6 characters.";
   if (code.includes("invalid-credential")) return "the email or password was not accepted.";
   if (code.includes("too-many-requests")) return "too many attempts. wait a moment and try again.";
-
   return `firebase error: ${code || "unknown-error"}`;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 function updatePreview() {
@@ -79,21 +100,103 @@ function updatePreview() {
   profileAvatarPreview.style.setProperty("--avatar-color", selectedColor);
 
   if (avatarUrl) {
-    profileAvatarPreview.innerHTML = `<img src="${avatarUrl.replaceAll('"', "&quot;")}" alt="">`;
-    const image = profileAvatarPreview.querySelector("img");
-    image.addEventListener("error", () => {
+    profileAvatarPreview.innerHTML = `<img src="${escapeHtml(avatarUrl)}" alt="">`;
+    profileAvatarPreview.querySelector("img")?.addEventListener("error", () => {
       profileAvatarPreview.textContent = selectedAvatar;
     }, { once: true });
   } else {
     profileAvatarPreview.textContent = selectedAvatar;
   }
+
+  renderListPreview();
 }
+
+function setForList(listName) {
+  if (listName === "tbrBookIds") return tbrBookIds;
+  if (listName === "currentlyReadingBookIds") return currentlyReadingBookIds;
+  return favoriteBookIds;
+}
+
+function titleList(ids) {
+  return books
+    .filter((book) => ids.has(book.id))
+    .map((book) => book.title)
+    .slice(0, 4);
+}
+
+function renderListPreview() {
+  let preview = document.querySelector("#profile-list-preview");
+  if (!preview) {
+    preview = document.createElement("div");
+    preview.id = "profile-list-preview";
+    preview.className = "profile-list-preview";
+    document.querySelector(".profile-preview-card").appendChild(preview);
+  }
+
+  const favorites = titleList(favoriteBookIds);
+  const tbr = titleList(tbrBookIds);
+  const reading = titleList(currentlyReadingBookIds);
+
+  preview.innerHTML = `
+    <h3>favorite books</h3>
+    <p>${favorites.length ? favorites.map(escapeHtml).join(" · ") : "nothing chosen yet"}</p>
+    <h3>tbr</h3>
+    <p>${tbr.length ? tbr.map(escapeHtml).join(" · ") : "nothing chosen yet"}</p>
+    <h3>currently reading</h3>
+    <p>${reading.length ? reading.map(escapeHtml).join(" · ") : "nothing chosen yet"}</p>
+  `;
+}
+
+function renderReadingListBooks() {
+  const search = readingListSearch.value.trim().toLowerCase();
+  const currentSet = setForList(activeList);
+  const visible = books.filter((book) =>
+    String(book.title || "").toLowerCase().includes(search) ||
+    String(book.author || "").toLowerCase().includes(search)
+  );
+
+  readingListBooks.innerHTML = "";
+  readingListEmpty.hidden = visible.length !== 0;
+
+  visible.forEach((book) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "reading-list-book";
+    button.classList.toggle("selected", currentSet.has(book.id));
+    button.innerHTML = `
+      <span>
+        <strong>${escapeHtml(book.title)}</strong>
+        <small>by ${escapeHtml(book.author || "unknown author")}</small>
+      </span>
+      <span class="reading-list-check">${currentSet.has(book.id) ? "✓" : ""}</span>
+    `;
+
+    button.addEventListener("click", () => {
+      if (currentSet.has(book.id)) currentSet.delete(book.id);
+      else currentSet.add(book.id);
+      renderReadingListBooks();
+      updatePreview();
+    });
+
+    readingListBooks.appendChild(button);
+  });
+}
+
+document.querySelectorAll("[data-list-tab]").forEach((tab) => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll("[data-list-tab]").forEach((item) => item.classList.remove("active"));
+    tab.classList.add("active");
+    activeList = tab.dataset.listTab;
+    renderReadingListBooks();
+  });
+});
+
+readingListSearch.addEventListener("input", renderReadingListBooks);
 
 document.querySelectorAll(".auth-tab").forEach((tab) => {
   tab.addEventListener("click", () => {
     document.querySelectorAll(".auth-tab").forEach((item) => item.classList.remove("active"));
     tab.classList.add("active");
-
     const showSignin = tab.dataset.authTab === "signin";
     signinForm.hidden = !showSignin;
     signupForm.hidden = showSignin;
@@ -104,7 +207,6 @@ document.querySelectorAll(".auth-tab").forEach((tab) => {
 
 signinForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-
   const button = signinForm.querySelector('button[type="submit"]');
   button.disabled = true;
   button.textContent = "signing in...";
@@ -127,7 +229,6 @@ signinForm.addEventListener("submit", async (event) => {
 
 signupForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-
   const displayName = document.querySelector("#signup-name").value.trim();
   const email = document.querySelector("#signup-email").value.trim();
   const password = document.querySelector("#signup-password").value;
@@ -145,13 +246,15 @@ signupForm.addEventListener("submit", async (event) => {
 
   try {
     const credential = await createUserWithEmailAndPassword(auth, email, password);
-
     await setDoc(doc(db, "profiles", credential.user.uid), {
       displayName,
       avatarEmoji: "📚",
       avatarColor: "#e8b8c5",
       avatarUrl: "",
       bio: "",
+      favoriteBookIds: [],
+      tbrBookIds: [],
+      currentlyReadingBookIds: [],
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
@@ -167,7 +270,6 @@ signupForm.addEventListener("submit", async (event) => {
 async function loadProfile(user) {
   const snapshot = await getDoc(doc(db, "profiles", user.uid));
   profileExists = snapshot.exists();
-
   const profile = profileExists
     ? snapshot.data()
     : {
@@ -175,11 +277,17 @@ async function loadProfile(user) {
         avatarEmoji: "📚",
         avatarColor: "#e8b8c5",
         avatarUrl: "",
-        bio: ""
+        bio: "",
+        favoriteBookIds: [],
+        tbrBookIds: [],
+        currentlyReadingBookIds: []
       };
 
   selectedAvatar = profile.avatarEmoji || "📚";
   selectedColor = profile.avatarColor || "#e8b8c5";
+  favoriteBookIds = new Set(profile.favoriteBookIds || []);
+  tbrBookIds = new Set(profile.tbrBookIds || []);
+  currentlyReadingBookIds = new Set(profile.currentlyReadingBookIds || []);
 
   profileDisplayName.value = profile.displayName || "";
   profileAvatarUrl.value = profile.avatarUrl || "";
@@ -188,12 +296,14 @@ async function loadProfile(user) {
   document.querySelectorAll("[data-avatar]").forEach((button) => {
     button.classList.toggle("selected", button.dataset.avatar === selectedAvatar);
   });
-
   document.querySelectorAll("[data-color]").forEach((button) => {
     button.classList.toggle("selected", button.dataset.color === selectedColor);
   });
 
+  publicProfileLink.href = `profile.html?uid=${encodeURIComponent(user.uid)}`;
+  publicProfileLink.hidden = false;
   updatePreview();
+  renderReadingListBooks();
 }
 
 document.querySelectorAll("[data-avatar]").forEach((button) => {
@@ -243,19 +353,14 @@ profileForm.addEventListener("submit", async (event) => {
       avatarColor: selectedColor,
       avatarUrl,
       bio,
+      favoriteBookIds: [...favoriteBookIds],
+      tbrBookIds: [...tbrBookIds],
+      currentlyReadingBookIds: [...currentlyReadingBookIds],
       updatedAt: serverTimestamp()
     };
+    if (!profileExists) profileData.createdAt = serverTimestamp();
 
-    if (!profileExists) {
-      profileData.createdAt = serverTimestamp();
-    }
-
-    await setDoc(
-      doc(db, "profiles", currentUser.uid),
-      profileData,
-      { merge: true }
-    );
-
+    await setDoc(doc(db, "profiles", currentUser.uid), profileData, { merge: true });
     profileExists = true;
     showToast("your profile was saved.");
   } catch (error) {
@@ -270,14 +375,27 @@ profileForm.addEventListener("submit", async (event) => {
 
 document.querySelector("#reader-signout-button").addEventListener("click", () => signOut(auth));
 
+async function loadBooks() {
+  const snapshot = await getDocs(collection(db, "books"));
+  books = snapshot.docs
+    .map((entry) => ({ id: entry.id, ...entry.data() }))
+    .sort((a, b) => String(a.title || "").localeCompare(String(b.title || "")));
+  renderReadingListBooks();
+  updatePreview();
+}
+
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
   authView.hidden = Boolean(user);
   profileView.hidden = !user;
+  publicProfileLink.hidden = !user;
 
   if (user) {
     try {
-      await loadProfile(user);
+      await Promise.all([loadBooks(), loadProfile(user)]);
+      if (returnPage && allowedReturnPages.has(returnPage)) {
+        window.location.href = returnPage;
+      }
     } catch (error) {
       console.error(error);
       profileMessage.textContent = "your profile could not be loaded.";
