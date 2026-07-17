@@ -6,8 +6,8 @@
   <meta name="description" content="ink and ivy — a private lending library for curious readers.">
   <title>ink and ivy</title>
   <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml">
-<link rel="stylesheet" href="style.css?v=15">
-  <script type="module" src="script.js?v=15"></script>
+<link rel="stylesheet" href="style.css?v=17">
+  <script type="module" src="script.js?v=17"></script>
 </head>
 <body>
   <header class="site-header">
@@ -26,6 +26,7 @@
       <a href="#request">suggest a new title</a>
       <a href="community.html">community</a>
       <a href="journal.html">reading journal</a>
+      <a href="recommendations.html">friend picks</a>
       <a id="reader-account-link" class="reader-account-link" href="reader.html"><span id="reader-nav-avatar" class="reader-nav-avatar" hidden></span><span id="reader-nav-label">reader login</span></a>
     </nav>
   </header>
@@ -308,9 +309,14 @@
             </form>
           </section>
 
-          <button id="book-details-request-button" class="button button-primary detail-request-button" type="button">
-            request checkout
-          </button>
+          <div class="detail-action-row">
+            <button id="book-details-request-button" class="button button-primary detail-request-button" type="button">
+              request checkout
+            </button>
+            <button id="book-details-recommend-button" class="button button-secondary detail-recommend-button" type="button">
+              recommend to a friend
+            </button>
+          </div>
         </div>
       </div>
     </section>
@@ -342,7 +348,7 @@
 
       <div class="loan-policy" aria-label="checkout policy">
         <strong>checkout policy</strong>
-        <span>up to 3 books at a time · 14-day loans · 2 checkout requests per 9 weeks</span>
+        <span>up to 3 pending requests or active loans · 14-day loans</span>
       </div>
 
       <form id="borrowing-request-form" class="borrowing-request-form">

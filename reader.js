@@ -82,7 +82,12 @@ const TITLE_SUGGESTION_WINDOW_MS =
 const ACTIVE_CHECKOUT_STATUSES = new Set(["pending", "approved"]);
 
 const returnPage = new URLSearchParams(window.location.search).get("return");
-const allowedReturnPages = new Set(["community.html", "index.html"]);
+const allowedReturnPages = new Set([
+  "community.html",
+  "index.html",
+  "journal.html",
+  "recommendations.html"
+]);
 
 
 function formatLoanDate(timestamp) {

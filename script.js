@@ -42,6 +42,8 @@ let currentProfile = null;
 let selectedRating = 0;
 let reviewsUnsubscribe = null;
 let currentUserReview = null;
+let linkedBookOpened = false;
+const linkedBookId = new URLSearchParams(window.location.search).get("book");
 
 const MAX_CHECKOUTS = 3;
 const MAX_TITLE_SUGGESTIONS_PER_WINDOW = 2;
@@ -81,6 +83,7 @@ const detailsCover = document.querySelector("#book-details-cover");
 const detailsCoverFallback = document.querySelector("#book-details-cover-fallback");
 const detailsCoverTitle = document.querySelector("#book-details-cover-title");
 const detailsRequestButton = document.querySelector("#book-details-request-button");
+const detailsRecommendButton = document.querySelector("#book-details-recommend-button");
 
 const readerAccountLink = document.querySelector("#reader-account-link");
 const readerNavAvatar = document.querySelector("#reader-nav-avatar");
@@ -538,6 +541,25 @@ function closeBorrowingModal() {
   readerNameInput.disabled = false;
 }
 
+
+detailsRecommendButton.addEventListener("click", () => {
+  if (!selectedBook) return;
+
+  sessionStorage.setItem(
+    "inkIvyRecommendationBookId",
+    selectedBook.id
+  );
+
+  if (!currentUser || !currentProfile) {
+    window.location.href =
+      "reader.html?return=recommendations.html";
+    return;
+  }
+
+  window.location.href =
+    `recommendations.html?book=${encodeURIComponent(selectedBook.id)}`;
+});
+
 detailsRequestButton.addEventListener("click", () => {
   if (!selectedBook) return;
   const book = selectedBook;
@@ -873,6 +895,14 @@ onSnapshot(
 
     rebuildGenreOptions();
     renderBooks();
+
+    if (!linkedBookOpened && linkedBookId) {
+      const linkedBook = books.find((book) => book.id === linkedBookId);
+      if (linkedBook) {
+        linkedBookOpened = true;
+        window.setTimeout(() => openBookDetails(linkedBook), 50);
+      }
+    }
   },
   (error) => {
     console.error(error);

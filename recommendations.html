@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="private friend-to-friend book recommendations for ink and ivy readers.">
+  <title>friend picks · ink and ivy</title>
+  <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml">
+  <link rel="stylesheet" href="recommendations.css?v=1">
+  <script type="module" src="recommendations.js?v=1"></script>
+</head>
+<body>
+  <header class="recommendations-header">
+    <a class="brand" href="index.html">
+      <span aria-hidden="true">🌿</span>
+      <span>ink and ivy</span>
+    </a>
+
+    <nav>
+      <a href="index.html">the shelves</a>
+      <a href="community.html">community</a>
+      <a href="journal.html">reading journal</a>
+      <a href="reader.html">reader account</a>
+      <button id="recommendations-signout-button" type="button" hidden>sign out</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="recommendations-login-view" class="login-view">
+      <div class="login-card">
+        <span class="large-leaf" aria-hidden="true">🌿</span>
+        <p class="eyebrow">books chosen by friends</p>
+        <h1>friend picks</h1>
+        <p>
+          sign in to recommend books privately and see the stories your friends
+          selected especially for you.
+        </p>
+        <a class="primary-link" href="reader.html?return=recommendations.html">reader login</a>
+      </div>
+    </section>
+
+    <section id="recommendations-view" class="recommendations-view" hidden>
+      <div class="recommendations-hero">
+        <div>
+          <p class="eyebrow">a book from me to you</p>
+          <h1>friend picks</h1>
+          <p>
+            send a book with a private note, collect recommendations from friends,
+            and add their choices directly to your tbr.
+          </p>
+        </div>
+
+        <aside class="recommendation-summary">
+          <strong id="unread-recommendation-count">0</strong>
+          <span>new recommendations</span>
+        </aside>
+      </div>
+
+      <div class="recommendation-tabs" role="tablist" aria-label="friend recommendation sections">
+        <button class="recommendation-tab active" type="button" data-recommendation-tab="received">
+          picked for me
+        </button>
+        <button class="recommendation-tab" type="button" data-recommendation-tab="sent">
+          sent by me
+        </button>
+        <button class="recommendation-tab" type="button" data-recommendation-tab="compose">
+          recommend a book
+        </button>
+      </div>
+
+      <section id="received-panel" class="recommendation-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">books my friends chose</p>
+            <h2>picked for me</h2>
+          </div>
+
+          <label class="status-filter">
+            show
+            <select id="received-status-filter">
+              <option value="active">active recommendations</option>
+              <option value="unread">new only</option>
+              <option value="saved">added to tbr</option>
+              <option value="dismissed">dismissed</option>
+              <option value="all">all</option>
+            </select>
+          </label>
+        </div>
+
+        <div id="received-recommendations" class="recommendation-list"></div>
+        <p id="received-empty" class="empty-state" hidden>
+          no friend recommendations are waiting here yet.
+        </p>
+      </section>
+
+      <section id="sent-panel" class="recommendation-panel" hidden>
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">books you passed along</p>
+            <h2>sent by me</h2>
+          </div>
+          <button id="sent-compose-button" class="primary-button compact" type="button">
+            send another
+          </button>
+        </div>
+
+        <div id="sent-recommendations" class="recommendation-list"></div>
+        <p id="sent-empty" class="empty-state" hidden>
+          you have not recommended a book yet.
+        </p>
+      </section>
+
+      <section id="compose-panel" class="recommendation-panel" hidden>
+        <div class="compose-layout">
+          <div class="compose-introduction">
+            <span aria-hidden="true">💌</span>
+            <p class="eyebrow">a private note between readers</p>
+            <h2>recommend a book</h2>
+            <p>
+              choose a friend, select a book from the Ink & Ivy shelves, and tell
+              them why you thought of them.
+            </p>
+          </div>
+
+          <form id="recommendation-form" class="recommendation-form">
+            <label>
+              friend
+              <select id="recommendation-friend" required>
+                <option value="">choose a friend</option>
+              </select>
+            </label>
+
+            <label>
+              book
+              <select id="recommendation-book" required>
+                <option value="">choose a book</option>
+              </select>
+            </label>
+
+            <label>
+              private note
+              <textarea
+                id="recommendation-note"
+                rows="6"
+                maxlength="800"
+                required
+                placeholder="I thought you would love this because..."
+              ></textarea>
+            </label>
+
+            <button id="send-recommendation-button" class="primary-button" type="submit">
+              send recommendation
+            </button>
+            <p id="recommendation-form-message" class="form-message" aria-live="polite"></p>
+          </form>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <div id="recommendations-toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

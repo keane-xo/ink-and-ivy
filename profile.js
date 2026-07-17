@@ -35,6 +35,7 @@ const avatar = document.querySelector("#public-avatar");
 const name = document.querySelector("#public-name");
 const bio = document.querySelector("#public-bio");
 const editOwnLink = document.querySelector("#edit-own-profile-link");
+const recommendToReaderLink = document.querySelector("#recommend-to-reader-link");
 const postsContainer = document.querySelector("#profile-posts");
 const postsEmpty = document.querySelector("#profile-posts-empty");
 const toast = document.querySelector("#profile-toast");
@@ -347,6 +348,9 @@ async function loadPage(user) {
   renderBookList("#reading-books", "#reading-empty", profile.currentlyReadingBookIds);
 
   editOwnLink.hidden = user.uid !== profileId;
+  recommendToReaderLink.hidden = user.uid === profileId;
+  recommendToReaderLink.href =
+    `recommendations.html?to=${encodeURIComponent(profileId)}`;
 
   onSnapshot(
     query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(100)),

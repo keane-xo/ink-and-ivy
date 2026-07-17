@@ -1314,3 +1314,26 @@ body.modal-open {
   border-top: 1px solid rgba(118, 83, 63, 0.18);
   font-style: italic;
 }
+
+
+/* Friend recommendations from book details */
+.detail-action-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 11px;
+  margin-top: 18px;
+}
+
+.detail-action-row .detail-request-button {
+  margin-top: 0;
+}
+
+.detail-recommend-button {
+  width: 100%;
+}
+
+@media (max-width: 620px) {
+  .detail-action-row {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,31 +1,26 @@
-INK AND IVY — ACTUAL DIGITAL JOURNAL
+INK AND IVY — FRIEND-TO-FRIEND BOOK RECOMMENDATIONS
 
-THE JOURNAL NOW FEELS LIKE A REAL BOOK
+THIS NEW FEATURE IS CALLED "FRIEND PICKS"
 
-- Readers first see their own journal cover.
-- The cover opens into a two-page digital journal.
-- The left page is a table of contents with filters and search.
-- The right page is lined paper.
-- New entries are typed directly across the lined page.
-- Saved entries are displayed as handwritten-style journal pages.
-- All existing entry types, book selection, progress, ratings, spoiler toggle,
-  private saving, editing, deleting, filtering, and community sharing remain.
-- The layout stacks neatly on phones.
+READERS CAN
+- Recommend any Ink & Ivy book privately to a friend
+- Include a personal note explaining why they chose it
+- Recommend directly from a book's detail popup
+- Recommend directly from a friend's reader page
+- See recommendations friends selected for them
+- See recommendations they have sent
+- Add a recommended book directly to their TBR
+- Mark recommendations as read, dismiss them, or remove them
+- Open the recommended book directly on the shelves
+- See a live count of new recommendations
 
-CUSTOMIZABLE COVER
-
-Each reader can save:
-- A custom cover title
-- A custom subtitle
-- One of 6 cover colors
-- One of 5 accent colors
-- Ivy, floral, stars, linen, or plain pattern
-- One of 8 cover emblems
-
-Cover settings are private and saved to the reader's Firebase account.
+PRIVACY
+Recommendations and notes are visible only to:
+- The sender
+- The recipient
+- The Ink & Ivy administrator
 
 STEP 1 — FIREBASE RULES
-
 Open FIRESTORE_RULES.txt.
 Copy everything into Firebase > Firestore Database > Rules.
 Replace the current rules and click Publish.
@@ -33,12 +28,27 @@ Replace the current rules and click Publish.
 STEP 2 — GITHUB
 
 Upload and replace:
+- index.html
+- style.css
+- script.js
+- reader.html
+- reader.js
+- community.html
+- profile.html
+- profile.css
+- profile.js
 - journal.html
-- journal.css
-- journal.js
+
+Upload these new files:
+- recommendations.html
+- recommendations.css
+- recommendations.js
 
 Do not upload FIRESTORE_RULES.txt to GitHub.
 
-STEP 3 — OPEN THE JOURNAL
+STEP 3 — OPEN FRIEND PICKS
 
-https://keane-xo.github.io/ink-and-ivy/journal.html?v=2
+https://keane-xo.github.io/ink-and-ivy/recommendations.html?v=1
+
+The homepage, community, reader account, reading journal, and reader pages
+will all link to Friend Picks.

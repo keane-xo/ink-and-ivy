@@ -222,3 +222,15 @@ h1,h2,h3,p{margin-top:0}h1{margin-bottom:12px;color:var(--brown);font-size:clamp
     width: 100%;
   }
 }
+
+
+.recommend-reader-link {
+  display: inline-block;
+  margin-top: 17px;
+  padding: 11px 18px;
+  color: var(--dark-brown);
+  background: var(--pink);
+  border: 1px solid var(--rose);
+  border-radius: 999px;
+  text-decoration: none;
+}
