@@ -10,7 +10,6 @@ import {
 import {
   addDoc,
   collection,
-  collectionGroup,
   deleteDoc,
   doc,
   getDocs,
@@ -500,11 +499,10 @@ async function loadData() {
   refreshButton.textContent = "loading...";
 
   try {
-    const [borrowingSnapshot, suggestionSnapshot, booksSnapshot, reviewsSnapshot] = await Promise.all([
+    const [borrowingSnapshot, suggestionSnapshot, booksSnapshot] = await Promise.all([
       getDocs(query(collection(db, "checkoutRequests"), orderBy("createdAt", "desc"))),
       getDocs(query(collection(db, "bookSuggestions"), orderBy("createdAt", "desc"))),
-      getDocs(collection(db, "books")),
-      getDocs(collectionGroup(db, "reviews"))
+      getDocs(collection(db, "books"))
     ]);
 
     borrowingRequests = borrowingSnapshot.docs.map((entry) => ({
@@ -521,8 +519,16 @@ async function loadData() {
       .map((entry) => ({ id: entry.id, ...entry.data() }))
       .sort((a, b) => String(a.title || "").localeCompare(String(b.title || "")));
 
-    readerReviews = reviewsSnapshot.docs
-      .map((entry) => ({ id: entry.id, ...entry.data() }))
+    const reviewSnapshots = await Promise.all(
+      books.map((book) =>
+        getDocs(collection(db, "books", book.id, "reviews"))
+      )
+    );
+
+    readerReviews = reviewSnapshots
+      .flatMap((snapshot) =>
+        snapshot.docs.map((entry) => ({ id: entry.id, ...entry.data() }))
+      )
       .sort((a, b) => {
         const aTime = a.updatedAt?.seconds || 0;
         const bTime = b.updatedAt?.seconds || 0;

@@ -1,18 +1,14 @@
-INK AND IVY — TRANSPARENT EMOJI TAB ICON
+INK AND IVY — ADMIN DATA FIX
 
-Upload these four files to the main level of the GitHub repository:
-- index.html
+Upload these two files to GitHub and replace the current versions:
 - admin.html
-- reader.html
-- favicon.svg
+- admin.js
 
-Replace the three HTML files and the old favicon.svg.
-
-You do not need favicon.ico anymore. The updated HTML uses only the transparent SVG emoji icon.
+No Firebase rules need to be changed.
 
 After committing:
 1. Wait about one minute.
-2. Close the old Ink & Ivy tab.
-3. Open the site in a brand-new tab.
+2. Open admin.html?v=8
+3. Click Refresh once if needed.
 
-The icon should now be exactly: 🌿
+This fixes the dashboard loading failure that caused every count to display as zero.
