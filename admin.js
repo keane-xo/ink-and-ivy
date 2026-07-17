@@ -234,7 +234,8 @@ loginForm.addEventListener("submit", async (event) => {
     }
   } catch (error) {
     console.error(error);
-    loginMessage.textContent = "the email or password was not accepted.";
+    const code = error?.code || "unknown-error";
+    loginMessage.textContent = `firebase error: ${code}`;
   } finally {
     loginButton.disabled = false;
     loginButton.textContent = "sign in";
