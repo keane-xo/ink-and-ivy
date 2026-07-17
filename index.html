@@ -154,6 +154,58 @@
     <p>ink and ivy · stories are meant to be shared</p>
   </footer>
 
+
+  <div id="request-modal" class="request-modal" hidden>
+    <div class="request-modal-backdrop" data-close-modal></div>
+
+    <section
+      class="request-modal-card"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="request-modal-title"
+    >
+      <button
+        class="request-modal-close"
+        type="button"
+        aria-label="close request form"
+        data-close-modal
+      >
+        ×
+      </button>
+
+      <span class="request-modal-leaf" aria-hidden="true">🌿</span>
+      <p class="eyebrow">one small step</p>
+      <h2 id="request-modal-title">request this book</h2>
+      <p id="request-modal-copy" class="request-modal-copy"></p>
+
+      <form id="borrowing-request-form" class="borrowing-request-form">
+        <label>
+          your name
+          <input
+            id="reader-name"
+            name="readerName"
+            type="text"
+            maxlength="80"
+            autocomplete="name"
+            required
+            placeholder="enter your name"
+          >
+        </label>
+
+        <div class="request-modal-actions">
+          <button class="button button-secondary" type="button" data-close-modal>
+            never mind
+          </button>
+          <button id="confirm-request-button" class="button button-primary" type="submit">
+            send request
+          </button>
+        </div>
+
+        <p id="borrowing-form-message" class="form-message" aria-live="polite"></p>
+      </form>
+    </section>
+  </div>
+
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </body>
 </html>

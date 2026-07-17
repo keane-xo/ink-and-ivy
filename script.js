@@ -38,6 +38,16 @@ const emptyState = document.querySelector("#empty-state");
 const toast = document.querySelector("#toast");
 const requestForm = document.querySelector("#request-form");
 const formMessage = document.querySelector("#form-message");
+const requestModal = document.querySelector("#request-modal");
+const requestModalTitle = document.querySelector("#request-modal-title");
+const requestModalCopy = document.querySelector("#request-modal-copy");
+const borrowingRequestForm = document.querySelector("#borrowing-request-form");
+const borrowingFormMessage = document.querySelector("#borrowing-form-message");
+const readerNameInput = document.querySelector("#reader-name");
+const confirmRequestButton = document.querySelector("#confirm-request-button");
+
+let selectedBook = null;
+let selectedRequestButton = null;
 
 function showToast(message) {
   toast.textContent = message;
@@ -56,51 +66,93 @@ function addGenreOptions() {
   });
 }
 
-async function saveBorrowingRequest(book, button) {
+function openBorrowingModal(book, button) {
+  selectedBook = book;
+  selectedRequestButton = button;
+
   const requestType = book.status === "available" ? "checkout" : "waitlist";
-  const readerName = window.prompt(`what is your name for this ${requestType} request?`);
+  requestModalTitle.textContent =
+    requestType === "checkout" ? "request this book" : "join the waitlist";
+  requestModalCopy.textContent =
+    requestType === "checkout"
+      ? `enter your name to request ${book.title}.`
+      : `enter your name to join the waitlist for ${book.title}.`;
+  confirmRequestButton.textContent =
+    requestType === "checkout" ? "send request" : "join waitlist";
 
-  if (readerName === null) return;
+  borrowingRequestForm.reset();
+  borrowingFormMessage.textContent = "";
+  requestModal.hidden = false;
+  document.body.classList.add("modal-open");
 
-  const cleanName = readerName.trim();
+  window.setTimeout(() => readerNameInput.focus(), 50);
+}
+
+function closeBorrowingModal() {
+  requestModal.hidden = true;
+  document.body.classList.remove("modal-open");
+  selectedBook = null;
+  selectedRequestButton = null;
+  borrowingFormMessage.textContent = "";
+}
+
+document.querySelectorAll("[data-close-modal]").forEach((element) => {
+  element.addEventListener("click", closeBorrowingModal);
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !requestModal.hidden) {
+    closeBorrowingModal();
+  }
+});
+
+borrowingRequestForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  if (!selectedBook) return;
+
+  const cleanName = readerNameInput.value.trim();
+  const requestType =
+    selectedBook.status === "available" ? "checkout" : "waitlist";
 
   if (!cleanName) {
-    showToast("please enter your name before sending the request.");
+    borrowingFormMessage.textContent = "please enter your name.";
+    readerNameInput.focus();
     return;
   }
 
-  if (cleanName.length > 80) {
-    showToast("please use a name shorter than 80 characters.");
-    return;
-  }
-
-  const originalText = button.textContent;
-  button.disabled = true;
-  button.textContent = "sending...";
+  const originalText = confirmRequestButton.textContent;
+  confirmRequestButton.disabled = true;
+  confirmRequestButton.textContent = "sending...";
+  borrowingFormMessage.textContent = "";
 
   try {
     await addDoc(collection(db, "checkoutRequests"), {
       name: cleanName,
-      bookTitle: book.title,
-      author: book.author,
+      bookTitle: selectedBook.title,
+      author: selectedBook.author,
       requestType,
       status: "pending",
       createdAt: serverTimestamp()
     });
 
+    const savedTitle = selectedBook.title;
+    closeBorrowingModal();
+
     showToast(
       requestType === "checkout"
-        ? `your request for ${book.title} was sent.`
-        : `you joined the waitlist for ${book.title}.`
+        ? `your request for ${savedTitle} was sent.`
+        : `you joined the waitlist for ${savedTitle}.`
     );
   } catch (error) {
     console.error(error);
-    showToast("the request could not be sent. please try again.");
+    borrowingFormMessage.textContent =
+      "the request could not be sent. please try again.";
   } finally {
-    button.disabled = false;
-    button.textContent = originalText;
+    confirmRequestButton.disabled = false;
+    confirmRequestButton.textContent = originalText;
   }
-}
+});
 
 function renderBooks() {
   const searchTerm = searchInput.value.trim().toLowerCase();
@@ -150,7 +202,7 @@ function renderBooks() {
     `;
 
     const actionButton = card.querySelector(".book-action");
-    actionButton.addEventListener("click", () => saveBorrowingRequest(book, actionButton));
+    actionButton.addEventListener("click", () => openBorrowingModal(book, actionButton));
     bookGrid.appendChild(card);
   });
 }
