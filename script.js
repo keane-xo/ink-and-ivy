@@ -1,52 +1,32 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+import {
+  addDoc,
+  collection,
+  getFirestore,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC1d0xo61Z0U9mReJnw7s5Z3x0HFrrfB2k",
+  authDomain: "ink-and-ivy-d0ff3.firebaseapp.com",
+  projectId: "ink-and-ivy-d0ff3",
+  storageBucket: "ink-and-ivy-d0ff3.firebasestorage.app",
+  messagingSenderId: "444464034610",
+  appId: "1:444464034610:web:de9c2c3a33737ae6849d2b"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 const books = [
-  {
-    title: "the hunger games",
-    author: "suzanne collins",
-    genre: "dystopian",
-    status: "available"
-  },
-  {
-    title: "the inheritance games",
-    author: "jennifer lynn barnes",
-    genre: "mystery",
-    status: "borrowed"
-  },
-  {
-    title: "little women",
-    author: "louisa may alcott",
-    genre: "classic",
-    status: "available"
-  },
-  {
-    title: "six of crows",
-    author: "leigh bardugo",
-    genre: "fantasy",
-    status: "available"
-  },
-  {
-    title: "the summer i turned pretty",
-    author: "jenny han",
-    genre: "romance",
-    status: "borrowed"
-  },
-  {
-    title: "a good girl's guide to murder",
-    author: "holly jackson",
-    genre: "mystery",
-    status: "available"
-  },
-  {
-    title: "the book thief",
-    author: "markus zusak",
-    genre: "historical fiction",
-    status: "available"
-  },
-  {
-    title: "the cruel prince",
-    author: "holly black",
-    genre: "fantasy",
-    status: "borrowed"
-  }
+  { title: "the hunger games", author: "suzanne collins", genre: "dystopian", status: "available" },
+  { title: "the inheritance games", author: "jennifer lynn barnes", genre: "mystery", status: "borrowed" },
+  { title: "little women", author: "louisa may alcott", genre: "classic", status: "available" },
+  { title: "six of crows", author: "leigh bardugo", genre: "fantasy", status: "available" },
+  { title: "the summer i turned pretty", author: "jenny han", genre: "romance", status: "borrowed" },
+  { title: "a good girl's guide to murder", author: "holly jackson", genre: "mystery", status: "available" },
+  { title: "the book thief", author: "markus zusak", genre: "historical fiction", status: "available" },
+  { title: "the cruel prince", author: "holly black", genre: "fantasy", status: "borrowed" }
 ];
 
 const bookGrid = document.querySelector("#book-grid");
@@ -56,11 +36,13 @@ const statusFilter = document.querySelector("#status-filter");
 const resultsCount = document.querySelector("#results-count");
 const emptyState = document.querySelector("#empty-state");
 const toast = document.querySelector("#toast");
+const requestForm = document.querySelector("#request-form");
+const formMessage = document.querySelector("#form-message");
 
 function showToast(message) {
   toast.textContent = message;
   toast.classList.add("show");
-  window.setTimeout(() => toast.classList.remove("show"), 2600);
+  window.setTimeout(() => toast.classList.remove("show"), 3200);
 }
 
 function addGenreOptions() {
@@ -72,6 +54,52 @@ function addGenreOptions() {
     option.textContent = genre;
     genreFilter.appendChild(option);
   });
+}
+
+async function saveBorrowingRequest(book, button) {
+  const requestType = book.status === "available" ? "checkout" : "waitlist";
+  const readerName = window.prompt(`what is your name for this ${requestType} request?`);
+
+  if (readerName === null) return;
+
+  const cleanName = readerName.trim();
+
+  if (!cleanName) {
+    showToast("please enter your name before sending the request.");
+    return;
+  }
+
+  if (cleanName.length > 80) {
+    showToast("please use a name shorter than 80 characters.");
+    return;
+  }
+
+  const originalText = button.textContent;
+  button.disabled = true;
+  button.textContent = "sending...";
+
+  try {
+    await addDoc(collection(db, "checkoutRequests"), {
+      name: cleanName,
+      bookTitle: book.title,
+      author: book.author,
+      requestType,
+      status: "pending",
+      createdAt: serverTimestamp()
+    });
+
+    showToast(
+      requestType === "checkout"
+        ? `your request for ${book.title} was sent.`
+        : `you joined the waitlist for ${book.title}.`
+    );
+  } catch (error) {
+    console.error(error);
+    showToast("the request could not be sent. please try again.");
+  } finally {
+    button.disabled = false;
+    button.textContent = originalText;
+  }
 }
 
 function renderBooks() {
@@ -121,10 +149,8 @@ function renderBooks() {
       </div>
     `;
 
-    card.querySelector(".book-action").addEventListener("click", () => {
-      showToast(`the ${buttonText} feature will be connected next.`);
-    });
-
+    const actionButton = card.querySelector(".book-action");
+    actionButton.addEventListener("click", () => saveBorrowingRequest(book, actionButton));
     bookGrid.appendChild(card);
   });
 }
@@ -135,7 +161,7 @@ statusFilter.addEventListener("change", renderBooks);
 
 document.querySelectorAll("[data-coming-soon]").forEach((button) => {
   button.addEventListener("click", () => {
-    showToast(`${button.dataset.comingSoon} will be connected next.`);
+    showToast(`${button.dataset.comingSoon} will be added later.`);
   });
 });
 
@@ -147,11 +173,44 @@ menuButton.addEventListener("click", () => {
   menuButton.setAttribute("aria-expanded", String(isOpen));
 });
 
-document.querySelector("#request-form").addEventListener("submit", (event) => {
+requestForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  document.querySelector("#form-message").textContent =
-    "your request form works visually. we will save requests next.";
-  event.currentTarget.reset();
+
+  const submitButton = requestForm.querySelector('button[type="submit"]');
+  const formData = new FormData(requestForm);
+  const name = String(formData.get("name") || "").trim();
+  const title = String(formData.get("title") || "").trim();
+  const author = String(formData.get("author") || "").trim();
+  const reason = String(formData.get("reason") || "").trim();
+
+  if (!name || !title) {
+    formMessage.textContent = "please enter your name and the book title.";
+    return;
+  }
+
+  submitButton.disabled = true;
+  submitButton.textContent = "sending...";
+  formMessage.textContent = "";
+
+  try {
+    await addDoc(collection(db, "bookSuggestions"), {
+      name,
+      title,
+      author,
+      reason,
+      status: "pending",
+      createdAt: serverTimestamp()
+    });
+
+    formMessage.textContent = "your book suggestion was sent successfully.";
+    requestForm.reset();
+  } catch (error) {
+    console.error(error);
+    formMessage.textContent = "your suggestion could not be sent. please try again.";
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = "send request";
+  }
 });
 
 addGenreOptions();
