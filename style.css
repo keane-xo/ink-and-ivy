@@ -1173,3 +1173,110 @@ body.modal-open {
   cursor: not-allowed;
   opacity: 0.7;
 }
+
+
+/* Prominent borrowing-guidelines panel */
+.borrowing-policy {
+  width: min(1120px, 90%);
+  margin: 18px auto 72px;
+  padding: 32px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  box-shadow: 0 16px 38px rgba(74, 51, 40, 0.08);
+}
+
+.borrowing-policy-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 17px;
+  max-width: 760px;
+  margin-bottom: 25px;
+}
+
+.borrowing-policy-leaf {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  background: var(--light-pink);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  font-size: 1.45rem;
+}
+
+.borrowing-policy-heading h2 {
+  margin: 0 0 8px;
+  color: var(--brown);
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: normal;
+}
+
+.borrowing-policy-heading p:last-child {
+  margin-bottom: 0;
+  color: #7c6658;
+  line-height: 1.6;
+}
+
+.borrowing-policy-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.borrowing-policy-grid article {
+  min-height: 205px;
+  padding: 24px 21px;
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: 17px;
+}
+
+.borrowing-policy-grid strong {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--rose);
+  font-size: 3.1rem;
+  font-weight: normal;
+  line-height: 1;
+}
+
+.borrowing-policy-grid h3 {
+  margin: 0 0 10px;
+  color: var(--brown);
+  font-size: 1.25rem;
+  font-weight: normal;
+}
+
+.borrowing-policy-grid p {
+  margin-bottom: 0;
+  color: #715f53;
+  line-height: 1.6;
+}
+
+.borrowing-policy-note {
+  margin: 18px 0 0;
+  padding-top: 17px;
+  color: var(--green);
+  border-top: 1px solid var(--line);
+  line-height: 1.55;
+  text-align: center;
+  font-style: italic;
+}
+
+@media (max-width: 760px) {
+  .borrowing-policy {
+    width: min(92%, 1120px);
+    padding: 25px 19px;
+    margin-bottom: 55px;
+  }
+
+  .borrowing-policy-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .borrowing-policy-grid article {
+    min-height: auto;
+  }
+}

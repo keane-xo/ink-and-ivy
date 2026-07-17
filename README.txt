@@ -1,32 +1,18 @@
-INK AND IVY — TWO REQUESTS PER NINE WEEKS
+INK AND IVY — VISIBLE BORROWING GUIDELINES
 
-THIS UPDATE ADDS
-- A maximum of two new checkout requests in any rolling nine-week period
-- A clear message showing the next date a reader may request a checkout
-- A reader-account counter showing requests used out of two
-- The existing three-active-book limit and 14-day due dates remain unchanged
-- Waitlist joins and new-book suggestions do not use the two-request allowance
+This adds a prominent borrowing-guidelines section near the top of the homepage.
 
-WHAT COUNTS
-Every checkout request submitted during the previous 63 days counts, even if it
-was later approved, completed, or declined. This prevents repeated request
-submissions from bypassing the limit.
+It clearly tells readers:
+- Up to 3 pending checkout requests or active loans at once
+- Up to 2 new checkout requests in any rolling 9-week period
+- Each approved checkout lasts 14 days
+- Waitlists and new-title suggestions do not use the 2-request allowance
 
-UPLOAD THESE SIX FILES TO GITHUB
+UPLOAD AND REPLACE:
 - index.html
 - style.css
-- script.js
-- reader.html
-- reader.css
-- reader.js
 
-Replace the current versions and commit the changes.
+No Firebase rules or JavaScript files need to change.
 
-NO FIREBASE RULE CHANGE IS NEEDED.
-
-AFTER COMMITTING
-Open:
-https://keane-xo.github.io/ink-and-ivy/?v=12
-
-Reader account:
-https://keane-xo.github.io/ink-and-ivy/reader.html?v=12
+After committing, open:
+https://keane-xo.github.io/ink-and-ivy/?v=13
