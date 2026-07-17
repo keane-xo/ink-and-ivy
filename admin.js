@@ -1,7 +1,9 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
 import {
+  browserLocalPersistence,
   getAuth,
   onAuthStateChanged,
+  setPersistence,
   signInWithEmailAndPassword,
   signOut
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
@@ -215,6 +217,31 @@ async function loadData() {
   }
 }
 
+async function openDashboardForUser(user) {
+  if (!user) {
+    loginView.hidden = false;
+    dashboardView.hidden = true;
+    signOutButton.hidden = true;
+    return false;
+  }
+
+  if (user.uid !== ADMIN_UID) {
+    loginView.hidden = false;
+    dashboardView.hidden = true;
+    signOutButton.hidden = true;
+    loginMessage.textContent =
+      `the login worked, but this account has uid ${user.uid}.`;
+    return false;
+  }
+
+  loginMessage.textContent = "";
+  loginView.hidden = true;
+  dashboardView.hidden = false;
+  signOutButton.hidden = false;
+  await loadData();
+  return true;
+}
+
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
@@ -226,15 +253,13 @@ loginForm.addEventListener("submit", async (event) => {
   loginMessage.textContent = "";
 
   try {
+    await setPersistence(auth, browserLocalPersistence);
     const credential = await signInWithEmailAndPassword(auth, email, password);
-
-    if (credential.user.uid !== ADMIN_UID) {
-      await signOut(auth);
-      loginMessage.textContent = "this account does not have admin access.";
-    }
+    await openDashboardForUser(credential.user);
   } catch (error) {
     console.error(error);
-    loginMessage.textContent = `firebase error: ${error?.code || "unknown-error"}`;
+    loginMessage.textContent =
+      `firebase error: ${error?.code || "unknown-error"}`;
   } finally {
     loginButton.disabled = false;
     loginButton.textContent = "sign in";
@@ -258,13 +283,5 @@ document.querySelectorAll(".tab").forEach((tab) => {
 });
 
 onAuthStateChanged(auth, async (user) => {
-  const isAdmin = user?.uid === ADMIN_UID;
-
-  loginView.hidden = isAdmin;
-  dashboardView.hidden = !isAdmin;
-  signOutButton.hidden = !isAdmin;
-
-  if (isAdmin) {
-    await loadData();
-  }
+  await openDashboardForUser(user);
 });

@@ -1,3 +1,7 @@
+[hidden] {
+  display: none !important;
+}
+
 :root {
   --cream: #fbf3e6;
   --paper: #fffaf2;
