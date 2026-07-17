@@ -11,12 +11,14 @@ import {
   deleteDoc,
   doc,
   getDoc,
+  getDocs,
   getFirestore,
   onSnapshot,
   orderBy,
   query,
   serverTimestamp,
-  setDoc
+  setDoc,
+  where
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -40,6 +42,9 @@ let currentProfile = null;
 let selectedRating = 0;
 let reviewsUnsubscribe = null;
 let currentUserReview = null;
+
+const MAX_CHECKOUTS = 3;
+const ACTIVE_CHECKOUT_STATUSES = new Set(["pending", "approved"]);
 
 const bookGrid = document.querySelector("#book-grid");
 const searchInput = document.querySelector("#search-input");
@@ -174,6 +179,30 @@ onAuthStateChanged(auth, async (user) => {
   await loadCurrentProfile(user);
   if (selectedBook) subscribeToReviews(selectedBook);
 });
+
+
+async function getReaderBorrowingRequests() {
+  if (!currentUser) return [];
+
+  const snapshot = await getDocs(
+    query(
+      collection(db, "checkoutRequests"),
+      where("userId", "==", currentUser.uid)
+    )
+  );
+
+  return snapshot.docs.map((entry) => ({
+    id: entry.id,
+    ...entry.data()
+  }));
+}
+
+function usesCheckoutSlot(item) {
+  return (
+    item.requestType === "checkout" &&
+    ACTIVE_CHECKOUT_STATUSES.has(item.status)
+  );
+}
 
 function rebuildGenreOptions() {
   const currentValue = genreFilter.value;
@@ -378,29 +407,41 @@ document.querySelectorAll("[data-close-book-details]").forEach((element) => {
 function openBorrowingModal(book) {
   selectedBook = book;
   const requestType = book.status === "available" ? "checkout" : "waitlist";
+  const signedIn = Boolean(currentUser && currentProfile);
 
   requestModalTitle.textContent =
     requestType === "checkout" ? "request this book" : "join the waitlist";
-  requestModalCopy.textContent =
-    requestType === "checkout"
-      ? `enter your name to request ${book.title}.`
-      : `enter your name to join the waitlist for ${book.title}.`;
-  confirmRequestButton.textContent =
-    requestType === "checkout" ? "send request" : "join waitlist";
+
+  if (!signedIn) {
+    requestModalCopy.textContent =
+      `sign in to your reader account before requesting ${book.title}.`;
+    confirmRequestButton.textContent = "sign in to continue";
+  } else {
+    requestModalCopy.textContent =
+      requestType === "checkout"
+        ? `request ${book.title}. approved checkouts are due in 14 days.`
+        : `join the waitlist for ${book.title}.`;
+    confirmRequestButton.textContent =
+      requestType === "checkout" ? "send request" : "join waitlist";
+  }
 
   borrowingRequestForm.reset();
-  if (currentProfile?.displayName) readerNameInput.value = currentProfile.displayName;
+  readerNameInput.disabled = !signedIn;
+  readerNameInput.value = signedIn ? currentProfile.displayName || "" : "";
   borrowingFormMessage.textContent = "";
   requestModal.hidden = false;
   document.body.classList.add("modal-open");
 
-  window.setTimeout(() => readerNameInput.focus(), 50);
+  if (signedIn) {
+    window.setTimeout(() => readerNameInput.focus(), 50);
+  }
 }
 
 function closeBorrowingModal() {
   requestModal.hidden = true;
   document.body.classList.remove("modal-open");
   borrowingFormMessage.textContent = "";
+  readerNameInput.disabled = false;
 }
 
 detailsRequestButton.addEventListener("click", () => {
@@ -429,7 +470,15 @@ borrowingRequestForm.addEventListener("submit", async (event) => {
 
   if (!selectedBook) return;
 
-  const cleanName = readerNameInput.value.trim();
+  if (!currentUser || !currentProfile) {
+    window.location.href = "reader.html?return=index.html";
+    return;
+  }
+
+  const cleanName =
+    readerNameInput.value.trim() ||
+    currentProfile.displayName ||
+    "reader";
   const requestType =
     selectedBook.status === "available" ? "checkout" : "waitlist";
 
@@ -441,11 +490,42 @@ borrowingRequestForm.addEventListener("submit", async (event) => {
 
   const originalText = confirmRequestButton.textContent;
   confirmRequestButton.disabled = true;
-  confirmRequestButton.textContent = "sending...";
+  confirmRequestButton.textContent = "checking...";
   borrowingFormMessage.textContent = "";
 
   try {
+    const existingRequests = await getReaderBorrowingRequests();
+
+    const duplicate = existingRequests.find(
+      (item) =>
+        item.bookId === selectedBook.id &&
+        item.requestType === requestType &&
+        ACTIVE_CHECKOUT_STATUSES.has(item.status)
+    );
+
+    if (duplicate) {
+      borrowingFormMessage.textContent =
+        requestType === "checkout"
+          ? "you already have an open request or loan for this book."
+          : "you are already on this book's waitlist.";
+      return;
+    }
+
+    if (requestType === "checkout") {
+      const usedSlots = existingRequests.filter(usesCheckoutSlot).length;
+
+      if (usedSlots >= MAX_CHECKOUTS) {
+        borrowingFormMessage.textContent =
+          "you already have three checkout requests or active loans. complete one before requesting another.";
+        return;
+      }
+    }
+
+    confirmRequestButton.textContent = "sending...";
+
     await addDoc(collection(db, "checkoutRequests"), {
+      userId: currentUser.uid,
+      bookId: selectedBook.id,
       name: cleanName,
       bookTitle: selectedBook.title,
       author: selectedBook.author || "",

@@ -17,6 +17,7 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  Timestamp,
   updateDoc,
   writeBatch
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
@@ -185,6 +186,11 @@ function updateCounts() {
       (item) => item.requestType === "waitlist" && item.status === "pending"
     ).length;
 
+  document.querySelector("#active-loans").textContent =
+    borrowingRequests.filter(
+      (item) => item.requestType === "checkout" && item.status === "approved"
+    ).length;
+
   document.querySelector("#pending-suggestions").textContent =
     bookSuggestions.filter((item) => item.status === "pending").length;
 
@@ -193,42 +199,245 @@ function updateCounts() {
   document.querySelector("#report-count").textContent = communityReports.filter((item) => item.status === "pending").length;
 }
 
+
+const MAX_CHECKOUTS = 3;
+const LOAN_LENGTH_DAYS = 14;
+
+function normalized(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function findBookForRequest(item) {
+  return (
+    books.find((book) => item.bookId && book.id === item.bookId) ||
+    books.find(
+      (book) =>
+        normalized(book.title) === normalized(item.bookTitle) &&
+        (!item.author || normalized(book.author) === normalized(item.author))
+    )
+  );
+}
+
+function isLoanOverdue(item) {
+  return (
+    item.requestType === "checkout" &&
+    item.status === "approved" &&
+    item.dueAt?.toDate &&
+    item.dueAt.toDate().getTime() < Date.now()
+  );
+}
+
+function formatDueDate(timestamp) {
+  if (!timestamp?.toDate) return "";
+
+  return timestamp.toDate().toLocaleDateString([], {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  }).toLowerCase();
+}
+
+function approvedCheckoutCount(userId, excludedRequestId = "") {
+  if (!userId) return 0;
+
+  return borrowingRequests.filter(
+    (item) =>
+      item.id !== excludedRequestId &&
+      item.userId === userId &&
+      item.requestType === "checkout" &&
+      item.status === "approved"
+  ).length;
+}
+
+async function approveBorrowingRequest(item) {
+  if (item.requestType !== "checkout") {
+    await updateDoc(doc(db, "checkoutRequests", item.id), {
+      status: "approved",
+      approvedAt: serverTimestamp()
+    });
+    showToast("waitlist request marked approved.");
+    await loadData();
+    return;
+  }
+
+  if (
+    item.userId &&
+    approvedCheckoutCount(item.userId, item.id) >= MAX_CHECKOUTS
+  ) {
+    showToast("this reader already has three active loans.");
+    return;
+  }
+
+  const book = findBookForRequest(item);
+  if (book?.status === "borrowed") {
+    showToast("this book is already out reading. keep this request pending or move it to the waitlist.");
+    return;
+  }
+
+  const dueDate = new Date();
+  dueDate.setDate(dueDate.getDate() + LOAN_LENGTH_DAYS);
+
+  const batch = writeBatch(db);
+  batch.update(doc(db, "checkoutRequests", item.id), {
+    status: "approved",
+    approvedAt: serverTimestamp(),
+    dueAt: Timestamp.fromDate(dueDate)
+  });
+
+  if (book) {
+    batch.update(doc(db, "books", book.id), {
+      status: "borrowed",
+      updatedAt: serverTimestamp()
+    });
+  }
+
+  await batch.commit();
+  showToast(`checkout approved · due ${formatDueDate(Timestamp.fromDate(dueDate))}.`);
+  await loadData();
+}
+
+async function completeBorrowingRequest(item) {
+  const batch = writeBatch(db);
+  batch.update(doc(db, "checkoutRequests", item.id), {
+    status: "completed",
+    completedAt: serverTimestamp()
+  });
+
+  if (item.requestType === "checkout") {
+    const book = findBookForRequest(item);
+    if (book) {
+      batch.update(doc(db, "books", book.id), {
+        status: "available",
+        updatedAt: serverTimestamp()
+      });
+    }
+  }
+
+  await batch.commit();
+  showToast(
+    item.requestType === "checkout"
+      ? "book marked returned and checkout completed."
+      : "request marked completed."
+  );
+  await loadData();
+}
+
+async function setFourteenDayDueDate(item) {
+  if (
+    item.userId &&
+    approvedCheckoutCount(item.userId, item.id) >= MAX_CHECKOUTS
+  ) {
+    showToast("this reader already has three other active loans.");
+    return;
+  }
+
+  const dueDate = new Date();
+  dueDate.setDate(dueDate.getDate() + LOAN_LENGTH_DAYS);
+
+  await updateDoc(doc(db, "checkoutRequests", item.id), {
+    approvedAt: item.approvedAt || serverTimestamp(),
+    dueAt: Timestamp.fromDate(dueDate)
+  });
+
+  showToast(`due date set for ${formatDueDate(Timestamp.fromDate(dueDate))}.`);
+  await loadData();
+}
+
 function renderBorrowing() {
   const filter = borrowingFilter.value;
-  const visible = borrowingRequests.filter(
-    (item) => filter === "all" || item.status === filter
-  );
+  const visible = borrowingRequests.filter((item) => {
+    if (filter === "all") return true;
+    if (filter === "overdue") return isLoanOverdue(item);
+    return item.status === filter;
+  });
 
   borrowingList.innerHTML = "";
   borrowingEmpty.hidden = visible.length !== 0;
 
   visible.forEach((item) => {
     const card = document.createElement("article");
+    const overdue = isLoanOverdue(item);
     card.className = "request-card";
+    card.classList.toggle("overdue", overdue);
+
+    let dueMarkup = "";
+    if (item.requestType === "checkout" && item.status === "approved") {
+      dueMarkup = item.dueAt?.toDate
+        ? `<p class="loan-due ${overdue ? "overdue" : ""}">${
+            overdue ? "overdue · " : "due "
+          }${formatDueDate(item.dueAt)}</p>`
+        : '<p class="loan-due">approved loan · due date not set</p>';
+    }
+
+    const statusActions = [];
+    if (item.status === "pending") {
+      statusActions.push(
+        '<button class="action-button" data-approve type="button">approve</button>'
+      );
+    }
+    if (item.status === "approved") {
+      statusActions.push(
+        `<button class="action-button secondary" data-complete type="button">${
+          item.requestType === "checkout" ? "mark returned" : "complete"
+        }</button>`
+      );
+    }
+    if (
+      item.requestType === "checkout" &&
+      item.status === "approved" &&
+      !item.dueAt
+    ) {
+      statusActions.push(
+        '<button class="action-button secondary" data-set-due type="button">set 14-day due date</button>'
+      );
+    }
 
     card.innerHTML = `
       <div>
         <h3>${escapeHtml(item.bookTitle)}</h3>
         <p><strong>${escapeHtml(item.name)}</strong> · ${escapeHtml(item.requestType)}</p>
         <p class="meta">by ${escapeHtml(item.author || "unknown author")}</p>
-        <p class="meta">${formatDate(item.createdAt)}</p>
-        <span class="status">${escapeHtml(item.status)}</span>
+        <p class="meta">requested ${formatDate(item.createdAt)}</p>
+        ${dueMarkup}
+        ${
+          item.requestType === "checkout"
+            ? '<p class="request-policy-note">maximum 3 active loans · 14 days per checkout</p>'
+            : ""
+        }
+        <span class="status">${escapeHtml(overdue ? "overdue" : item.status)}</span>
       </div>
       <div class="request-actions">
-        <button class="action-button" data-status="approved" type="button">approve</button>
-        <button class="action-button secondary" data-status="completed" type="button">complete</button>
+        ${statusActions.join("")}
         <button class="action-button danger" data-delete type="button">delete</button>
       </div>
     `;
 
-    card.querySelectorAll("[data-status]").forEach((button) => {
-      button.addEventListener("click", async () => {
-        await updateDoc(doc(db, "checkoutRequests", item.id), {
-          status: button.dataset.status
-        });
-        showToast(`request marked ${button.dataset.status}.`);
-        await loadData();
-      });
+    card.querySelector("[data-approve]")?.addEventListener("click", async () => {
+      try {
+        await approveBorrowingRequest(item);
+      } catch (error) {
+        console.error(error);
+        showToast("the request could not be approved.");
+      }
+    });
+
+    card.querySelector("[data-complete]")?.addEventListener("click", async () => {
+      try {
+        await completeBorrowingRequest(item);
+      } catch (error) {
+        console.error(error);
+        showToast("the request could not be completed.");
+      }
+    });
+
+    card.querySelector("[data-set-due]")?.addEventListener("click", async () => {
+      try {
+        await setFourteenDayDueDate(item);
+      } catch (error) {
+        console.error(error);
+        showToast("the due date could not be set.");
+      }
     });
 
     card.querySelector("[data-delete]").addEventListener("click", async () => {

@@ -14,8 +14,11 @@ import {
   getDoc,
   getDocs,
   getFirestore,
+  onSnapshot,
+  query,
   serverTimestamp,
-  setDoc
+  setDoc,
+  where
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -50,6 +53,9 @@ const publicProfileLink = document.querySelector("#public-profile-link");
 const readingListSearch = document.querySelector("#reading-list-search");
 const readingListBooks = document.querySelector("#reading-list-books");
 const readingListEmpty = document.querySelector("#reading-list-empty");
+const loanSlotCount = document.querySelector("#loan-slot-count");
+const myLoansList = document.querySelector("#my-loans-list");
+const myLoansEmpty = document.querySelector("#my-loans-empty");
 const toast = document.querySelector("#toast");
 
 let currentUser = null;
@@ -61,9 +67,108 @@ let activeList = "favoriteBookIds";
 let favoriteBookIds = new Set();
 let tbrBookIds = new Set();
 let currentlyReadingBookIds = new Set();
+let loansUnsubscribe = null;
+
+const MAX_CHECKOUTS = 3;
+const ACTIVE_CHECKOUT_STATUSES = new Set(["pending", "approved"]);
 
 const returnPage = new URLSearchParams(window.location.search).get("return");
-const allowedReturnPages = new Set(["community.html"]);
+const allowedReturnPages = new Set(["community.html", "index.html"]);
+
+
+function formatLoanDate(timestamp) {
+  if (!timestamp?.toDate) return "";
+
+  return timestamp.toDate().toLocaleDateString([], {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  }).toLowerCase();
+}
+
+function loanIsOverdue(item) {
+  return (
+    item.requestType === "checkout" &&
+    item.status === "approved" &&
+    item.dueAt?.toDate &&
+    item.dueAt.toDate().getTime() < Date.now()
+  );
+}
+
+function renderMyLoans(items) {
+  const activeItems = items
+    .filter((item) => ACTIVE_CHECKOUT_STATUSES.has(item.status))
+    .sort((a, b) => {
+      const aTime = a.dueAt?.seconds || a.createdAt?.seconds || 0;
+      const bTime = b.dueAt?.seconds || b.createdAt?.seconds || 0;
+      return aTime - bTime;
+    });
+
+  const usedSlots = activeItems.filter(
+    (item) => item.requestType === "checkout"
+  ).length;
+
+  loanSlotCount.textContent = `${usedSlots} / ${MAX_CHECKOUTS}`;
+  myLoansList.innerHTML = "";
+  myLoansEmpty.hidden = activeItems.length !== 0;
+
+  activeItems.forEach((item) => {
+    const overdue = loanIsOverdue(item);
+    const card = document.createElement("article");
+    card.className = "my-loan-item";
+    card.classList.toggle("overdue", overdue);
+
+    let timingCopy = "";
+    if (item.requestType === "waitlist") {
+      timingCopy =
+        item.status === "pending"
+          ? "waiting for the book to become available"
+          : "waitlist request approved";
+    } else if (item.status === "pending") {
+      timingCopy = "awaiting approval · this uses one of your three checkout slots";
+    } else if (item.dueAt?.toDate) {
+      timingCopy = overdue
+        ? `overdue · was due ${formatLoanDate(item.dueAt)}`
+        : `due ${formatLoanDate(item.dueAt)}`;
+    } else {
+      timingCopy = "approved · ask the library admin for your due date";
+    }
+
+    card.innerHTML = `
+      <h3>${escapeHtml(item.bookTitle || "untitled book")}</h3>
+      <p>by ${escapeHtml(item.author || "unknown author")}</p>
+      <p>${escapeHtml(timingCopy)}</p>
+      <span class="my-loan-status">${escapeHtml(
+        overdue ? "overdue" : `${item.requestType} · ${item.status}`
+      )}</span>
+    `;
+
+    myLoansList.appendChild(card);
+  });
+}
+
+function subscribeToMyLoans(user) {
+  loansUnsubscribe?.();
+  loansUnsubscribe = onSnapshot(
+    query(
+      collection(db, "checkoutRequests"),
+      where("userId", "==", user.uid)
+    ),
+    (snapshot) => {
+      renderMyLoans(
+        snapshot.docs.map((entry) => ({
+          id: entry.id,
+          ...entry.data()
+        }))
+      );
+    },
+    (error) => {
+      console.error(error);
+      myLoansEmpty.hidden = false;
+      myLoansEmpty.textContent = "your checkout activity could not be loaded.";
+    }
+  );
+}
 
 function showToast(message) {
   toast.textContent = message;
@@ -390,8 +495,12 @@ onAuthStateChanged(auth, async (user) => {
   profileView.hidden = !user;
   publicProfileLink.hidden = !user;
 
+  loansUnsubscribe?.();
+  loansUnsubscribe = null;
+
   if (user) {
     try {
+      subscribeToMyLoans(user);
       await Promise.all([loadBooks(), loadProfile(user)]);
       if (returnPage && allowedReturnPages.has(returnPage)) {
         window.location.href = returnPage;
@@ -400,5 +509,7 @@ onAuthStateChanged(auth, async (user) => {
       console.error(error);
       profileMessage.textContent = "your profile could not be loaded.";
     }
+  } else {
+    renderMyLoans([]);
   }
 });

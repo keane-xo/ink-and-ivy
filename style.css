@@ -1146,3 +1146,30 @@ body.modal-open {
     text-align: center;
   }
 }
+
+
+.loan-policy {
+  display: grid;
+  gap: 5px;
+  padding: 14px 16px;
+  margin: 18px 0;
+  color: var(--dark-brown);
+  background: var(--light-pink);
+  border: 1px solid var(--rose);
+  border-radius: 13px;
+}
+
+.loan-policy strong {
+  color: var(--brown);
+  font-weight: normal;
+}
+
+.loan-policy span {
+  color: #7c6658;
+  font-size: 0.9rem;
+}
+
+.borrowing-request-form input:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}

@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>reader profile · ink and ivy</title>
   <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml">
-<link rel="stylesheet" href="reader.css?v=10">
-  <script type="module" src="reader.js?v=10"></script>
+<link rel="stylesheet" href="reader.css?v=11">
+  <script type="module" src="reader.js?v=11"></script>
 </head>
 <body>
   <header class="reader-header">
@@ -78,6 +78,30 @@
         </div>
         <button id="reader-signout-button" class="secondary-button" type="button">sign out</button>
       </div>
+
+
+      <section class="my-loans-card" aria-labelledby="my-loans-title">
+        <div class="my-loans-heading">
+          <div>
+            <p class="eyebrow">your library activity</p>
+            <h2 id="my-loans-title">my checkouts & waitlists</h2>
+          </div>
+          <div class="loan-slot-count">
+            <strong id="loan-slot-count">0 / 3</strong>
+            <span>checkout slots used</span>
+          </div>
+        </div>
+
+        <p class="loan-policy-copy">
+          you may have up to three pending checkout requests or active loans at once.
+          every approved checkout is due 14 days after approval.
+        </p>
+
+        <div id="my-loans-list" class="my-loans-list"></div>
+        <p id="my-loans-empty" class="reading-list-empty" hidden>
+          you do not have any active checkouts or waitlists.
+        </p>
+      </section>
 
       <div class="profile-layout">
         <aside class="profile-preview-card">

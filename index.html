@@ -6,8 +6,8 @@
   <meta name="description" content="ink and ivy — a private lending library for curious readers.">
   <title>ink and ivy</title>
   <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml">
-<link rel="stylesheet" href="style.css?v=7">
-  <script type="module" src="script.js?v=7"></script>
+<link rel="stylesheet" href="style.css?v=11">
+  <script type="module" src="script.js?v=11"></script>
 </head>
 <body>
   <header class="site-header">
@@ -104,12 +104,12 @@
         <article class="step-card">
           <span>02</span>
           <h3>place a request</h3>
-          <p>ask to borrow it, or join the waitlist if it is already out reading.</p>
+          <p>sign in to request a book. each reader may have up to three checkout requests or active loans at once.</p>
         </article>
         <article class="step-card">
           <span>03</span>
           <h3>return and repeat</h3>
-          <p>bring it back when you are finished and begin your next adventure.</p>
+          <p>each approved checkout lasts two weeks. return it by the due date, then begin your next adventure.</p>
         </article>
       </div>
     </section>
@@ -286,6 +286,12 @@
       <p class="eyebrow">one small step</p>
       <h2 id="request-modal-title">request this book</h2>
       <p id="request-modal-copy" class="request-modal-copy"></p>
+
+
+      <div class="loan-policy" aria-label="checkout policy">
+        <strong>checkout policy</strong>
+        <span>up to 3 books at a time · 14-day loans</span>
+      </div>
 
       <form id="borrowing-request-form" class="borrowing-request-form">
         <label>

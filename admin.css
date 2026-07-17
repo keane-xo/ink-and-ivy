@@ -662,3 +662,29 @@ select:focus {
   .summary-grid { grid-template-columns: 1fr; }
   .admin-report-top { flex-direction: column; }
 }
+
+
+.summary-grid {
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+}
+
+.loan-due {
+  margin-top: 8px;
+  color: var(--green);
+  font-weight: bold;
+}
+
+.loan-due.overdue {
+  color: #a24436;
+}
+
+.request-card.overdue {
+  background: #fff5f2;
+  border-color: #c97769;
+}
+
+.request-policy-note {
+  margin-top: 6px;
+  color: #7c6658;
+  font-size: 0.82rem;
+}
