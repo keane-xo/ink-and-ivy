@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>ink and ivy admin</title>
+  <link rel="stylesheet" href="admin.css">
+  <script type="module" src="admin.js"></script>
+</head>
+<body>
+  <header class="admin-header">
+    <a href="index.html" class="brand">
+      <span aria-hidden="true">🌿</span>
+      <span>ink and ivy</span>
+    </a>
+    <button id="sign-out-button" class="small-button" type="button" hidden>sign out</button>
+  </header>
+
+  <main>
+    <section id="login-view" class="login-view">
+      <div class="login-card">
+        <span class="leaf" aria-hidden="true">🌿</span>
+        <p class="eyebrow">private access</p>
+        <h1>admin library desk</h1>
+        <p class="intro">sign in to review checkout requests, waitlists, and book suggestions.</p>
+
+        <form id="login-form">
+          <label>
+            email
+            <input id="admin-email" type="email" autocomplete="email" required>
+          </label>
+
+          <label>
+            password
+            <input id="admin-password" type="password" autocomplete="current-password" required>
+          </label>
+
+          <button id="login-button" class="primary-button" type="submit">sign in</button>
+          <p id="login-message" class="message" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+
+    <section id="dashboard-view" class="dashboard" hidden>
+      <div class="dashboard-heading">
+        <div>
+          <p class="eyebrow">private library desk</p>
+          <h1>request dashboard</h1>
+        </div>
+        <button id="refresh-button" class="small-button" type="button">refresh</button>
+      </div>
+
+      <div class="summary-grid">
+        <article>
+          <span id="pending-checkouts">0</span>
+          <p>checkout requests</p>
+        </article>
+        <article>
+          <span id="pending-waitlists">0</span>
+          <p>waitlist requests</p>
+        </article>
+        <article>
+          <span id="pending-suggestions">0</span>
+          <p>book suggestions</p>
+        </article>
+      </div>
+
+      <div class="tabs" role="tablist" aria-label="request categories">
+        <button class="tab active" type="button" data-tab="borrowing">checkout & waitlist</button>
+        <button class="tab" type="button" data-tab="suggestions">book suggestions</button>
+      </div>
+
+      <section id="borrowing-panel" class="panel">
+        <div class="panel-heading">
+          <h2>checkout and waitlist requests</h2>
+          <select id="borrowing-filter" aria-label="filter borrowing requests">
+            <option value="all">all requests</option>
+            <option value="pending">pending</option>
+            <option value="approved">approved</option>
+            <option value="completed">completed</option>
+          </select>
+        </div>
+        <div id="borrowing-list" class="request-list"></div>
+        <p id="borrowing-empty" class="empty" hidden>no requests here yet.</p>
+      </section>
+
+      <section id="suggestions-panel" class="panel" hidden>
+        <div class="panel-heading">
+          <h2>book suggestions</h2>
+          <select id="suggestion-filter" aria-label="filter book suggestions">
+            <option value="all">all suggestions</option>
+            <option value="pending">pending</option>
+            <option value="approved">approved</option>
+            <option value="declined">declined</option>
+          </select>
+        </div>
+        <div id="suggestion-list" class="request-list"></div>
+        <p id="suggestion-empty" class="empty" hidden>no suggestions here yet.</p>
+      </section>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
