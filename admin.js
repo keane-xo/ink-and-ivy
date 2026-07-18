@@ -644,7 +644,7 @@ function renderBooks() {
           <p>
             <span class="status">${escapeHtml(book.genre || "uncategorized")}</span>
             <span class="status">${book.status === "available" ? "on the shelf" : "out reading"}</span>
-            ${book.pageCount ? `<span class="status">${Number(book.pageCount)} pages</span>` : ""}
+            ${book.pageCount ? `<span class="status">${Number(book.pageCount)} pages</span>` : '<span class="status">page count needed</span>'}
           </p>
         </div>
       </div>
@@ -707,21 +707,31 @@ bookForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const id = editingBookId.value;
+  const pageCount = Number(
+    document.querySelector("#book-page-count").value
+  );
+
   const bookData = {
     title: document.querySelector("#book-title").value.trim(),
     author: document.querySelector("#book-author").value.trim(),
     genre: document.querySelector("#book-genre").value.trim().toLowerCase(),
     status: document.querySelector("#book-status").value,
-    pageCount: Math.max(0, Number(document.querySelector("#book-page-count").value || 0)),
+    pageCount: Number.isInteger(pageCount) ? pageCount : 0,
     coverUrl: document.querySelector("#book-cover-url").value.trim(),
     summary: document.querySelector("#book-summary").value.trim(),
     nyaNote: document.querySelector("#book-nya-note").value.trim(),
     updatedAt: serverTimestamp()
   };
 
-  if (!bookData.title || !bookData.author || !bookData.genre || !bookData.summary) {
+  if (
+    !bookData.title ||
+    !bookData.author ||
+    !bookData.genre ||
+    !bookData.summary ||
+    bookData.pageCount < 1
+  ) {
     bookFormMessage.textContent =
-      "please complete the title, author, genre, and summary.";
+      "please complete the title, author, genre, page count, and summary.";
     return;
   }
 

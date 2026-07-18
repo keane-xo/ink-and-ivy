@@ -1,41 +1,31 @@
-INK AND IVY — ALL SUGGESTIONS COMMUNITY BALLOT
+INK AND IVY — REQUIRED BOOK PAGE COUNTS
 
-THIS CORRECTS THE VOTING SYSTEM
-
-Every nine-week cycle still selects exactly three books:
-
-1. One book is chosen by the eligible reader with the highest streak reached
-   during that cycle.
-2. One book is the highest-voted community suggestion.
-3. One book is the second-highest-voted community suggestion.
+This makes page count part of every book's information so Tome Traveler works.
 
 WHAT CHANGED
+- The admin book editor now requires a page count.
+- Existing books without one are marked "page count needed" in Manage Books.
+- Page count appears in each book's detail popup on the shelves.
+- Tome Traveler already checks this saved pageCount field and unlocks after a
+  reader completes a book with more than 400 pages.
 
-- There are no librarian-selected finalists.
-- Every pending new-title suggestion automatically appears on the ballot.
-- All signed-in readers see the same complete ballot.
-- Each reader casts one vote and may change it until voting closes.
-- The two suggestions with the most votes become the community selections.
-- If vote totals tie, the older submitted suggestion ranks first.
-- A suggestion submitted while voting is open appears automatically.
-- Suggestions that the librarian has marked declined or selected are not on
-  the pending ballot.
+IMPORTANT FOR EXISTING BOOKS
+Open Admin > Manage Books and edit each existing book once.
+Enter the page count for the actual edition in your library, then save it.
+Different editions can have different page counts, so the site does not guess.
 
-STEP 1 — FIREBASE RULES
-
-Open FIRESTORE_RULES.txt.
-Copy everything into Firebase > Firestore Database > Rules.
-Replace the current rules and click Publish.
-
-STEP 2 — GITHUB
-
+GITHUB
 Upload and replace:
-- challenges.html
-- challenges.css
-- challenges.js
+- admin.html
+- admin.js
+- index.html
+- script.js
 
-Do not upload FIRESTORE_RULES.txt to GitHub.
+No Firebase rules update is needed.
+No paid service is needed.
 
-STEP 3 — CHECK THE UPDATED BALLOT
+ADMIN:
+https://keane-xo.github.io/ink-and-ivy/admin.html?v=13
 
-https://keane-xo.github.io/ink-and-ivy/challenges.html?v=3
+SHELVES:
+https://keane-xo.github.io/ink-and-ivy/?v=19

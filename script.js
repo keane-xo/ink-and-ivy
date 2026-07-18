@@ -77,6 +77,7 @@ const detailsTitle = document.querySelector("#book-details-title");
 const detailsAuthor = document.querySelector("#book-details-author");
 const detailsGenre = document.querySelector("#book-details-genre");
 const detailsStatus = document.querySelector("#book-details-status");
+const detailsPageCount = document.querySelector("#book-details-page-count");
 const detailsSummary = document.querySelector("#book-details-summary");
 const detailsNote = document.querySelector("#book-details-note");
 const detailsCover = document.querySelector("#book-details-cover");
@@ -460,6 +461,11 @@ function openBookDetails(book) {
   const isAvailable = book.status === "available";
   detailsStatus.textContent = isAvailable ? "🌿 on the shelf" : "📖 out reading";
   detailsStatus.className = `pill status-${book.status || "available"}`;
+
+  const pageCount = Number(book.pageCount || 0);
+  detailsPageCount.hidden = pageCount < 1;
+  detailsPageCount.textContent = pageCount > 0 ? `${pageCount} pages` : "";
+
   detailsRequestButton.textContent =
     isAvailable ? "request checkout" : "join the waitlist";
 
