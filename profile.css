@@ -370,9 +370,9 @@ h1,h2,h3,p{margin-top:0}h1{margin-bottom:12px;color:var(--brown);font-size:clamp
 
 .profile-streak-section {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   flex-wrap: wrap;
-  margin-bottom: 20px;
+  margin: 22px 0 24px;
 }
 
 .profile-streak-section > div {
