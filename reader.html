@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>reader profile · ink and ivy</title>
   <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml">
-<link rel="stylesheet" href="reader.css?v=15">
-  <script type="module" src="reader.js?v=17"></script>
+<link rel="stylesheet" href="reader.css?v=18">
+  <script type="module" src="reader.js?v=18"></script>
 </head>
 <body>
   <header class="reader-header">
@@ -15,11 +15,20 @@
       <span>ink and ivy</span>
     </a>
     <nav class="reader-header-links">
-      <a class="back-link" href="index.html">the shelves</a>
+      <a class="back-link" href="index.html#shelves">the shelves</a>
+      <a class="back-link" href="index.html#how-it-works">how it works</a>
+      <a class="back-link" href="index.html#request">suggest a new title</a>
       <a class="back-link" href="community.html">community</a>
-      <a class="back-link" href="journal.html">reading journal</a>
-      <a class="back-link" href="recommendations.html">friend picks</a>
-      <a id="public-profile-link" class="back-link" href="#" hidden>view my public page</a>
+
+      <details class="more-menu">
+        <summary>more</summary>
+        <div class="more-menu-panel">
+          <a class="back-link" href="journal.html">reading journal</a>
+          <a class="back-link" href="recommendations.html">friend picks</a>
+          <a class="back-link" href="challenges.html">challenges &amp; badges</a>
+          <a id="public-profile-link" class="back-link" href="#" hidden>view my public page</a>
+        </div>
+      </details>
     </nav>
   </header>
 

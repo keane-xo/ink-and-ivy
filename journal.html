@@ -6,8 +6,8 @@
   <meta name="description" content="a private digital reading journal for ink and ivy readers.">
   <title>reading journal · ink and ivy</title>
   <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml">
-  <link rel="stylesheet" href="journal.css?v=2">
-  <script type="module" src="journal.js?v=2"></script>
+  <link rel="stylesheet" href="journal.css?v=3">
+  <script type="module" src="journal.js?v=3"></script>
 </head>
 <body>
   <header class="journal-header">
@@ -17,11 +17,20 @@
     </a>
 
     <nav>
-      <a href="index.html">the shelves</a>
+      <a href="index.html#shelves">the shelves</a>
+      <a href="index.html#how-it-works">how it works</a>
+      <a href="index.html#request">suggest a new title</a>
       <a href="community.html">community</a>
-      <a href="reader.html">reader account</a>
-      <a href="recommendations.html">friend picks</a>
-      <button id="journal-signout-button" type="button" hidden>sign out</button>
+
+      <details class="more-menu">
+        <summary>more</summary>
+        <div class="more-menu-panel">
+          <a href="recommendations.html">friend picks</a>
+          <a href="challenges.html">challenges &amp; badges</a>
+          <a href="reader.html">reader account</a>
+          <button id="journal-signout-button" type="button" hidden>sign out</button>
+        </div>
+      </details>
     </nav>
   </header>
 

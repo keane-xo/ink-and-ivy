@@ -86,7 +86,8 @@ const allowedReturnPages = new Set([
   "community.html",
   "index.html",
   "journal.html",
-  "recommendations.html"
+  "recommendations.html",
+  "challenges.html"
 ]);
 
 

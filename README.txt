@@ -1,26 +1,35 @@
-INK AND IVY — FRIEND-TO-FRIEND BOOK RECOMMENDATIONS
+INK AND IVY — READING CHALLENGES, BADGES, AND COMPACT MENU
 
-THIS NEW FEATURE IS CALLED "FRIEND PICKS"
+NEW FEATURE: CHALLENGES & BADGES
 
-READERS CAN
-- Recommend any Ink & Ivy book privately to a friend
-- Include a personal note explaining why they chose it
-- Recommend directly from a book's detail popup
-- Recommend directly from a friend's reader page
-- See recommendations friends selected for them
-- See recommendations they have sent
-- Add a recommended book directly to their TBR
-- Mark recommendations as read, dismiss them, or remove them
-- Open the recommended book directly on the shelves
-- See a live count of new recommendations
+Readers can:
+- Join any of 8 cozy reading challenges
+- Log their own progress one step at a time
+- Correct an accidental progress entry
+- Leave an unfinished challenge
+- Unlock a permanent collectible badge when a challenge is completed
+- See earned badges in a personal badge cabinet
+- Display earned badges automatically on their public reader page
 
-PRIVACY
-Recommendations and notes are visible only to:
-- The sender
-- The recipient
-- The Ink & Ivy administrator
+The challenges are intentionally personal and low-pressure.
+There are no rankings or leaderboards.
+
+NEW MENU DESIGN
+
+The top menu now keeps these four links visible:
+- The shelves
+- How it works
+- Suggest a new title
+- Community
+
+Everything else is organized under a "More" dropdown:
+- Reading journal
+- Friend picks
+- Challenges & badges
+- Reader account, profile tools, and sign-out links where appropriate
 
 STEP 1 — FIREBASE RULES
+
 Open FIRESTORE_RULES.txt.
 Copy everything into Firebase > Firestore Database > Rules.
 Replace the current rules and click Publish.
@@ -32,23 +41,31 @@ Upload and replace:
 - style.css
 - script.js
 - reader.html
+- reader.css
 - reader.js
 - community.html
+- community.css
+- community.js
 - profile.html
 - profile.css
 - profile.js
 - journal.html
-
-Upload these new files:
+- journal.css
+- journal.js
 - recommendations.html
 - recommendations.css
 - recommendations.js
 
+Upload these new files:
+- challenges.html
+- challenges.css
+- challenges.js
+
 Do not upload FIRESTORE_RULES.txt to GitHub.
 
-STEP 3 — OPEN FRIEND PICKS
+STEP 3 — OPEN THE NEW PAGE
 
-https://keane-xo.github.io/ink-and-ivy/recommendations.html?v=1
+https://keane-xo.github.io/ink-and-ivy/challenges.html?v=1
 
-The homepage, community, reader account, reading journal, and reader pages
-will all link to Friend Picks.
+To force the newest homepage menu:
+https://keane-xo.github.io/ink-and-ivy/?v=18

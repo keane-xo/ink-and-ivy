@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="cozy reading challenges and collectible profile badges for ink and ivy readers.">
+  <title>challenges &amp; badges · ink and ivy</title>
+  <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml">
+  <link rel="stylesheet" href="challenges.css?v=1">
+  <script type="module" src="challenges.js?v=1"></script>
+</head>
+<body>
+  <header class="challenges-header">
+    <a class="brand" href="index.html">
+      <span aria-hidden="true">🌿</span>
+      <span>ink and ivy</span>
+    </a>
+
+    <nav>
+      <a href="index.html#shelves">the shelves</a>
+      <a href="index.html#how-it-works">how it works</a>
+      <a href="index.html#request">suggest a new title</a>
+      <a href="community.html">community</a>
+
+      <details class="more-menu">
+        <summary>more</summary>
+        <div class="more-menu-panel">
+          <a href="journal.html">reading journal</a>
+          <a href="recommendations.html">friend picks</a>
+          <a href="reader.html">reader account</a>
+          <button id="challenges-signout-button" type="button" hidden>sign out</button>
+        </div>
+      </details>
+    </nav>
+  </header>
+
+  <main>
+    <section id="challenges-login-view" class="login-view">
+      <div class="login-card">
+        <span class="large-leaf" aria-hidden="true">🌿</span>
+        <p class="eyebrow">little adventures between the pages</p>
+        <h1>challenges &amp; badges</h1>
+        <p>
+          sign in to choose reading adventures, track your progress, and collect
+          badges for your reader page.
+        </p>
+        <a class="primary-link" href="reader.html?return=challenges.html">reader login</a>
+      </div>
+    </section>
+
+    <section id="challenges-view" class="challenges-view" hidden>
+      <div class="challenges-hero">
+        <div>
+          <p class="eyebrow">your reading garden</p>
+          <h1>challenges &amp; badges</h1>
+          <p>
+            choose the adventures that sound fun and log each step yourself.
+            there are no rankings or leaderboards—just small reasons to try
+            something new and a badge to remember it by.
+          </p>
+        </div>
+
+        <aside class="garden-summary">
+          <strong id="earned-badge-total">0</strong>
+          <span>badges collected</span>
+        </aside>
+      </div>
+
+      <section class="badge-cabinet">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">your little collection</p>
+            <h2>badge cabinet</h2>
+          </div>
+          <a id="challenge-public-profile-link" href="#" hidden>see them on my page</a>
+        </div>
+
+        <div id="badge-cabinet-grid" class="badge-cabinet-grid"></div>
+        <p id="badge-cabinet-empty" class="empty-state" hidden>
+          complete your first challenge to place a badge here.
+        </p>
+      </section>
+
+      <section class="challenge-section">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">choose your next adventure</p>
+            <h2>reading challenges</h2>
+          </div>
+          <label class="challenge-filter">
+            show
+            <select id="challenge-filter">
+              <option value="all">all challenges</option>
+              <option value="available">available</option>
+              <option value="active">in progress</option>
+              <option value="completed">completed</option>
+            </select>
+          </label>
+        </div>
+
+        <div id="challenge-grid" class="challenge-grid"></div>
+        <p id="challenge-empty" class="empty-state" hidden>
+          no challenges match this view.
+        </p>
+      </section>
+    </section>
+  </main>
+
+  <div id="challenges-toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

@@ -29,6 +29,73 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+const BADGES = {
+  "page-turner": {
+    emoji: "📖",
+    name: "page turner",
+    description: "finished three books"
+  },
+  "genre-explorer": {
+    emoji: "🧭",
+    name: "genre explorer",
+    description: "read across three different genres"
+  },
+  "friends-choice": {
+    emoji: "💌",
+    name: "friend's choice",
+    description: "finished a book recommended by a friend"
+  },
+  "reviewers-quill": {
+    emoji: "🪶",
+    name: "reviewer's quill",
+    description: "shared five book reviews"
+  },
+  "journal-keeper": {
+    emoji: "✍️",
+    name: "journal keeper",
+    description: "filled five reading-journal pages"
+  },
+  "tome-traveler": {
+    emoji: "🏰",
+    name: "tome traveler",
+    description: "finished a book longer than 400 pages"
+  },
+  "seasonal-reader": {
+    emoji: "🍂",
+    name: "seasonal reader",
+    description: "finished four books in one season"
+  },
+  "brave-browser": {
+    emoji: "🌙",
+    name: "brave browser",
+    description: "read beyond a usual comfort genre"
+  }
+};
+
+function renderPublicBadges(ids) {
+  const container = document.querySelector("#public-badges");
+  const empty = document.querySelector("#public-badges-empty");
+  const validIds = (ids || []).filter((id) => BADGES[id]);
+
+  container.innerHTML = "";
+  empty.hidden = validIds.length !== 0;
+
+  validIds.forEach((id) => {
+    const badge = BADGES[id];
+    const element = document.createElement("article");
+    element.className = "public-badge";
+    element.innerHTML = `
+      <span aria-hidden="true">${badge.emoji}</span>
+      <div>
+        <strong>${badge.name}</strong>
+        <small>${badge.description}</small>
+      </div>
+    `;
+    container.appendChild(element);
+  });
+}
+
+
 const loginView = document.querySelector("#profile-login-view");
 const profileView = document.querySelector("#public-profile-view");
 const avatar = document.querySelector("#public-avatar");
@@ -342,6 +409,8 @@ async function loadPage(user) {
   avatar.innerHTML = avatarMarkup(profile);
   name.textContent = profile.displayName || "reader";
   bio.textContent = profile.bio || "an ink and ivy reader";
+
+  renderPublicBadges(profile.earnedBadges || []);
 
   renderBookList("#favorite-books", "#favorite-empty", profile.favoriteBookIds);
   renderBookList("#tbr-books", "#tbr-empty", profile.tbrBookIds);
