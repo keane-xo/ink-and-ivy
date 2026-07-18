@@ -6,9 +6,9 @@
   <meta name="description" content="reading streaks, community voting, and automatic badges for ink and ivy readers.">
   <title>streaks, votes &amp; badges · ink and ivy</title>
   <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml">
-  <link rel="stylesheet" href="challenges.css?v=2">
+  <link rel="stylesheet" href="challenges.css?v=3">
   <script type="module" src="streaks.js?v=1"></script>
-  <script type="module" src="challenges.js?v=2"></script>
+  <script type="module" src="challenges.js?v=3"></script>
 </head>
 <body>
   <header class="challenges-header">
@@ -115,8 +115,8 @@
               chooses one guaranteed book.
             </li>
             <li>
-              every reader votes among three additional finalists during the
-              final seven days.
+              every pending title suggestion is automatically placed on the
+              community ballot during the final seven days.
             </li>
             <li>
               the two books with the most votes are added with the streak
@@ -142,31 +142,6 @@
         <div id="ballot-options" class="ballot-options"></div>
         <p id="ballot-form-message" class="form-message" aria-live="polite"></p>
 
-        <section id="admin-ballot-setup" class="admin-cycle-box" hidden>
-          <p class="eyebrow">librarian setup</p>
-          <h3>choose the three ballot finalists</h3>
-          <p>
-            select three different pending title suggestions before voting opens.
-          </p>
-          <div class="admin-finalist-grid">
-            <label>
-              finalist one
-              <select id="finalist-one"></select>
-            </label>
-            <label>
-              finalist two
-              <select id="finalist-two"></select>
-            </label>
-            <label>
-              finalist three
-              <select id="finalist-three"></select>
-            </label>
-          </div>
-          <button id="save-finalists-button" class="primary-button compact" type="button">
-            publish finalists
-          </button>
-          <p id="admin-finalist-message" class="form-message" aria-live="polite"></p>
-        </section>
       </section>
 
       <section id="previous-results-panel" class="panel results-panel" hidden>

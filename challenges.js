@@ -66,12 +66,6 @@ const ballotStatus = document.querySelector("#ballot-status");
 const ballotMessage = document.querySelector("#ballot-message");
 const ballotOptions = document.querySelector("#ballot-options");
 const ballotFormMessage = document.querySelector("#ballot-form-message");
-const adminBallotSetup = document.querySelector("#admin-ballot-setup");
-const finalistOne = document.querySelector("#finalist-one");
-const finalistTwo = document.querySelector("#finalist-two");
-const finalistThree = document.querySelector("#finalist-three");
-const saveFinalistsButton = document.querySelector("#save-finalists-button");
-const adminFinalistMessage = document.querySelector("#admin-finalist-message");
 const previousResultsPanel = document.querySelector("#previous-results-panel");
 const previousCycleRange = document.querySelector("#previous-cycle-range");
 const streakWinnerName = document.querySelector("#streak-winner-name");
@@ -106,6 +100,7 @@ let unsubscribeCurrentCycle = null;
 let unsubscribePreviousCycle = null;
 let unsubscribeCurrentVote = null;
 let unsubscribeWinnerSelection = null;
+let unsubscribeSuggestions = null;
 let myGlobalStreak = {};
 let myCycleMember = {};
 let leaderboard = [];
@@ -279,12 +274,6 @@ function renderLeaderboard() {
   });
 }
 
-function finalistObjects(documentData) {
-  return Array.isArray(documentData?.finalists)
-    ? documentData.finalists
-    : [];
-}
-
 function voteIsOpen() {
   return (
     currentCycle &&
@@ -293,7 +282,7 @@ function voteIsOpen() {
   );
 }
 
-async function castVote(finalist) {
+async function castVote(suggestion) {
   if (!currentUser || !currentCycle) return;
 
   ballotFormMessage.textContent = "saving your vote...";
@@ -309,15 +298,15 @@ async function castVote(finalist) {
       ),
       {
         userId: currentUser.uid,
-        selectedSuggestionId: finalist.suggestionId,
-        selectedTitle: finalist.title,
+        selectedSuggestionId: suggestion.id,
+        selectedTitle: suggestion.title,
         updatedAt: serverTimestamp(),
         createdAt: currentVote?.createdAt || serverTimestamp()
       },
       { merge: true }
     );
     ballotFormMessage.textContent =
-      `your vote for ${finalist.title} was saved. you may change it until the cycle ends.`;
+      `your vote for ${suggestion.title} was saved. you may change it until the cycle ends.`;
   } catch (error) {
     console.error(error);
     ballotFormMessage.textContent =
@@ -334,148 +323,55 @@ function renderBallot() {
     ballotStatus.textContent = "begins october 8";
     ballotMessage.textContent =
       "the first ballot opens during the final seven days of the first cycle.";
-    adminBallotSetup.hidden = true;
     return;
   }
 
   ballotTitle.textContent = `cycle ${currentCycle.index + 1} ballot`;
-  const finalists = finalistObjects(currentCycleDocument);
 
   if (todayDay < currentCycle.votingOpenDay) {
     ballotStatus.textContent = "upcoming";
     ballotMessage.textContent =
-      `voting opens ${displayDate(currentCycle.votingOpenDay)} and closes at the end of ${displayDate(currentCycle.endDay)}.`;
+      `every pending title suggestion will appear here automatically. voting opens ${displayDate(currentCycle.votingOpenDay)} and closes at the end of ${displayDate(currentCycle.endDay)}.`;
   } else if (todayDay <= currentCycle.endDay) {
     ballotStatus.textContent = "voting open";
     ballotMessage.textContent =
-      "choose one finalist. your vote may be changed until the cycle ends.";
+      "every pending title suggestion is on the ballot. choose one book; you may change your vote until the cycle ends.";
   } else {
     ballotStatus.textContent = "closed";
     ballotMessage.textContent =
       "this ballot has closed. final results appear after the librarian's next visit.";
   }
 
-  if (!finalists.length) {
+  if (!pendingSuggestions.length) {
     ballotOptions.innerHTML =
-      '<p class="empty-state">the three ballot finalists have not been published yet.</p>';
-  } else {
-    finalists.forEach((finalist, index) => {
-      const selected =
-        currentVote?.selectedSuggestionId === finalist.suggestionId;
-      const card = document.createElement("article");
-      card.className = `ballot-option ${selected ? "selected" : ""}`;
-      card.innerHTML = `
-        <span>finalist ${index + 1}</span>
-        <h3>${escapeHtml(finalist.title)}</h3>
-        <p>by ${escapeHtml(finalist.author || "unknown author")}</p>
-        <button
-          class="${selected ? "secondary-button" : "primary-button"}"
-          type="button"
-          ${voteIsOpen() ? "" : "disabled"}
-        >
-          ${selected ? "your vote" : "vote for this book"}
-        </button>
-      `;
-      card.querySelector("button").addEventListener(
-        "click",
-        () => castVote(finalist)
-      );
-      ballotOptions.appendChild(card);
-    });
-  }
-
-  const adminCanEdit =
-    currentUser?.uid === ADMIN_UID &&
-    todayDay < currentCycle.votingOpenDay;
-
-  adminBallotSetup.hidden = !adminCanEdit;
-  if (adminCanEdit) populateFinalistSelectors();
-}
-
-function suggestionLabel(suggestion) {
-  return `${suggestion.title} — ${suggestion.author || "unknown author"} · ${suggestion.name || "reader"}`;
-}
-
-function populateSelect(select, selectedId = "") {
-  select.innerHTML = '<option value="">choose a suggestion</option>';
-  pendingSuggestions.forEach((suggestion) => {
-    const option = document.createElement("option");
-    option.value = suggestion.id;
-    option.textContent = suggestionLabel(suggestion);
-    select.appendChild(option);
-  });
-  select.value = selectedId;
-}
-
-function populateFinalistSelectors() {
-  const finalists = finalistObjects(currentCycleDocument);
-  populateSelect(finalistOne, finalists[0]?.suggestionId || "");
-  populateSelect(finalistTwo, finalists[1]?.suggestionId || "");
-  populateSelect(finalistThree, finalists[2]?.suggestionId || "");
-}
-
-saveFinalistsButton.addEventListener("click", async () => {
-  if (!currentCycle || currentUser?.uid !== ADMIN_UID) return;
-
-  const ids = [
-    finalistOne.value,
-    finalistTwo.value,
-    finalistThree.value
-  ];
-
-  if (ids.some((id) => !id) || new Set(ids).size !== 3) {
-    adminFinalistMessage.textContent =
-      "choose three different title suggestions.";
+      '<p class="empty-state">no pending title suggestions have been submitted yet.</p>';
     return;
   }
 
-  const selected = ids.map((id) =>
-    pendingSuggestions.find((suggestion) => suggestion.id === id)
-  );
-
-  if (selected.some((item) => !item)) {
-    adminFinalistMessage.textContent =
-      "one of those suggestions could not be found.";
-    return;
-  }
-
-  saveFinalistsButton.disabled = true;
-  saveFinalistsButton.textContent = "publishing...";
-  adminFinalistMessage.textContent = "";
-
-  try {
-    await setDoc(
-      doc(db, "readingCycles", currentCycle.id),
-      {
-        cycleId: currentCycle.id,
-        cycleNumber: currentCycle.index + 1,
-        startDate: dateKeyFromDay(currentCycle.startDay),
-        endDate: dateKeyFromDay(currentCycle.endDay),
-        votingOpenDate: dateKeyFromDay(currentCycle.votingOpenDay),
-        finalistIds: ids,
-        finalists: selected.map((suggestion) => ({
-          suggestionId: suggestion.id,
-          title: suggestion.title,
-          author: suggestion.author || "",
-          submittedById: suggestion.userId,
-          submittedByName: suggestion.name || "reader"
-        })),
-        updatedAt: serverTimestamp(),
-        createdAt: currentCycleDocument?.createdAt || serverTimestamp()
-      },
-      { merge: true }
+  pendingSuggestions.forEach((suggestion, index) => {
+    const selected =
+      currentVote?.selectedSuggestionId === suggestion.id;
+    const card = document.createElement("article");
+    card.className = `ballot-option ${selected ? "selected" : ""}`;
+    card.innerHTML = `
+      <span>submitted suggestion ${index + 1}</span>
+      <h3>${escapeHtml(suggestion.title)}</h3>
+      <p>by ${escapeHtml(suggestion.author || "unknown author")}</p>
+      <button
+        class="${selected ? "secondary-button" : "primary-button"}"
+        type="button"
+        ${voteIsOpen() ? "" : "disabled"}
+      >
+        ${selected ? "your vote" : "vote for this book"}
+      </button>
+    `;
+    card.querySelector("button").addEventListener(
+      "click",
+      () => castVote(suggestion)
     );
-    adminFinalistMessage.textContent =
-      "the three ballot finalists were published.";
-  } catch (error) {
-    console.error(error);
-    adminFinalistMessage.textContent =
-      "the finalists could not be published.";
-  } finally {
-    saveFinalistsButton.disabled = false;
-    saveFinalistsButton.textContent = "publish finalists";
-  }
-});
+    ballotOptions.appendChild(card);
+  });
+}
 
 function sortWinnerCandidates(members) {
   return members
@@ -514,20 +410,36 @@ async function finalizeCycleIfNeeded(cycle) {
 
   if (cycleData.finalizedAt) return;
 
-  const [membersSnapshot, votesSnapshot] = await Promise.all([
-    getDocs(collection(db, "readingCycles", cycle.id, "members")),
-    getDocs(collection(db, "readingCycles", cycle.id, "votes"))
-  ]);
+  const [membersSnapshot, votesSnapshot, suggestionsSnapshot] =
+    await Promise.all([
+      getDocs(collection(db, "readingCycles", cycle.id, "members")),
+      getDocs(collection(db, "readingCycles", cycle.id, "votes")),
+      getDocs(
+        query(
+          collection(db, "bookSuggestions"),
+          where("status", "==", "pending")
+        )
+      )
+    ]);
 
   const candidates = sortWinnerCandidates(
     membersSnapshot.docs.map((entry) => entry.data())
   );
   const winner = candidates[0] || null;
-  const finalists = finalistObjects(cycleData);
+
+  const ballotSuggestions = suggestionsSnapshot.docs.map((entry) => ({
+    suggestionId: entry.id,
+    title: entry.data().title || "",
+    author: entry.data().author || "",
+    submittedById: entry.data().userId || "",
+    submittedByName: entry.data().name || "reader",
+    submittedAt: entry.data().createdAt || null
+  }));
 
   const counts = new Map(
-    finalists.map((item) => [item.suggestionId, 0])
+    ballotSuggestions.map((item) => [item.suggestionId, 0])
   );
+
   votesSnapshot.docs.forEach((entry) => {
     const selectedId = entry.data().selectedSuggestionId;
     if (counts.has(selectedId)) {
@@ -535,18 +447,23 @@ async function finalizeCycleIfNeeded(cycle) {
     }
   });
 
-  const votedWinners = finalists
-    .map((item, index) => ({
+  const votedWinners = ballotSuggestions
+    .map((item) => ({
       ...item,
-      votes: counts.get(item.suggestionId) || 0,
-      finalistOrder: index
+      votes: counts.get(item.suggestionId) || 0
     }))
-    .sort(
-      (a, b) =>
-        b.votes - a.votes ||
-        a.finalistOrder - b.finalistOrder
-    )
-    .slice(0, 2);
+    .sort((a, b) => {
+      const voteDifference = b.votes - a.votes;
+      if (voteDifference) return voteDifference;
+
+      const submittedDifference =
+        timestampValue(a.submittedAt) - timestampValue(b.submittedAt);
+      if (submittedDifference) return submittedDifference;
+
+      return String(a.title).localeCompare(String(b.title));
+    })
+    .slice(0, 2)
+    .map(({ submittedAt, ...item }) => item);
 
   await setDoc(
     cycleReference,
@@ -757,28 +674,40 @@ async function loadAutomaticBadges() {
   }
 }
 
-async function loadSuggestions() {
+function loadSuggestions() {
   if (!currentUser) return;
 
-  if (currentUser.uid === ADMIN_UID) {
-    const snapshot = await getDocs(collection(db, "bookSuggestions"));
-    pendingSuggestions = snapshot.docs
-      .map((entry) => ({ id: entry.id, ...entry.data() }))
-      .filter((item) => item.status === "pending");
-  }
-
-  const ownSnapshot = await getDocs(
+  unsubscribeSuggestions?.();
+  unsubscribeSuggestions = onSnapshot(
     query(
       collection(db, "bookSuggestions"),
-      where("userId", "==", currentUser.uid)
-    )
-  );
-  winnerSuggestions = ownSnapshot.docs
-    .map((entry) => ({ id: entry.id, ...entry.data() }))
-    .filter((item) => item.status === "pending");
+      where("status", "==", "pending")
+    ),
+    (snapshot) => {
+      pendingSuggestions = snapshot.docs
+        .map((entry) => ({ id: entry.id, ...entry.data() }))
+        .sort((a, b) => {
+          const dateDifference =
+            timestampValue(a.createdAt) - timestampValue(b.createdAt);
+          if (dateDifference) return dateDifference;
+          return String(a.title || "").localeCompare(String(b.title || ""));
+        });
 
-  renderBallot();
-  renderPreviousResults();
+      winnerSuggestions = pendingSuggestions.filter(
+        (item) => item.userId === currentUser.uid
+      );
+
+      renderBallot();
+      renderPreviousResults();
+    },
+    (error) => {
+      console.error(error);
+      pendingSuggestions = [];
+      winnerSuggestions = [];
+      ballotOptions.innerHTML =
+        '<p class="empty-state">the submitted title suggestions could not be loaded.</p>';
+    }
+  );
 }
 
 function stopListeners() {
@@ -789,7 +718,8 @@ function stopListeners() {
     unsubscribeCurrentCycle,
     unsubscribePreviousCycle,
     unsubscribeCurrentVote,
-    unsubscribeWinnerSelection
+    unsubscribeWinnerSelection,
+    unsubscribeSuggestions
   ].forEach((unsubscribe) => unsubscribe?.());
 
   unsubscribeStreak =
@@ -799,6 +729,7 @@ function stopListeners() {
     unsubscribePreviousCycle =
     unsubscribeCurrentVote =
     unsubscribeWinnerSelection =
+    unsubscribeSuggestions =
       null;
 }
 
@@ -945,10 +876,8 @@ onAuthStateChanged(auth, async (user) => {
     renderBadges();
 
     startListeners(user);
-    await Promise.all([
-      loadSuggestions(),
-      loadAutomaticBadges()
-    ]);
+    loadSuggestions();
+    await loadAutomaticBadges();
 
     await finalizeAllEndedCycles();
   } catch (error) {
