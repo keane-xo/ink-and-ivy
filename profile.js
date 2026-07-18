@@ -64,11 +64,6 @@ const BADGES = {
     emoji: "🍂",
     name: "seasonal reader",
     description: "finished four books in one season"
-  },
-  "brave-browser": {
-    emoji: "🌙",
-    name: "brave browser",
-    description: "read beyond a usual comfort genre"
   }
 };
 
@@ -381,10 +376,16 @@ async function loadPage(user) {
     return;
   }
 
-  const [profileSnapshot, currentProfileSnapshotDoc, booksSnapshot] = await Promise.all([
+  const [
+    profileSnapshot,
+    currentProfileSnapshotDoc,
+    booksSnapshot,
+    streakSnapshot
+  ] = await Promise.all([
     getDoc(doc(db, "profiles", profileId)),
     getDoc(doc(db, "profiles", user.uid)),
-    getDocs(collection(db, "books"))
+    getDocs(collection(db, "books")),
+    getDoc(doc(db, "readerStreaks", profileId))
   ]);
 
   if (!profileSnapshot.exists()) {
@@ -411,6 +412,12 @@ async function loadPage(user) {
   bio.textContent = profile.bio || "an ink and ivy reader";
 
   renderPublicBadges(profile.earnedBadges || []);
+
+  const streak = streakSnapshot.exists() ? streakSnapshot.data() : {};
+  document.querySelector("#public-current-streak").textContent =
+    Number(streak.currentStreak || 0);
+  document.querySelector("#public-longest-streak").textContent =
+    Number(streak.longestStreak || 0);
 
   renderBookList("#favorite-books", "#favorite-empty", profile.favoriteBookIds);
   renderBookList("#tbr-books", "#tbr-empty", profile.tbrBookIds);

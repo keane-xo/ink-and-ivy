@@ -644,6 +644,7 @@ function renderBooks() {
           <p>
             <span class="status">${escapeHtml(book.genre || "uncategorized")}</span>
             <span class="status">${book.status === "available" ? "on the shelf" : "out reading"}</span>
+            ${book.pageCount ? `<span class="status">${Number(book.pageCount)} pages</span>` : ""}
           </p>
         </div>
       </div>
@@ -678,6 +679,7 @@ function beginBookEdit(book) {
   document.querySelector("#book-author").value = book.author || "";
   document.querySelector("#book-genre").value = book.genre || "";
   document.querySelector("#book-status").value = book.status || "available";
+  document.querySelector("#book-page-count").value = book.pageCount || "";
   document.querySelector("#book-cover-url").value = book.coverUrl || "";
   document.querySelector("#book-summary").value = book.summary || "";
   document.querySelector("#book-nya-note").value = book.nyaNote || "";
@@ -710,6 +712,7 @@ bookForm.addEventListener("submit", async (event) => {
     author: document.querySelector("#book-author").value.trim(),
     genre: document.querySelector("#book-genre").value.trim().toLowerCase(),
     status: document.querySelector("#book-status").value,
+    pageCount: Math.max(0, Number(document.querySelector("#book-page-count").value || 0)),
     coverUrl: document.querySelector("#book-cover-url").value.trim(),
     summary: document.querySelector("#book-summary").value.trim(),
     nyaNote: document.querySelector("#book-nya-note").value.trim(),

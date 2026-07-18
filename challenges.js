@@ -1,4 +1,8 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+import {
+  getApp,
+  getApps,
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
 import {
   browserLocalPersistence,
   getAuth,
@@ -7,17 +11,23 @@ import {
   signOut
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 import {
-  arrayUnion,
   collection,
-  deleteDoc,
   doc,
   getDoc,
+  getDocs,
   getFirestore,
   onSnapshot,
+  orderBy,
+  query,
   serverTimestamp,
   setDoc,
-  updateDoc
+  updateDoc,
+  where
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+import {
+  BADGES,
+  syncAutomaticBadges
+} from "./badge-engine.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC1dOxo61Z0U9mReJnw7s5Z3x0HFrrfB2k",
@@ -28,431 +38,866 @@ const firebaseConfig = {
   appId: "1:444464034610:web:de9c2c3a33737ae6849d2b"
 };
 
-const app = initializeApp(firebaseConfig);
+const ADMIN_UID = "66iUUKyOu7Rvu2I6Hwtdel82b122";
+const START_DAY = Math.floor(Date.UTC(2026, 7, 13) / 86400000);
+const CYCLE_DAYS = 63;
+const VOTING_DAYS = 7;
+const TIME_ZONE = "America/Chicago";
+
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 setPersistence(auth, browserLocalPersistence).catch(console.error);
 
-const BADGES = {
-  "page-turner": {
-    emoji: "📖",
-    name: "page turner",
-    description: "finished three books"
-  },
-  "genre-explorer": {
-    emoji: "🧭",
-    name: "genre explorer",
-    description: "read across three different genres"
-  },
-  "friends-choice": {
-    emoji: "💌",
-    name: "friend's choice",
-    description: "finished a book recommended by a friend"
-  },
-  "reviewers-quill": {
-    emoji: "🪶",
-    name: "reviewer's quill",
-    description: "shared five book reviews"
-  },
-  "journal-keeper": {
-    emoji: "✍️",
-    name: "journal keeper",
-    description: "filled five reading-journal pages"
-  },
-  "tome-traveler": {
-    emoji: "🏰",
-    name: "tome traveler",
-    description: "finished a book longer than 400 pages"
-  },
-  "seasonal-reader": {
-    emoji: "🍂",
-    name: "seasonal reader",
-    description: "finished four books in one season"
-  },
-  "brave-browser": {
-    emoji: "🌙",
-    name: "brave browser",
-    description: "read beyond a usual comfort genre"
-  }
-};
-
-const CHALLENGES = [
-  {
-    id: "page-turner",
-    emoji: "📖",
-    name: "page turner",
-    description: "finish three books of any kind.",
-    target: 3,
-    step: "book finished"
-  },
-  {
-    id: "genre-explorer",
-    emoji: "🧭",
-    name: "genre explorer",
-    description: "finish books from three different genres.",
-    target: 3,
-    step: "new genre explored"
-  },
-  {
-    id: "friends-choice",
-    emoji: "💌",
-    name: "friend's choice",
-    description: "finish one book that a friend recommended to you.",
-    target: 1,
-    step: "recommended book finished"
-  },
-  {
-    id: "reviewers-quill",
-    emoji: "🪶",
-    name: "reviewer's quill",
-    description: "write and share five thoughtful book reviews.",
-    target: 5,
-    step: "review written"
-  },
-  {
-    id: "journal-keeper",
-    emoji: "✍️",
-    name: "journal keeper",
-    description: "fill five pages in your private reading journal.",
-    target: 5,
-    step: "journal page written"
-  },
-  {
-    id: "tome-traveler",
-    emoji: "🏰",
-    name: "tome traveler",
-    description: "finish one book that is more than 400 pages long.",
-    target: 1,
-    step: "long book finished"
-  },
-  {
-    id: "seasonal-reader",
-    emoji: "🍂",
-    name: "seasonal reader",
-    description: "finish four books during the same season.",
-    target: 4,
-    step: "seasonal book finished"
-  },
-  {
-    id: "brave-browser",
-    emoji: "🌙",
-    name: "brave browser",
-    description: "finish one book outside your usual comfort genre.",
-    target: 1,
-    step: "new kind of book finished"
-  }
-];
-
 const loginView = document.querySelector("#challenges-login-view");
 const challengesView = document.querySelector("#challenges-view");
 const signoutButton = document.querySelector("#challenges-signout-button");
-const earnedBadgeTotal = document.querySelector("#earned-badge-total");
-const badgeGrid = document.querySelector("#badge-cabinet-grid");
-const badgeEmpty = document.querySelector("#badge-cabinet-empty");
+const cycleSummaryLabel = document.querySelector("#cycle-summary-label");
+const cycleCountdown = document.querySelector("#cycle-countdown");
+const cycleDateRange = document.querySelector("#cycle-date-range");
+const currentStreak = document.querySelector("#current-streak");
+const cycleBestStreak = document.querySelector("#cycle-best-streak");
+const cycleActiveDays = document.querySelector("#cycle-active-days");
+const globalLongestStreak = document.querySelector("#global-longest-streak");
+const leaderboardList = document.querySelector("#leaderboard-list");
+const leaderboardEmpty = document.querySelector("#leaderboard-empty");
+const ballotTitle = document.querySelector("#ballot-title");
+const ballotStatus = document.querySelector("#ballot-status");
+const ballotMessage = document.querySelector("#ballot-message");
+const ballotOptions = document.querySelector("#ballot-options");
+const ballotFormMessage = document.querySelector("#ballot-form-message");
+const adminBallotSetup = document.querySelector("#admin-ballot-setup");
+const finalistOne = document.querySelector("#finalist-one");
+const finalistTwo = document.querySelector("#finalist-two");
+const finalistThree = document.querySelector("#finalist-three");
+const saveFinalistsButton = document.querySelector("#save-finalists-button");
+const adminFinalistMessage = document.querySelector("#admin-finalist-message");
+const previousResultsPanel = document.querySelector("#previous-results-panel");
+const previousCycleRange = document.querySelector("#previous-cycle-range");
+const streakWinnerName = document.querySelector("#streak-winner-name");
+const guaranteedBookTitle = document.querySelector("#guaranteed-book-title");
+const streakWinnerDetail = document.querySelector("#streak-winner-detail");
+const voteWinnerOne = document.querySelector("#vote-winner-one");
+const voteWinnerTwo = document.querySelector("#vote-winner-two");
+const winnerChoiceBox = document.querySelector("#winner-choice-box");
+const winnerSuggestionSelect = document.querySelector("#winner-suggestion-select");
+const saveWinnerChoiceButton = document.querySelector("#save-winner-choice-button");
+const winnerChoiceMessage = document.querySelector("#winner-choice-message");
 const publicProfileLink = document.querySelector("#challenge-public-profile-link");
-const challengeFilter = document.querySelector("#challenge-filter");
-const challengeGrid = document.querySelector("#challenge-grid");
-const challengeEmpty = document.querySelector("#challenge-empty");
+const badgeGrid = document.querySelector("#automatic-badge-grid");
+const badgeSyncMessage = document.querySelector("#badge-sync-message");
 const toast = document.querySelector("#challenges-toast");
 
 let currentUser = null;
 let currentProfile = null;
-let progressById = new Map();
-let unsubscribeProfile = null;
-let unsubscribeProgress = null;
+let todayDay = 0;
+let currentCycle = null;
+let previousCycle = null;
+let currentCycleDocument = null;
+let previousCycleDocument = null;
+let currentVote = null;
+let pendingSuggestions = [];
+let winnerSuggestions = [];
+let previousWinnerSelection = null;
+let unsubscribeStreak = null;
+let unsubscribeMember = null;
+let unsubscribeLeaderboard = null;
+let unsubscribeCurrentCycle = null;
+let unsubscribePreviousCycle = null;
+let unsubscribeCurrentVote = null;
+let unsubscribeWinnerSelection = null;
+let myGlobalStreak = {};
+let myCycleMember = {};
+let leaderboard = [];
+let automaticProgress = {};
 
 function showToast(message) {
   toast.textContent = message;
   toast.classList.add("show");
-  window.setTimeout(() => toast.classList.remove("show"), 3000);
+  window.setTimeout(() => toast.classList.remove("show"), 3200);
 }
 
-function progressFor(challenge) {
-  return progressById.get(challenge.id) || null;
+function centralParts(date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(date);
+
+  const values = Object.fromEntries(
+    parts
+      .filter((part) => part.type !== "literal")
+      .map((part) => [part.type, part.value])
+  );
+
+  return {
+    year: Number(values.year),
+    month: Number(values.month),
+    day: Number(values.day)
+  };
 }
 
-function badgeIds() {
-  return Array.isArray(currentProfile?.earnedBadges)
-    ? currentProfile.earnedBadges
-    : [];
+function dayNumber(parts) {
+  return Math.floor(
+    Date.UTC(parts.year, parts.month - 1, parts.day) / 86400000
+  );
 }
 
-function renderBadges() {
-  const earned = badgeIds().filter((id) => BADGES[id]);
-  earnedBadgeTotal.textContent = earned.length;
-  badgeGrid.innerHTML = "";
-  badgeEmpty.hidden = earned.length !== 0;
+function dateFromDay(day) {
+  return new Date(day * 86400000 + 12 * 60 * 60 * 1000);
+}
 
-  earned.forEach((id) => {
-    const badge = BADGES[id];
-    const card = document.createElement("article");
-    card.className = "badge-card";
-    card.innerHTML = `
-      <span class="badge-emoji" aria-hidden="true">${badge.emoji}</span>
-      <strong>${badge.name}</strong>
-      <small>${badge.description}</small>
+function dateKeyFromDay(day) {
+  const date = dateFromDay(day);
+  return [
+    date.getUTCFullYear(),
+    String(date.getUTCMonth() + 1).padStart(2, "0"),
+    String(date.getUTCDate()).padStart(2, "0")
+  ].join("-");
+}
+
+function displayDate(day, includeYear = true) {
+  return dateFromDay(day).toLocaleDateString([], {
+    month: "long",
+    day: "numeric",
+    ...(includeYear ? { year: "numeric" } : {})
+  }).toLowerCase();
+}
+
+function cycleForIndex(index) {
+  if (index < 0) return null;
+  const startDay = START_DAY + index * CYCLE_DAYS;
+  return {
+    id: `cycle-${index + 1}`,
+    index,
+    startDay,
+    endDay: startDay + CYCLE_DAYS - 1,
+    votingOpenDay: startDay + CYCLE_DAYS - VOTING_DAYS
+  };
+}
+
+function cycleForToday(day) {
+  if (day < START_DAY) return null;
+  return cycleForIndex(
+    Math.floor((day - START_DAY) / CYCLE_DAYS)
+  );
+}
+
+function timestampValue(value) {
+  return value?.seconds || Number.MAX_SAFE_INTEGER;
+}
+
+function avatarMarkup(person) {
+  if (person?.avatarUrl) {
+    return `<img src="${escapeHtml(person.avatarUrl)}" alt="">`;
+  }
+  return escapeHtml(person?.avatarEmoji || "📚");
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function cycleRange(cycle) {
+  if (!cycle) return "";
+  return `${displayDate(cycle.startDay, false)} – ${displayDate(cycle.endDay)}`;
+}
+
+function updateCycleSummary() {
+  if (!currentCycle) {
+    const days = START_DAY - todayDay;
+    cycleSummaryLabel.textContent = "streaks begin in";
+    cycleCountdown.textContent = `${days} ${days === 1 ? "day" : "days"}`;
+    cycleDateRange.textContent =
+      `${displayDate(START_DAY, false)} – ${displayDate(START_DAY + CYCLE_DAYS - 1)}`;
+    return;
+  }
+
+  const daysRemaining = currentCycle.endDay - todayDay + 1;
+  cycleSummaryLabel.textContent = `cycle ${currentCycle.index + 1}`;
+  cycleCountdown.textContent =
+    `${daysRemaining} ${daysRemaining === 1 ? "day left" : "days left"}`;
+  cycleDateRange.textContent = cycleRange(currentCycle);
+}
+
+function renderMyStreak() {
+  currentStreak.textContent = Number(myGlobalStreak.currentStreak || 0);
+  globalLongestStreak.textContent =
+    Number(myGlobalStreak.longestStreak || 0);
+  cycleBestStreak.textContent = Number(myCycleMember.bestStreak || 0);
+  cycleActiveDays.textContent = Number(myCycleMember.activeDays || 0);
+}
+
+function renderLeaderboard() {
+  leaderboardList.innerHTML = "";
+
+  const eligible = leaderboard
+    .filter((item) => item.eligibleForPrize !== false && item.userId !== ADMIN_UID)
+    .sort((a, b) => {
+      const streakDifference =
+        Number(b.bestStreak || 0) - Number(a.bestStreak || 0);
+      if (streakDifference) return streakDifference;
+
+      const reachedDifference =
+        timestampValue(a.bestReachedAt) - timestampValue(b.bestReachedAt);
+      if (reachedDifference) return reachedDifference;
+
+      return String(a.displayName || "").localeCompare(
+        String(b.displayName || "")
+      );
+    });
+
+  leaderboardEmpty.hidden = eligible.length !== 0;
+
+  if (!eligible.length) {
+    leaderboardEmpty.textContent = currentCycle
+      ? "no eligible reader has started a streak in this cycle yet."
+      : "streaks begin on august 13.";
+  }
+
+  eligible.slice(0, 12).forEach((reader, index) => {
+    const row = document.createElement("article");
+    row.className = "leaderboard-row";
+    row.innerHTML = `
+      <span class="leaderboard-rank">${index + 1}</span>
+      <span class="avatar" style="--avatar-color:${escapeHtml(reader.avatarColor || "#e8b8c5")}">
+        ${avatarMarkup(reader)}
+      </span>
+      <span class="leaderboard-reader">
+        <strong>${escapeHtml(reader.displayName || "reader")}</strong>
+        <small>${Number(reader.activeDays || 0)} active days</small>
+      </span>
+      <span class="leaderboard-score">🔥 ${Number(reader.bestStreak || 0)}</span>
     `;
-    badgeGrid.appendChild(card);
+    leaderboardList.appendChild(row);
   });
 }
 
-function challengeState(challenge) {
-  const progress = progressFor(challenge);
-  if (!progress) return "available";
-  return progress.status === "completed" ? "completed" : "active";
+function finalistObjects(documentData) {
+  return Array.isArray(documentData?.finalists)
+    ? documentData.finalists
+    : [];
 }
 
-async function joinChallenge(challenge) {
-  if (!currentUser) return;
+function voteIsOpen() {
+  return (
+    currentCycle &&
+    todayDay >= currentCycle.votingOpenDay &&
+    todayDay <= currentCycle.endDay
+  );
+}
+
+async function castVote(finalist) {
+  if (!currentUser || !currentCycle) return;
+
+  ballotFormMessage.textContent = "saving your vote...";
 
   try {
     await setDoc(
       doc(
         db,
-        "profiles",
-        currentUser.uid,
-        "readingChallenges",
-        challenge.id
+        "readingCycles",
+        currentCycle.id,
+        "votes",
+        currentUser.uid
       ),
       {
         userId: currentUser.uid,
-        challengeId: challenge.id,
-        progress: 0,
-        target: challenge.target,
-        status: "active",
-        joinedAt: serverTimestamp(),
-        completedAt: null,
-        updatedAt: serverTimestamp()
-      }
+        selectedSuggestionId: finalist.suggestionId,
+        selectedTitle: finalist.title,
+        updatedAt: serverTimestamp(),
+        createdAt: currentVote?.createdAt || serverTimestamp()
+      },
+      { merge: true }
     );
-    showToast(`${challenge.name} was added to your reading garden.`);
+    ballotFormMessage.textContent =
+      `your vote for ${finalist.title} was saved. you may change it until the cycle ends.`;
   } catch (error) {
     console.error(error);
-    showToast("the challenge could not be joined.");
+    ballotFormMessage.textContent =
+      "your vote could not be saved.";
   }
 }
 
-async function logProgress(challenge, amount) {
-  if (!currentUser) return;
-  const record = progressFor(challenge);
-  if (!record || record.status === "completed") return;
+function renderBallot() {
+  ballotOptions.innerHTML = "";
+  ballotFormMessage.textContent = "";
 
-  const nextProgress = Math.max(
-    0,
-    Math.min(challenge.target, Number(record.progress || 0) + amount)
-  );
-  const completed = nextProgress >= challenge.target;
-
-  try {
-    await updateDoc(
-      doc(
-        db,
-        "profiles",
-        currentUser.uid,
-        "readingChallenges",
-        challenge.id
-      ),
-      {
-        progress: nextProgress,
-        status: completed ? "completed" : "active",
-        completedAt: completed ? serverTimestamp() : null,
-        updatedAt: serverTimestamp()
-      }
-    );
-
-    if (completed) {
-      await updateDoc(doc(db, "profiles", currentUser.uid), {
-        earnedBadges: arrayUnion(challenge.id),
-        updatedAt: serverTimestamp()
-      });
-      showToast(`badge unlocked: ${challenge.name}!`);
-    }
-  } catch (error) {
-    console.error(error);
-    showToast("your challenge progress could not be saved.");
-  }
-}
-
-async function leaveChallenge(challenge) {
-  if (!currentUser) return;
-
-  try {
-    await deleteDoc(
-      doc(
-        db,
-        "profiles",
-        currentUser.uid,
-        "readingChallenges",
-        challenge.id
-      )
-    );
-    showToast(`${challenge.name} was removed from your active challenges.`);
-  } catch (error) {
-    console.error(error);
-    showToast("the challenge could not be removed.");
-  }
-}
-
-function renderChallenges() {
-  const selectedFilter = challengeFilter.value;
-  const visible = CHALLENGES.filter((challenge) => {
-    const state = challengeState(challenge);
-    return selectedFilter === "all" || state === selectedFilter;
-  });
-
-  challengeGrid.innerHTML = "";
-  challengeEmpty.hidden = visible.length !== 0;
-
-  visible.forEach((challenge) => {
-    const record = progressFor(challenge);
-    const state = challengeState(challenge);
-    const progress = Math.min(
-      challenge.target,
-      Number(record?.progress || 0)
-    );
-    const percent = Math.round((progress / challenge.target) * 100);
-
-    const card = document.createElement("article");
-    card.className = `challenge-card ${state}`;
-
-    let actions = "";
-    if (state === "available") {
-      actions = `
-        <div class="challenge-actions">
-          <button class="primary-button" type="button" data-join>
-            join challenge
-          </button>
-        </div>
-      `;
-    } else if (state === "active") {
-      actions = `
-        <div class="challenge-actions">
-          <button class="primary-button" type="button" data-add-progress>
-            ${challenge.target === 1 ? "complete challenge" : "log one step"}
-          </button>
-          ${progress > 0 ? '<button class="secondary-button" type="button" data-remove-progress>undo one</button>' : ""}
-          <button class="secondary-button" type="button" data-leave>
-            leave challenge
-          </button>
-        </div>
-      `;
-    } else {
-      actions = `
-        <p class="challenge-complete-note">
-          badge collected and displayed on your reader page.
-        </p>
-      `;
-    }
-
-    card.innerHTML = `
-      <div class="challenge-card-top">
-        <span class="challenge-icon" aria-hidden="true">${challenge.emoji}</span>
-        <span class="challenge-status">${
-          state === "available"
-            ? "available"
-            : state === "completed"
-              ? "completed"
-              : "in progress"
-        }</span>
-      </div>
-
-      <h3>${challenge.name}</h3>
-      <p>${challenge.description}</p>
-
-      <div class="progress-label">
-        <span>${progress} of ${challenge.target}</span>
-        <span>${challenge.step}</span>
-      </div>
-      <div class="progress-track" aria-label="${percent} percent complete">
-        <div class="progress-fill" style="--progress:${percent}%"></div>
-      </div>
-
-      ${actions}
-    `;
-
-    card.querySelector("[data-join]")?.addEventListener(
-      "click",
-      () => joinChallenge(challenge)
-    );
-    card.querySelector("[data-add-progress]")?.addEventListener(
-      "click",
-      () => logProgress(challenge, 1)
-    );
-    card.querySelector("[data-remove-progress]")?.addEventListener(
-      "click",
-      () => logProgress(challenge, -1)
-    );
-    card.querySelector("[data-leave]")?.addEventListener(
-      "click",
-      () => leaveChallenge(challenge)
-    );
-
-    challengeGrid.appendChild(card);
-  });
-}
-
-function renderAll() {
-  renderBadges();
-  renderChallenges();
-}
-
-challengeFilter.addEventListener("change", renderChallenges);
-signoutButton.addEventListener("click", () => signOut(auth));
-
-function stopListeners() {
-  unsubscribeProfile?.();
-  unsubscribeProgress?.();
-  unsubscribeProfile = null;
-  unsubscribeProgress = null;
-}
-
-async function startForUser(user) {
-  const profileDocument = await getDoc(doc(db, "profiles", user.uid));
-  if (!profileDocument.exists()) {
-    window.location.href = "reader.html";
+  if (!currentCycle) {
+    ballotTitle.textContent = "the first community vote";
+    ballotStatus.textContent = "begins october 8";
+    ballotMessage.textContent =
+      "the first ballot opens during the final seven days of the first cycle.";
+    adminBallotSetup.hidden = true;
     return;
   }
 
-  publicProfileLink.href =
-    `profile.html?uid=${encodeURIComponent(user.uid)}`;
-  publicProfileLink.hidden = false;
+  ballotTitle.textContent = `cycle ${currentCycle.index + 1} ballot`;
+  const finalists = finalistObjects(currentCycleDocument);
 
-  unsubscribeProfile = onSnapshot(
-    doc(db, "profiles", user.uid),
-    (snapshot) => {
-      currentProfile = snapshot.exists() ? snapshot.data() : null;
-      renderBadges();
-    },
-    (error) => {
-      console.error(error);
-      showToast("your badge cabinet could not be loaded.");
-    }
+  if (todayDay < currentCycle.votingOpenDay) {
+    ballotStatus.textContent = "upcoming";
+    ballotMessage.textContent =
+      `voting opens ${displayDate(currentCycle.votingOpenDay)} and closes at the end of ${displayDate(currentCycle.endDay)}.`;
+  } else if (todayDay <= currentCycle.endDay) {
+    ballotStatus.textContent = "voting open";
+    ballotMessage.textContent =
+      "choose one finalist. your vote may be changed until the cycle ends.";
+  } else {
+    ballotStatus.textContent = "closed";
+    ballotMessage.textContent =
+      "this ballot has closed. final results appear after the librarian's next visit.";
+  }
+
+  if (!finalists.length) {
+    ballotOptions.innerHTML =
+      '<p class="empty-state">the three ballot finalists have not been published yet.</p>';
+  } else {
+    finalists.forEach((finalist, index) => {
+      const selected =
+        currentVote?.selectedSuggestionId === finalist.suggestionId;
+      const card = document.createElement("article");
+      card.className = `ballot-option ${selected ? "selected" : ""}`;
+      card.innerHTML = `
+        <span>finalist ${index + 1}</span>
+        <h3>${escapeHtml(finalist.title)}</h3>
+        <p>by ${escapeHtml(finalist.author || "unknown author")}</p>
+        <button
+          class="${selected ? "secondary-button" : "primary-button"}"
+          type="button"
+          ${voteIsOpen() ? "" : "disabled"}
+        >
+          ${selected ? "your vote" : "vote for this book"}
+        </button>
+      `;
+      card.querySelector("button").addEventListener(
+        "click",
+        () => castVote(finalist)
+      );
+      ballotOptions.appendChild(card);
+    });
+  }
+
+  const adminCanEdit =
+    currentUser?.uid === ADMIN_UID &&
+    todayDay < currentCycle.votingOpenDay;
+
+  adminBallotSetup.hidden = !adminCanEdit;
+  if (adminCanEdit) populateFinalistSelectors();
+}
+
+function suggestionLabel(suggestion) {
+  return `${suggestion.title} — ${suggestion.author || "unknown author"} · ${suggestion.name || "reader"}`;
+}
+
+function populateSelect(select, selectedId = "") {
+  select.innerHTML = '<option value="">choose a suggestion</option>';
+  pendingSuggestions.forEach((suggestion) => {
+    const option = document.createElement("option");
+    option.value = suggestion.id;
+    option.textContent = suggestionLabel(suggestion);
+    select.appendChild(option);
+  });
+  select.value = selectedId;
+}
+
+function populateFinalistSelectors() {
+  const finalists = finalistObjects(currentCycleDocument);
+  populateSelect(finalistOne, finalists[0]?.suggestionId || "");
+  populateSelect(finalistTwo, finalists[1]?.suggestionId || "");
+  populateSelect(finalistThree, finalists[2]?.suggestionId || "");
+}
+
+saveFinalistsButton.addEventListener("click", async () => {
+  if (!currentCycle || currentUser?.uid !== ADMIN_UID) return;
+
+  const ids = [
+    finalistOne.value,
+    finalistTwo.value,
+    finalistThree.value
+  ];
+
+  if (ids.some((id) => !id) || new Set(ids).size !== 3) {
+    adminFinalistMessage.textContent =
+      "choose three different title suggestions.";
+    return;
+  }
+
+  const selected = ids.map((id) =>
+    pendingSuggestions.find((suggestion) => suggestion.id === id)
   );
 
-  unsubscribeProgress = onSnapshot(
-    collection(
-      db,
-      "profiles",
-      user.uid,
-      "readingChallenges"
-    ),
-    (snapshot) => {
-      progressById = new Map(
-        snapshot.docs.map((entry) => [
-          entry.id,
-          { id: entry.id, ...entry.data() }
-        ])
+  if (selected.some((item) => !item)) {
+    adminFinalistMessage.textContent =
+      "one of those suggestions could not be found.";
+    return;
+  }
+
+  saveFinalistsButton.disabled = true;
+  saveFinalistsButton.textContent = "publishing...";
+  adminFinalistMessage.textContent = "";
+
+  try {
+    await setDoc(
+      doc(db, "readingCycles", currentCycle.id),
+      {
+        cycleId: currentCycle.id,
+        cycleNumber: currentCycle.index + 1,
+        startDate: dateKeyFromDay(currentCycle.startDay),
+        endDate: dateKeyFromDay(currentCycle.endDay),
+        votingOpenDate: dateKeyFromDay(currentCycle.votingOpenDay),
+        finalistIds: ids,
+        finalists: selected.map((suggestion) => ({
+          suggestionId: suggestion.id,
+          title: suggestion.title,
+          author: suggestion.author || "",
+          submittedById: suggestion.userId,
+          submittedByName: suggestion.name || "reader"
+        })),
+        updatedAt: serverTimestamp(),
+        createdAt: currentCycleDocument?.createdAt || serverTimestamp()
+      },
+      { merge: true }
+    );
+    adminFinalistMessage.textContent =
+      "the three ballot finalists were published.";
+  } catch (error) {
+    console.error(error);
+    adminFinalistMessage.textContent =
+      "the finalists could not be published.";
+  } finally {
+    saveFinalistsButton.disabled = false;
+    saveFinalistsButton.textContent = "publish finalists";
+  }
+});
+
+function sortWinnerCandidates(members) {
+  return members
+    .filter(
+      (member) =>
+        member.eligibleForPrize !== false &&
+        member.userId !== ADMIN_UID
+    )
+    .sort((a, b) => {
+      const streakDifference =
+        Number(b.bestStreak || 0) - Number(a.bestStreak || 0);
+      if (streakDifference) return streakDifference;
+
+      const reachedDifference =
+        timestampValue(a.bestReachedAt) - timestampValue(b.bestReachedAt);
+      if (reachedDifference) return reachedDifference;
+
+      return String(a.displayName || "").localeCompare(
+        String(b.displayName || "")
       );
-      renderChallenges();
-    },
-    (error) => {
-      console.error(error);
-      challengeEmpty.hidden = false;
-      challengeEmpty.textContent =
-        "your reading challenges could not be loaded.";
+    });
+}
+
+async function finalizeCycleIfNeeded(cycle) {
+  if (
+    !cycle ||
+    currentUser?.uid !== ADMIN_UID ||
+    todayDay <= cycle.endDay
+  ) {
+    return;
+  }
+
+  const cycleReference = doc(db, "readingCycles", cycle.id);
+  const cycleSnapshot = await getDoc(cycleReference);
+  const cycleData = cycleSnapshot.exists() ? cycleSnapshot.data() : {};
+
+  if (cycleData.finalizedAt) return;
+
+  const [membersSnapshot, votesSnapshot] = await Promise.all([
+    getDocs(collection(db, "readingCycles", cycle.id, "members")),
+    getDocs(collection(db, "readingCycles", cycle.id, "votes"))
+  ]);
+
+  const candidates = sortWinnerCandidates(
+    membersSnapshot.docs.map((entry) => entry.data())
+  );
+  const winner = candidates[0] || null;
+  const finalists = finalistObjects(cycleData);
+
+  const counts = new Map(
+    finalists.map((item) => [item.suggestionId, 0])
+  );
+  votesSnapshot.docs.forEach((entry) => {
+    const selectedId = entry.data().selectedSuggestionId;
+    if (counts.has(selectedId)) {
+      counts.set(selectedId, counts.get(selectedId) + 1);
     }
+  });
+
+  const votedWinners = finalists
+    .map((item, index) => ({
+      ...item,
+      votes: counts.get(item.suggestionId) || 0,
+      finalistOrder: index
+    }))
+    .sort(
+      (a, b) =>
+        b.votes - a.votes ||
+        a.finalistOrder - b.finalistOrder
+    )
+    .slice(0, 2);
+
+  await setDoc(
+    cycleReference,
+    {
+      cycleId: cycle.id,
+      cycleNumber: cycle.index + 1,
+      startDate: dateKeyFromDay(cycle.startDay),
+      endDate: dateKeyFromDay(cycle.endDay),
+      votingOpenDate: dateKeyFromDay(cycle.votingOpenDay),
+      winnerId: winner?.userId || "",
+      winnerName: winner?.displayName || "",
+      winnerBestStreak: Number(winner?.bestStreak || 0),
+      winnerReachedAt: winner?.bestReachedAt || null,
+      votedWinnerIds: votedWinners.map((item) => item.suggestionId),
+      votedWinners,
+      finalizedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      createdAt: cycleData.createdAt || serverTimestamp()
+    },
+    { merge: true }
+  );
+
+  showToast(`cycle ${cycle.index + 1} results were finalized automatically.`);
+}
+
+async function finalizeAllEndedCycles() {
+  if (currentUser?.uid !== ADMIN_UID || todayDay <= START_DAY) return;
+
+  const lastEndedIndex = Math.floor(
+    (todayDay - START_DAY - 1) / CYCLE_DAYS
+  );
+
+  for (let index = 0; index <= lastEndedIndex; index += 1) {
+    await finalizeCycleIfNeeded(cycleForIndex(index));
+  }
+}
+
+function eligibleWinnerSuggestions() {
+  const votedWinnerIds = new Set(
+    Array.isArray(previousCycleDocument?.votedWinnerIds)
+      ? previousCycleDocument.votedWinnerIds
+      : []
+  );
+
+  return winnerSuggestions.filter(
+    (suggestion) => !votedWinnerIds.has(suggestion.id)
   );
 }
+
+function populateWinnerSuggestions() {
+  winnerSuggestionSelect.innerHTML =
+    '<option value="">choose one of your suggestions</option>';
+
+  eligibleWinnerSuggestions().forEach((suggestion) => {
+    const option = document.createElement("option");
+    option.value = suggestion.id;
+    option.textContent =
+      `${suggestion.title} — ${suggestion.author || "unknown author"}`;
+    winnerSuggestionSelect.appendChild(option);
+  });
+}
+
+saveWinnerChoiceButton.addEventListener("click", async () => {
+  if (!previousCycle || !currentUser) return;
+
+  const suggestion = eligibleWinnerSuggestions().find(
+    (item) => item.id === winnerSuggestionSelect.value
+  );
+
+  if (!suggestion) {
+    winnerChoiceMessage.textContent =
+      "choose one of your pending title suggestions.";
+    return;
+  }
+
+  saveWinnerChoiceButton.disabled = true;
+  saveWinnerChoiceButton.textContent = "saving...";
+  winnerChoiceMessage.textContent = "";
+
+  try {
+    await setDoc(
+      doc(
+        db,
+        "readingCycles",
+        previousCycle.id,
+        "winnerSelections",
+        currentUser.uid
+      ),
+      {
+        userId: currentUser.uid,
+        suggestionId: suggestion.id,
+        title: suggestion.title,
+        author: suggestion.author || "",
+        selectedAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      },
+      { merge: true }
+    );
+    winnerChoiceMessage.textContent =
+      `${suggestion.title} is your guaranteed selection.`;
+  } catch (error) {
+    console.error(error);
+    winnerChoiceMessage.textContent =
+      "your guaranteed selection could not be saved.";
+  } finally {
+    saveWinnerChoiceButton.disabled = false;
+    saveWinnerChoiceButton.textContent = "choose this book";
+  }
+});
+
+function renderPreviousResults() {
+  if (!previousCycle) {
+    previousResultsPanel.hidden = true;
+    return;
+  }
+
+  previousResultsPanel.hidden = false;
+  previousCycleRange.textContent = cycleRange(previousCycle);
+
+  const finalized = Boolean(previousCycleDocument?.finalizedAt);
+  if (!finalized) {
+    streakWinnerName.textContent = "results pending";
+    guaranteedBookTitle.textContent =
+      "the librarian's next visit will finalize the cycle";
+    streakWinnerDetail.textContent = "";
+    voteWinnerOne.textContent = "results pending";
+    voteWinnerTwo.textContent = "results pending";
+    winnerChoiceBox.hidden = true;
+    return;
+  }
+
+  streakWinnerName.textContent =
+    previousCycleDocument.winnerName || "no eligible winner";
+  streakWinnerDetail.textContent =
+    previousCycleDocument.winnerId
+      ? `highest streak reached: ${Number(previousCycleDocument.winnerBestStreak || 0)} days`
+      : "";
+
+  guaranteedBookTitle.textContent =
+    previousWinnerSelection?.title || "winner has not chosen a book yet";
+
+  const voted = Array.isArray(previousCycleDocument.votedWinners)
+    ? previousCycleDocument.votedWinners
+    : [];
+  voteWinnerOne.textContent = voted[0]?.title || "no ballot result";
+  voteWinnerTwo.textContent = voted[1]?.title || "no ballot result";
+
+  const isWinner =
+    previousCycleDocument.winnerId === currentUser?.uid;
+  winnerChoiceBox.hidden = !isWinner || Boolean(previousWinnerSelection);
+
+  if (isWinner && !previousWinnerSelection) {
+    populateWinnerSuggestions();
+    if (!eligibleWinnerSuggestions().length) {
+      winnerChoiceMessage.innerHTML =
+        'you need a pending suggestion that was not already selected by the community vote. <a href="index.html#request">submit one here</a>, then return to choose it.';
+      saveWinnerChoiceButton.disabled = true;
+    } else {
+      winnerChoiceMessage.textContent = "";
+      saveWinnerChoiceButton.disabled = false;
+    }
+  }
+}
+
+function renderBadges() {
+  badgeGrid.innerHTML = "";
+
+  Object.entries(BADGES).forEach(([id, badge]) => {
+    const value = Number(automaticProgress[id] || 0);
+    const displayValue = Math.min(value, badge.target);
+    const earned = value >= badge.target;
+    const percent = Math.min(100, Math.round((value / badge.target) * 100));
+
+    const card = document.createElement("article");
+    card.className = `automatic-badge-card ${earned ? "earned" : ""}`;
+    card.innerHTML = `
+      <div class="badge-card-top">
+        <span aria-hidden="true">${badge.emoji}</span>
+        <span class="badge-state">${earned ? "badge earned" : "automatic"}</span>
+      </div>
+      <h3>${badge.name}</h3>
+      <p>${badge.description}</p>
+      <div class="progress-label">
+        <span>${displayValue} of ${badge.target}</span>
+        <span>${badge.unit}</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" style="--progress:${percent}%"></div>
+      </div>
+    `;
+    badgeGrid.appendChild(card);
+  });
+}
+
+async function loadAutomaticBadges() {
+  badgeSyncMessage.textContent = "checking your reading activity...";
+
+  try {
+    const result = await syncAutomaticBadges(db, currentUser.uid);
+    automaticProgress = result.progress;
+    renderBadges();
+    badgeSyncMessage.textContent =
+      "your badges and progress are current.";
+  } catch (error) {
+    console.error(error);
+    badgeSyncMessage.textContent =
+      "some automatic badge progress could not be checked.";
+  }
+}
+
+async function loadSuggestions() {
+  if (!currentUser) return;
+
+  if (currentUser.uid === ADMIN_UID) {
+    const snapshot = await getDocs(collection(db, "bookSuggestions"));
+    pendingSuggestions = snapshot.docs
+      .map((entry) => ({ id: entry.id, ...entry.data() }))
+      .filter((item) => item.status === "pending");
+  }
+
+  const ownSnapshot = await getDocs(
+    query(
+      collection(db, "bookSuggestions"),
+      where("userId", "==", currentUser.uid)
+    )
+  );
+  winnerSuggestions = ownSnapshot.docs
+    .map((entry) => ({ id: entry.id, ...entry.data() }))
+    .filter((item) => item.status === "pending");
+
+  renderBallot();
+  renderPreviousResults();
+}
+
+function stopListeners() {
+  [
+    unsubscribeStreak,
+    unsubscribeMember,
+    unsubscribeLeaderboard,
+    unsubscribeCurrentCycle,
+    unsubscribePreviousCycle,
+    unsubscribeCurrentVote,
+    unsubscribeWinnerSelection
+  ].forEach((unsubscribe) => unsubscribe?.());
+
+  unsubscribeStreak =
+    unsubscribeMember =
+    unsubscribeLeaderboard =
+    unsubscribeCurrentCycle =
+    unsubscribePreviousCycle =
+    unsubscribeCurrentVote =
+    unsubscribeWinnerSelection =
+      null;
+}
+
+function startListeners(user) {
+  unsubscribeStreak = onSnapshot(
+    doc(db, "readerStreaks", user.uid),
+    (snapshot) => {
+      myGlobalStreak = snapshot.exists() ? snapshot.data() : {};
+      renderMyStreak();
+    }
+  );
+
+  if (currentCycle) {
+    unsubscribeMember = onSnapshot(
+      doc(
+        db,
+        "readingCycles",
+        currentCycle.id,
+        "members",
+        user.uid
+      ),
+      (snapshot) => {
+        myCycleMember = snapshot.exists() ? snapshot.data() : {};
+        renderMyStreak();
+      }
+    );
+
+    unsubscribeLeaderboard = onSnapshot(
+      collection(
+        db,
+        "readingCycles",
+        currentCycle.id,
+        "members"
+      ),
+      (snapshot) => {
+        leaderboard = snapshot.docs.map((entry) => entry.data());
+        renderLeaderboard();
+      }
+    );
+
+    unsubscribeCurrentCycle = onSnapshot(
+      doc(db, "readingCycles", currentCycle.id),
+      (snapshot) => {
+        currentCycleDocument = snapshot.exists()
+          ? snapshot.data()
+          : null;
+        renderBallot();
+      }
+    );
+
+    unsubscribeCurrentVote = onSnapshot(
+      doc(
+        db,
+        "readingCycles",
+        currentCycle.id,
+        "votes",
+        user.uid
+      ),
+      (snapshot) => {
+        currentVote = snapshot.exists() ? snapshot.data() : null;
+        renderBallot();
+      }
+    );
+  } else {
+    leaderboard = [];
+    renderLeaderboard();
+    renderBallot();
+  }
+
+  if (previousCycle) {
+    unsubscribePreviousCycle = onSnapshot(
+      doc(db, "readingCycles", previousCycle.id),
+      (snapshot) => {
+        previousCycleDocument = snapshot.exists()
+          ? snapshot.data()
+          : null;
+        renderPreviousResults();
+      }
+    );
+
+    unsubscribeWinnerSelection = onSnapshot(
+      doc(
+        db,
+        "readingCycles",
+        previousCycle.id,
+        "winnerSelections",
+        user.uid
+      ),
+      (snapshot) => {
+        previousWinnerSelection = snapshot.exists()
+          ? snapshot.data()
+          : null;
+        renderPreviousResults();
+      }
+    );
+  }
+}
+
+signoutButton.addEventListener("click", () => signOut(auth));
 
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
@@ -462,14 +907,52 @@ onAuthStateChanged(auth, async (user) => {
 
   stopListeners();
   currentProfile = null;
-  progressById = new Map();
+  myGlobalStreak = {};
+  myCycleMember = {};
+  leaderboard = [];
+  currentCycleDocument = null;
+  previousCycleDocument = null;
+  currentVote = null;
+  previousWinnerSelection = null;
+  pendingSuggestions = [];
+  winnerSuggestions = [];
 
-  if (user) {
-    try {
-      await startForUser(user);
-    } catch (error) {
-      console.error(error);
-      showToast("challenges and badges could not be opened.");
+  if (!user) return;
+
+  try {
+    const profileSnapshot = await getDoc(doc(db, "profiles", user.uid));
+    if (!profileSnapshot.exists()) {
+      window.location.href = "reader.html";
+      return;
     }
+
+    currentProfile = profileSnapshot.data();
+    publicProfileLink.href =
+      `profile.html?uid=${encodeURIComponent(user.uid)}`;
+    publicProfileLink.hidden = false;
+
+    todayDay = dayNumber(centralParts());
+    currentCycle = cycleForToday(todayDay);
+    previousCycle = currentCycle
+      ? cycleForIndex(currentCycle.index - 1)
+      : null;
+
+    updateCycleSummary();
+    renderMyStreak();
+    renderLeaderboard();
+    renderBallot();
+    renderPreviousResults();
+    renderBadges();
+
+    startListeners(user);
+    await Promise.all([
+      loadSuggestions(),
+      loadAutomaticBadges()
+    ]);
+
+    await finalizeAllEndedCycles();
+  } catch (error) {
+    console.error(error);
+    showToast("streaks, voting, and badges could not be opened.");
   }
 });

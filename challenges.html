@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="cozy reading challenges and collectible profile badges for ink and ivy readers.">
-  <title>challenges &amp; badges · ink and ivy</title>
+  <meta name="description" content="reading streaks, community voting, and automatic badges for ink and ivy readers.">
+  <title>streaks, votes &amp; badges · ink and ivy</title>
   <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml">
-  <link rel="stylesheet" href="challenges.css?v=1">
-  <script type="module" src="challenges.js?v=1"></script>
+  <link rel="stylesheet" href="challenges.css?v=2">
+  <script type="module" src="streaks.js?v=1"></script>
+  <script type="module" src="challenges.js?v=2"></script>
 </head>
 <body>
   <header class="challenges-header">
@@ -38,11 +39,11 @@
     <section id="challenges-login-view" class="login-view">
       <div class="login-card">
         <span class="large-leaf" aria-hidden="true">🌿</span>
-        <p class="eyebrow">little adventures between the pages</p>
-        <h1>challenges &amp; badges</h1>
+        <p class="eyebrow">show up, read, and grow</p>
+        <h1>streaks, votes &amp; badges</h1>
         <p>
-          sign in to choose reading adventures, track your progress, and collect
-          badges for your reader page.
+          sign in to build your daily streak, vote on future library books,
+          and collect badges automatically.
         </p>
         <a class="primary-link" href="reader.html?return=challenges.html">reader login</a>
       </div>
@@ -51,57 +52,189 @@
     <section id="challenges-view" class="challenges-view" hidden>
       <div class="challenges-hero">
         <div>
-          <p class="eyebrow">your reading garden</p>
-          <h1>challenges &amp; badges</h1>
+          <p class="eyebrow">the first cycle begins august 13, 2026</p>
+          <h1>streaks, votes &amp; badges</h1>
           <p>
-            choose the adventures that sound fun and log each step yourself.
-            there are no rankings or leaderboards—just small reasons to try
-            something new and a badge to remember it by.
+            one signed-in visit per day grows your streak. the website remembers
+            the highest streak you reached during each nine-week cycle, even if
+            the streak is later lost.
           </p>
         </div>
 
-        <aside class="garden-summary">
-          <strong id="earned-badge-total">0</strong>
-          <span>badges collected</span>
+        <aside class="cycle-summary">
+          <span id="cycle-summary-label">next cycle</span>
+          <strong id="cycle-countdown">—</strong>
+          <small id="cycle-date-range">august 13 – october 14, 2026</small>
         </aside>
       </div>
 
-      <section class="badge-cabinet">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">your little collection</p>
-            <h2>badge cabinet</h2>
-          </div>
-          <a id="challenge-public-profile-link" href="#" hidden>see them on my page</a>
-        </div>
-
-        <div id="badge-cabinet-grid" class="badge-cabinet-grid"></div>
-        <p id="badge-cabinet-empty" class="empty-state" hidden>
-          complete your first challenge to place a badge here.
-        </p>
+      <section class="streak-dashboard">
+        <article>
+          <span aria-hidden="true">🔥</span>
+          <strong id="current-streak">0</strong>
+          <p>current streak</p>
+        </article>
+        <article>
+          <span aria-hidden="true">🏆</span>
+          <strong id="cycle-best-streak">0</strong>
+          <p>highest streak this cycle</p>
+        </article>
+        <article>
+          <span aria-hidden="true">📅</span>
+          <strong id="cycle-active-days">0</strong>
+          <p>active days this cycle</p>
+        </article>
+        <article>
+          <span aria-hidden="true">🌿</span>
+          <strong id="global-longest-streak">0</strong>
+          <p>longest streak ever</p>
+        </article>
       </section>
 
-      <section class="challenge-section">
+      <div class="main-grid">
+        <section class="panel leaderboard-panel">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">highest streak reached</p>
+              <h2>cycle leaderboard</h2>
+            </div>
+            <span class="small-note">the librarian is excluded from the prize</span>
+          </div>
+          <div id="leaderboard-list" class="leaderboard-list"></div>
+          <p id="leaderboard-empty" class="empty-state" hidden>
+            streaks begin on august 13.
+          </p>
+        </section>
+
+        <section class="panel cycle-rules">
+          <p class="eyebrow">three books every nine weeks</p>
+          <h2>how the book choices work</h2>
+          <ol>
+            <li>
+              the reader with the highest streak reached during the cycle
+              chooses one guaranteed book.
+            </li>
+            <li>
+              every reader votes among three additional finalists during the
+              final seven days.
+            </li>
+            <li>
+              the two books with the most votes are added with the streak
+              winner's guaranteed choice.
+            </li>
+          </ol>
+          <p>
+            tied streaks are decided by who reached that streak first.
+          </p>
+        </section>
+      </div>
+
+      <section id="ballot-panel" class="panel ballot-panel">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">choose your next adventure</p>
-            <h2>reading challenges</h2>
+            <p class="eyebrow">community library ballot</p>
+            <h2 id="ballot-title">this cycle's vote</h2>
           </div>
-          <label class="challenge-filter">
-            show
-            <select id="challenge-filter">
-              <option value="all">all challenges</option>
-              <option value="available">available</option>
-              <option value="active">in progress</option>
-              <option value="completed">completed</option>
-            </select>
-          </label>
+          <span id="ballot-status" class="status-pill">upcoming</span>
         </div>
 
-        <div id="challenge-grid" class="challenge-grid"></div>
-        <p id="challenge-empty" class="empty-state" hidden>
-          no challenges match this view.
+        <p id="ballot-message" class="panel-intro"></p>
+        <div id="ballot-options" class="ballot-options"></div>
+        <p id="ballot-form-message" class="form-message" aria-live="polite"></p>
+
+        <section id="admin-ballot-setup" class="admin-cycle-box" hidden>
+          <p class="eyebrow">librarian setup</p>
+          <h3>choose the three ballot finalists</h3>
+          <p>
+            select three different pending title suggestions before voting opens.
+          </p>
+          <div class="admin-finalist-grid">
+            <label>
+              finalist one
+              <select id="finalist-one"></select>
+            </label>
+            <label>
+              finalist two
+              <select id="finalist-two"></select>
+            </label>
+            <label>
+              finalist three
+              <select id="finalist-three"></select>
+            </label>
+          </div>
+          <button id="save-finalists-button" class="primary-button compact" type="button">
+            publish finalists
+          </button>
+          <p id="admin-finalist-message" class="form-message" aria-live="polite"></p>
+        </section>
+      </section>
+
+      <section id="previous-results-panel" class="panel results-panel" hidden>
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">most recent completed cycle</p>
+            <h2>three books chosen</h2>
+          </div>
+          <span id="previous-cycle-range" class="small-note"></span>
+        </div>
+
+        <div class="results-grid">
+          <article class="result-card guaranteed">
+            <span aria-hidden="true">🏆</span>
+            <p>highest-streak choice</p>
+            <h3 id="streak-winner-name">results pending</h3>
+            <strong id="guaranteed-book-title">book not chosen yet</strong>
+            <small id="streak-winner-detail"></small>
+          </article>
+
+          <article class="result-card">
+            <span aria-hidden="true">🗳️</span>
+            <p>community vote winner</p>
+            <h3 id="vote-winner-one">results pending</h3>
+          </article>
+
+          <article class="result-card">
+            <span aria-hidden="true">🗳️</span>
+            <p>community vote winner</p>
+            <h3 id="vote-winner-two">results pending</h3>
+          </article>
+        </div>
+
+        <section id="winner-choice-box" class="winner-choice-box" hidden>
+          <p class="eyebrow">your guaranteed selection</p>
+          <h3>you had the highest streak</h3>
+          <p>
+            choose one of your pending title suggestions as the guaranteed book
+            for this completed cycle.
+          </p>
+          <label>
+            my book choice
+            <select id="winner-suggestion-select"></select>
+          </label>
+          <button id="save-winner-choice-button" class="primary-button compact" type="button">
+            choose this book
+          </button>
+          <p id="winner-choice-message" class="form-message" aria-live="polite"></p>
+        </section>
+      </section>
+
+      <section class="panel badge-section">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">updated by the website</p>
+            <h2>automatic badges</h2>
+          </div>
+          <a id="challenge-public-profile-link" href="#" hidden>see badges on my page</a>
+        </div>
+
+        <p class="panel-intro">
+          there are no progress buttons. checkouts, reviews, journal pages,
+          friend recommendations, genres, seasons, and page counts update these
+          automatically.
         </p>
+
+        <div id="automatic-badge-grid" class="automatic-badge-grid"></div>
+        <p id="badge-sync-message" class="form-message" aria-live="polite"></p>
       </section>
     </section>
   </main>

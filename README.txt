@@ -1,32 +1,56 @@
-INK AND IVY — READING CHALLENGES, BADGES, AND COMPACT MENU
+INK AND IVY — FREE STREAKS, NINE-WEEK VOTING, AND AUTOMATIC BADGES
 
-NEW FEATURE: CHALLENGES & BADGES
+THIS VERSION DOES NOT REQUIRE A PAID FIREBASE PLAN.
 
-Readers can:
-- Join any of 8 cozy reading challenges
-- Log their own progress one step at a time
-- Correct an accidental progress entry
-- Leave an unfinished challenge
-- Unlock a permanent collectible badge when a challenge is completed
-- See earned badges in a personal badge cabinet
-- Display earned badges automatically on their public reader page
+The implementation intentionally avoids:
+- Cloud Functions
+- Cloud Scheduler
+- Firebase Storage
+- Any paid server or outside service
 
-The challenges are intentionally personal and low-pressure.
-There are no rankings or leaderboards.
+Because there is no paid scheduled backend, a completed cycle is finalized
+automatically the first time the librarian/admin opens the streaks page after
+the cycle has ended.
 
-NEW MENU DESIGN
+STREAK RULES
 
-The top menu now keeps these four links visible:
-- The shelves
-- How it works
-- Suggest a new title
-- Community
+- Streak tracking starts August 13, 2026.
+- One signed-in visit per calendar day counts.
+- The website uses the America/Chicago calendar date.
+- Every cycle lasts exactly 63 days.
+- The first cycle is August 13 through October 14, 2026.
+- The website stores both the current streak and the highest streak reached
+  during the cycle.
+- Losing a streak does not erase the cycle's highest streak.
+- The librarian/admin account is excluded from the prize.
+- A tie is won by the reader who reached the tied streak first.
 
-Everything else is organized under a "More" dropdown:
-- Reading journal
-- Friend picks
-- Challenges & badges
-- Reader account, profile tools, and sign-out links where appropriate
+BOOK SELECTION AT THE END OF EACH CYCLE
+
+Exactly three books are selected:
+1. One guaranteed selection chosen by the reader with the highest cycle streak.
+2. Two books chosen by all readers from a three-book ballot.
+
+The community ballot opens during the final seven days of each cycle.
+The admin selects the three ballot finalists before voting opens.
+
+AUTOMATIC BADGES
+
+The progress buttons are gone. The website now checks:
+- Completed checkout records
+- Genres of completed books
+- Completed books received through Friend Picks
+- Published book reviews
+- Saved reading-journal pages
+- Book page counts
+- Completed books within the same season
+
+Brave Browser has been removed.
+
+PAGE COUNTS
+
+Tome Traveler requires page-count information. The updated admin book editor
+has an optional Page Count field. Existing books can be edited to add it.
 
 STEP 1 — FIREBASE RULES
 
@@ -55,17 +79,22 @@ Upload and replace:
 - recommendations.html
 - recommendations.css
 - recommendations.js
-
-Upload these new files:
 - challenges.html
 - challenges.css
 - challenges.js
+- admin.html
+- admin.css
+- admin.js
+
+Upload these new files:
+- streaks.js
+- badge-engine.js
 
 Do not upload FIRESTORE_RULES.txt to GitHub.
 
-STEP 3 — OPEN THE NEW PAGE
+STEP 3 — OPEN THE PAGE
 
-https://keane-xo.github.io/ink-and-ivy/challenges.html?v=1
+https://keane-xo.github.io/ink-and-ivy/challenges.html?v=2
 
-To force the newest homepage menu:
-https://keane-xo.github.io/ink-and-ivy/?v=18
+The first cycle does not begin until August 13, 2026, so the page will show a
+countdown before that date.

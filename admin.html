@@ -6,8 +6,8 @@
   <meta name="robots" content="noindex, nofollow">
   <title>ink and ivy admin</title>
   <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml">
-<link rel="stylesheet" href="admin.css?v=11">
-  <script type="module" src="admin.js?v=11"></script>
+<link rel="stylesheet" href="admin.css?v=12">
+  <script type="module" src="admin.js?v=12"></script>
 </head>
 <body>
   <header class="admin-header">
@@ -159,13 +159,18 @@
               </label>
 
               <label>
-                availability
-                <select id="book-status" required>
-                  <option value="available">on the shelf</option>
-                  <option value="borrowed">out reading</option>
-                </select>
+                page count
+                <input id="book-page-count" type="number" min="0" max="5000" step="1" placeholder="optional">
               </label>
             </div>
+
+            <label>
+              availability
+              <select id="book-status" required>
+                <option value="available">on the shelf</option>
+                <option value="borrowed">out reading</option>
+              </select>
+            </label>
 
             <label>
               cover image link
