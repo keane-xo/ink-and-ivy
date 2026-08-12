@@ -777,7 +777,7 @@ function renderFeaturedBooks() {
       </div>
 
       <div class="featured-book-content">
-        <span class="featured-pick-label">featured pick</span>
+        <span class="featured-pick-label">picked by me</span>
         <h3>${escapeHtml(book.title)}</h3>
         <p class="featured-book-author">by ${escapeHtml(book.author || "unknown author")}</p>
 
