@@ -12,11 +12,13 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
   getFirestore,
   orderBy,
   query,
   serverTimestamp,
+  setDoc,
   Timestamp,
   updateDoc,
   writeBatch
@@ -141,12 +143,22 @@ const adminReportsEmpty = document.querySelector("#admin-reports-empty");
 const reportFilter = document.querySelector("#report-filter");
 const adminReviewList = document.querySelector("#admin-review-list");
 const adminReviewsEmpty = document.querySelector("#admin-reviews-empty");
+const featuredBooksForm = document.querySelector("#featured-books-form");
+const featuredBookSelects = Array.from(
+  document.querySelectorAll(".featured-book-select")
+);
+const featuredBookNotes = Array.from(
+  document.querySelectorAll(".featured-book-note")
+);
+const featuredBooksMessage = document.querySelector("#featured-books-message");
+const saveFeaturedBooksButton = document.querySelector("#save-featured-books-button");
 
 let borrowingRequests = [];
 let bookSuggestions = [];
 let books = [];
 let readerReviews = [];
 let communityReports = [];
+let featuredBooksConfig = [];
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -625,6 +637,82 @@ function renderReports() {
   });
 }
 
+
+function populateFeaturedBookOptions() {
+  featuredBookSelects.forEach((select, index) => {
+    const currentValue =
+      featuredBooksConfig[index]?.bookId || select.value || "";
+
+    select.innerHTML = '<option value="">leave this slot empty</option>';
+
+    books.forEach((book) => {
+      const option = document.createElement("option");
+      option.value = book.id;
+      option.textContent = `${book.title} — ${book.author || "unknown author"}`;
+      select.appendChild(option);
+    });
+
+    select.value = books.some((book) => book.id === currentValue)
+      ? currentValue
+      : "";
+  });
+}
+
+function renderFeaturedBookEditor() {
+  populateFeaturedBookOptions();
+
+  featuredBookNotes.forEach((textarea, index) => {
+    textarea.value = featuredBooksConfig[index]?.note || "";
+  });
+}
+
+featuredBooksForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const entries = featuredBookSelects
+    .map((select, index) => ({
+      bookId: select.value,
+      note: featuredBookNotes[index].value.trim()
+    }))
+    .filter((item) => item.bookId);
+
+  const ids = entries.map((item) => item.bookId);
+  if (new Set(ids).size !== ids.length) {
+    featuredBooksMessage.textContent =
+      "choose each featured book only once.";
+    return;
+  }
+
+  saveFeaturedBooksButton.disabled = true;
+  saveFeaturedBooksButton.textContent = "saving...";
+  featuredBooksMessage.textContent = "";
+
+  try {
+    await setDoc(
+      doc(db, "siteSettings", "homepage"),
+      {
+        featuredBooks: entries,
+        updatedAt: serverTimestamp()
+      },
+      { merge: true }
+    );
+
+    featuredBooksConfig = entries;
+    featuredBooksMessage.textContent =
+      entries.length
+        ? "homepage featured books saved."
+        : "featured section cleared from the homepage.";
+    showToast("homepage features updated.");
+  } catch (error) {
+    console.error(error);
+    featuredBooksMessage.textContent =
+      "the homepage features could not be saved.";
+  } finally {
+    saveFeaturedBooksButton.disabled = false;
+    saveFeaturedBooksButton.textContent = "save homepage features";
+  }
+});
+
 function renderBooks() {
   adminBookList.innerHTML = "";
   booksEmpty.hidden = books.length !== 0;
@@ -800,11 +888,18 @@ async function loadData() {
   refreshButton.textContent = "loading...";
 
   try {
-    const [borrowingSnapshot, suggestionSnapshot, booksSnapshot, reportsSnapshot] = await Promise.all([
+    const [
+      borrowingSnapshot,
+      suggestionSnapshot,
+      booksSnapshot,
+      reportsSnapshot,
+      homepageSettingsSnapshot
+    ] = await Promise.all([
       getDocs(query(collection(db, "checkoutRequests"), orderBy("createdAt", "desc"))),
       getDocs(query(collection(db, "bookSuggestions"), orderBy("createdAt", "desc"))),
       getDocs(collection(db, "books")),
-      getDocs(query(collection(db, "reports"), orderBy("createdAt", "desc")))
+      getDocs(query(collection(db, "reports"), orderBy("createdAt", "desc"))),
+      getDoc(doc(db, "siteSettings", "homepage"))
     ]);
 
     borrowingRequests = borrowingSnapshot.docs.map((entry) => ({
@@ -820,6 +915,12 @@ async function loadData() {
     books = booksSnapshot.docs
       .map((entry) => ({ id: entry.id, ...entry.data() }))
       .sort((a, b) => String(a.title || "").localeCompare(String(b.title || "")));
+
+    featuredBooksConfig =
+      homepageSettingsSnapshot.exists() &&
+      Array.isArray(homepageSettingsSnapshot.data().featuredBooks)
+        ? homepageSettingsSnapshot.data().featuredBooks.slice(0, 4)
+        : [];
 
     const reviewSnapshots = await Promise.all(
       books.map((book) =>
@@ -846,6 +947,7 @@ async function loadData() {
     renderBorrowing();
     renderSuggestions();
     renderBooks();
+    renderFeaturedBookEditor();
     renderAdminReviews();
     renderReports();
   } catch (error) {

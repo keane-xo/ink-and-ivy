@@ -6,8 +6,8 @@
   <meta name="description" content="ink and ivy — a private lending library for curious readers.">
   <title>ink and ivy</title>
   <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml">
-<link rel="stylesheet" href="style.css?v=18">
-  <script type="module" src="script.js?v=19"></script>
+<link rel="stylesheet" href="style.css?v=20">
+  <script type="module" src="script.js?v=20"></script>
   <script type="module" src="streaks.js?v=1"></script>
 </head>
 <body>
@@ -102,6 +102,20 @@
         the two-per-nine-weeks limit is only for suggesting new titles to add to the library.
         it does not limit checkout requests for books already on the shelves.
       </p>
+    </section>
+
+
+    <section id="featured-section" class="featured-section" aria-labelledby="featured-title" hidden>
+      <div class="featured-heading">
+        <div>
+          <p class="eyebrow">picked by me</p>
+          <h2 id="featured-title">featured right now</h2>
+          <p>a few books i’m especially excited to share at the moment.</p>
+        </div>
+        <span class="featured-flourish" aria-hidden="true">❧</span>
+      </div>
+
+      <div id="featured-books-grid" class="featured-books-grid"></div>
     </section>
 
     <section class="catalog-section" id="shelves">

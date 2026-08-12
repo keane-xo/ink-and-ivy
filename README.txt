@@ -1,24 +1,52 @@
-INK AND IVY — STREAK SPACING AND BADGE WORDING
+INK AND IVY — HOMEPAGE FEATURED BOOKS
 
-WHAT CHANGED
+NEW HOMEPAGE SECTION
 
-- Added comfortable space between the large reader profile card and the
-  current-streak/longest-streak cards.
-- Reworded the automatic-badges introduction so it explains what the badges
-  celebrate instead of explaining what the feature does not have.
+A new "featured right now" section appears before Browse the Shelves.
 
-UPLOAD AND REPLACE
+Each featured card can show:
+- Book cover
+- Title and author
+- Your personal "why I picked it" note
+- Genre
+- Page count
+- Availability
+- An Open Book button that opens the normal book-detail popup
 
-- profile.html
-- profile.css
-- challenges.html
+The section disappears automatically if you have not selected any books.
 
-No JavaScript changes are needed.
-No Firebase rules update is needed.
+ADMIN CONTROL
 
-READER PAGE
-Open any reader page with:
-profile.html?uid=THE_READER_UID&v=6
+A new Admin tab called "homepage features" lets you choose up to four books.
+Each slot has its own personal note.
 
-BADGES PAGE
-https://keane-xo.github.io/ink-and-ivy/challenges.html?v=4
+You can change the picks whenever you want. Leaving all four slots empty removes
+the section from the homepage.
+
+STEP 1 — FIREBASE RULES
+
+Open FIRESTORE_RULES.txt.
+Copy everything into Firebase > Firestore Database > Rules.
+Replace the current rules and click Publish.
+
+STEP 2 — GITHUB
+
+Upload and replace:
+- index.html
+- style.css
+- script.js
+- admin.html
+- admin.css
+- admin.js
+
+Do not upload FIRESTORE_RULES.txt to GitHub.
+
+STEP 3 — CHOOSE YOUR FEATURED BOOKS
+
+Open:
+https://keane-xo.github.io/ink-and-ivy/admin.html?v=14
+
+Choose "homepage features", select the books, write your notes, and save.
+
+Then view:
+https://keane-xo.github.io/ink-and-ivy/?v=20

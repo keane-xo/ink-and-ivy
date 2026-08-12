@@ -6,8 +6,8 @@
   <meta name="robots" content="noindex, nofollow">
   <title>ink and ivy admin</title>
   <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml">
-<link rel="stylesheet" href="admin.css?v=12">
-  <script type="module" src="admin.js?v=13"></script>
+<link rel="stylesheet" href="admin.css?v=14">
+  <script type="module" src="admin.js?v=14"></script>
 </head>
 <body>
   <header class="admin-header">
@@ -87,6 +87,7 @@
         <button class="tab active" type="button" data-tab="borrowing">checkout & waitlist</button>
         <button class="tab" type="button" data-tab="suggestions">book suggestions</button>
         <button class="tab" type="button" data-tab="books">manage books</button>
+        <button class="tab" type="button" data-tab="featured">homepage features</button>
         <button class="tab" type="button" data-tab="reviews">reader reviews</button>
         <button class="tab" type="button" data-tab="reports">reports</button>
       </div>
@@ -202,6 +203,88 @@
             <p id="books-empty" class="empty" hidden>no books have been added yet.</p>
           </div>
         </div>
+      </section>
+
+
+
+      <section id="featured-panel" class="panel" hidden>
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">homepage editor</p>
+            <h2>featured books</h2>
+            <p class="panel-intro">
+              choose up to four books to appear before browse the shelves.
+              each pick can have a short personal note.
+            </p>
+          </div>
+        </div>
+
+        <form id="featured-books-form" class="featured-books-form">
+          <div class="featured-admin-grid">
+            <article class="featured-admin-slot">
+              <span class="slot-number">01</span>
+              <label>
+                featured book
+                <select class="featured-book-select" data-feature-slot="0">
+                  <option value="">leave this slot empty</option>
+                </select>
+              </label>
+              <label>
+                your note
+                <textarea class="featured-book-note" data-feature-note="0" rows="4" maxlength="500" placeholder="why are you featuring this book right now?"></textarea>
+              </label>
+            </article>
+
+            <article class="featured-admin-slot">
+              <span class="slot-number">02</span>
+              <label>
+                featured book
+                <select class="featured-book-select" data-feature-slot="1">
+                  <option value="">leave this slot empty</option>
+                </select>
+              </label>
+              <label>
+                your note
+                <textarea class="featured-book-note" data-feature-note="1" rows="4" maxlength="500" placeholder="why are you featuring this book right now?"></textarea>
+              </label>
+            </article>
+
+            <article class="featured-admin-slot">
+              <span class="slot-number">03</span>
+              <label>
+                featured book
+                <select class="featured-book-select" data-feature-slot="2">
+                  <option value="">leave this slot empty</option>
+                </select>
+              </label>
+              <label>
+                your note
+                <textarea class="featured-book-note" data-feature-note="2" rows="4" maxlength="500" placeholder="why are you featuring this book right now?"></textarea>
+              </label>
+            </article>
+
+            <article class="featured-admin-slot">
+              <span class="slot-number">04</span>
+              <label>
+                featured book
+                <select class="featured-book-select" data-feature-slot="3">
+                  <option value="">leave this slot empty</option>
+                </select>
+              </label>
+              <label>
+                your note
+                <textarea class="featured-book-note" data-feature-note="3" rows="4" maxlength="500" placeholder="why are you featuring this book right now?"></textarea>
+              </label>
+            </article>
+          </div>
+
+          <div class="featured-admin-actions">
+            <button id="save-featured-books-button" class="primary-button" type="submit">
+              save homepage features
+            </button>
+            <p id="featured-books-message" class="message" aria-live="polite"></p>
+          </div>
+        </form>
       </section>
 
 

@@ -1421,3 +1421,216 @@ body.modal-open {
     box-shadow: none;
   }
 }
+
+
+/* Homepage featured picks */
+.featured-section {
+  padding: 76px 7% 82px;
+  background:
+    radial-gradient(circle at 10% 15%, rgba(232, 184, 197, 0.18), transparent 28%),
+    radial-gradient(circle at 92% 82%, rgba(95, 112, 88, 0.12), transparent 30%),
+    var(--paper);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.featured-heading {
+  max-width: 1100px;
+  margin: 0 auto 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 24px;
+}
+
+.featured-heading > div {
+  max-width: 720px;
+}
+
+.featured-heading h2 {
+  margin: 0 0 12px;
+  color: var(--brown);
+  font-size: clamp(2.5rem, 5vw, 4.2rem);
+  font-weight: normal;
+}
+
+.featured-heading p:last-child {
+  margin-bottom: 0;
+  color: #7c6658;
+  font-size: 1.08rem;
+  line-height: 1.65;
+}
+
+.featured-flourish {
+  color: var(--rose);
+  font-size: 3.4rem;
+  line-height: 1;
+}
+
+.featured-books-grid {
+  max-width: 1100px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.featured-book-card {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 155px 1fr;
+  overflow: hidden;
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 14px 34px rgba(74, 51, 40, 0.08);
+}
+
+.featured-book-cover {
+  min-height: 235px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: 14px;
+  color: var(--brown);
+  text-align: center;
+  background: linear-gradient(145deg, #f3cbd5, #f8eadf);
+  border-right: 1px solid var(--line);
+}
+
+.featured-book-cover img {
+  width: 100%;
+  height: 100%;
+  min-height: 235px;
+  object-fit: cover;
+}
+
+.featured-book-cover span {
+  display: block;
+  font-size: 2.25rem;
+}
+
+.featured-book-content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 22px;
+}
+
+.featured-pick-label {
+  align-self: flex-start;
+  display: inline-block;
+  margin-bottom: 12px;
+  padding: 5px 9px;
+  color: var(--green);
+  background: rgba(215, 225, 200, 0.42);
+  border: 1px solid rgba(95, 112, 88, 0.26);
+  border-radius: 999px;
+  font-family: Arial, sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+}
+
+.featured-book-content h3 {
+  margin: 0 0 4px;
+  color: var(--brown);
+  font-size: 1.75rem;
+  font-weight: normal;
+  line-height: 1.15;
+}
+
+.featured-book-author {
+  margin: 0 0 15px;
+  color: #8a7467;
+  font-style: italic;
+}
+
+.featured-note {
+  flex: 1;
+  margin: 0 0 16px;
+  padding: 14px 15px;
+  color: var(--dark-brown);
+  line-height: 1.65;
+  background: rgba(255, 250, 242, 0.72);
+  border-left: 4px solid var(--pink);
+  border-radius: 0 12px 12px 0;
+}
+
+.featured-note strong {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--brown);
+  font-weight: normal;
+}
+
+.featured-book-meta {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
+}
+
+.featured-book-meta span {
+  padding: 5px 9px;
+  color: var(--brown);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-family: Arial, sans-serif;
+  font-size: 0.72rem;
+}
+
+.featured-open-button {
+  align-self: flex-start;
+}
+
+@media (max-width: 900px) {
+  .featured-books-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .featured-heading {
+    align-items: flex-start;
+  }
+
+  .featured-flourish {
+    display: none;
+  }
+
+  .featured-book-card {
+    grid-template-columns: 105px 1fr;
+  }
+
+  .featured-book-cover,
+  .featured-book-cover img {
+    min-height: 190px;
+  }
+
+  .featured-book-content {
+    padding: 17px;
+  }
+
+  .featured-book-content h3 {
+    font-size: 1.45rem;
+  }
+}
+
+@media (max-width: 450px) {
+  .featured-book-card {
+    grid-template-columns: 1fr;
+  }
+
+  .featured-book-cover {
+    max-height: 280px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .featured-book-cover img {
+    min-height: 0;
+    max-height: 280px;
+    object-fit: contain;
+  }
+}

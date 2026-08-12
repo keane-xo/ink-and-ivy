@@ -688,3 +688,87 @@ select:focus {
   color: #7c6658;
   font-size: 0.82rem;
 }
+
+
+/* Homepage featured-book editor */
+.featured-books-form {
+  max-width: 1050px;
+}
+
+.featured-admin-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.featured-admin-slot {
+  position: relative;
+  padding: 22px;
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+}
+
+.featured-admin-slot label {
+  display: block;
+  margin-bottom: 15px;
+}
+
+.featured-admin-slot textarea {
+  width: 100%;
+  margin-top: 7px;
+  padding: 13px 15px;
+  resize: vertical;
+  color: var(--dark-brown);
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  outline: none;
+  font: inherit;
+  text-transform: lowercase;
+}
+
+.featured-admin-slot textarea:focus {
+  border-color: var(--rose);
+  box-shadow: 0 0 0 3px rgba(200, 132, 152, 0.15);
+}
+
+.slot-number {
+  display: inline-block;
+  margin-bottom: 15px;
+  color: var(--rose);
+  font-family: Arial, sans-serif;
+  font-size: 0.78rem;
+  font-weight: bold;
+  letter-spacing: 0.16em;
+}
+
+.featured-admin-actions {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  margin-top: 18px;
+}
+
+.featured-admin-actions .primary-button {
+  width: auto;
+}
+
+.featured-admin-actions .message {
+  margin: 0;
+}
+
+@media (max-width: 760px) {
+  .featured-admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .featured-admin-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .featured-admin-actions .primary-button {
+    width: 100%;
+  }
+}

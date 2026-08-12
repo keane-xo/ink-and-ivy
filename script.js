@@ -43,6 +43,7 @@ let selectedRating = 0;
 let reviewsUnsubscribe = null;
 let currentUserReview = null;
 let linkedBookOpened = false;
+let featuredConfig = [];
 const linkedBookId = new URLSearchParams(window.location.search).get("book");
 
 const MAX_CHECKOUTS = 3;
@@ -58,6 +59,8 @@ const genreFilter = document.querySelector("#genre-filter");
 const statusFilter = document.querySelector("#status-filter");
 const resultsCount = document.querySelector("#results-count");
 const emptyState = document.querySelector("#empty-state");
+const featuredSection = document.querySelector("#featured-section");
+const featuredBooksGrid = document.querySelector("#featured-books-grid");
 const toast = document.querySelector("#toast");
 const requestForm = document.querySelector("#request-form");
 const formMessage = document.querySelector("#form-message");
@@ -742,6 +745,68 @@ deleteReviewButton.addEventListener("click", async () => {
   }
 });
 
+
+function renderFeaturedBooks() {
+  if (!featuredSection || !featuredBooksGrid) return;
+
+  const resolved = featuredConfig
+    .map((feature) => {
+      const book = books.find((item) => item.id === feature.bookId);
+      return book ? { ...feature, book } : null;
+    })
+    .filter(Boolean);
+
+  featuredSection.hidden = resolved.length === 0;
+  featuredBooksGrid.innerHTML = "";
+
+  resolved.forEach(({ book, note }) => {
+    const article = document.createElement("article");
+    article.className = "featured-book-card";
+
+    const pageCount = Number(book.pageCount || 0);
+    const statusText =
+      book.status === "available" ? "on the shelf" : "out reading";
+
+    article.innerHTML = `
+      <div class="featured-book-cover">
+        ${
+          book.coverUrl
+            ? `<img src="${escapeHtml(book.coverUrl)}" alt="cover of ${escapeHtml(book.title)}">`
+            : `<span>📖</span>`
+        }
+      </div>
+
+      <div class="featured-book-content">
+        <span class="featured-pick-label">featured pick</span>
+        <h3>${escapeHtml(book.title)}</h3>
+        <p class="featured-book-author">by ${escapeHtml(book.author || "unknown author")}</p>
+
+        ${
+          note
+            ? `<div class="featured-note"><strong>why i picked it</strong>${escapeHtml(note)}</div>`
+            : ""
+        }
+
+        <div class="featured-book-meta">
+          <span>${escapeHtml(book.genre || "uncategorized")}</span>
+          ${pageCount > 0 ? `<span>${pageCount} pages</span>` : ""}
+          <span>${statusText}</span>
+        </div>
+
+        <button class="button button-secondary featured-open-button" type="button">
+          open book
+        </button>
+      </div>
+    `;
+
+    article
+      .querySelector(".featured-open-button")
+      .addEventListener("click", () => openBookDetails(book));
+
+    featuredBooksGrid.appendChild(article);
+  });
+}
+
 function renderBooks() {
   const searchTerm = searchInput.value.trim().toLowerCase();
   const selectedGenre = genreFilter.value;
@@ -901,6 +966,7 @@ onSnapshot(
 
     rebuildGenreOptions();
     renderBooks();
+    renderFeaturedBooks();
 
     if (!linkedBookOpened && linkedBookId) {
       const linkedBook = books.find((book) => book.id === linkedBookId);
@@ -915,5 +981,29 @@ onSnapshot(
     bookGrid.innerHTML =
       '<p class="catalog-loading">the shelves could not be loaded. please try again soon.</p>';
     resultsCount.textContent = "";
+  }
+);
+
+
+onSnapshot(
+  doc(db, "siteSettings", "homepage"),
+  (snapshot) => {
+    const data = snapshot.exists() ? snapshot.data() : {};
+    featuredConfig = Array.isArray(data.featuredBooks)
+      ? data.featuredBooks
+          .filter(
+            (item) =>
+              item &&
+              typeof item.bookId === "string" &&
+              item.bookId
+          )
+          .slice(0, 4)
+      : [];
+    renderFeaturedBooks();
+  },
+  (error) => {
+    console.error(error);
+    featuredConfig = [];
+    renderFeaturedBooks();
   }
 );
