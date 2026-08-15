@@ -79,8 +79,6 @@ const reportMessage = document.querySelector("#report-message");
 const submitReportButton = document.querySelector("#submit-report-button");
 const toast = document.querySelector("#toast");
 
-const LIBRARIAN_UID = "66iUUKyOu7Rvu2I6Hwtdel82b";
-
 let currentUser = null;
 let currentProfile = null;
 let books = [];
@@ -140,13 +138,8 @@ function profileSnapshot() {
 
 function readerTitleMarkup(userId) {
   const profile = profiles.find((item) => item.id === userId);
-  const librarian = userId === LIBRARIAN_UID
-    ? `<span class="librarian-badge">librarian</span>`
-    : "";
-  const title = profile?.selectedTitle
-    ? `<span class="reader-title-chip">${escapeHtml(profile.selectedTitle)}</span>`
-    : "";
-  return `${librarian}${title}`;
+  if (!profile?.selectedTitle) return "";
+  return `<span class="reader-title-chip">${escapeHtml(profile.selectedTitle)}</span>`;
 }
 
 async function sendCommunityNotification({
@@ -430,7 +423,7 @@ function attachComments(post, commentsArea) {
         </span>
         <div>
           <div class="comment-heading">
-            <a class="comment-author" href="profile.html?uid=${encodeURIComponent(comment.userId)}">
+            <a class="comment-author" data-reader-id="${escapeHtml(comment.userId)}" href="profile.html?uid=${encodeURIComponent(comment.userId)}">
               <strong>${escapeHtml(comment.displayName || "reader")}</strong>
               ${readerTitleMarkup(comment.userId)}
             </a>
@@ -533,7 +526,7 @@ function renderPosts() {
             ${avatarMarkup(post)}
           </span>
           <span>
-            <span class="reader-name-line">
+            <span class="reader-name-line" data-reader-id="${escapeHtml(post.userId)}">
               <strong>${escapeHtml(post.displayName || "reader")}</strong>
               ${readerTitleMarkup(post.userId)}
             </span>
@@ -655,9 +648,8 @@ function renderReaders() {
       <span class="avatar avatar-large" style="--avatar-color:${escapeHtml(profile.avatarColor || "#e8b8c5")}">
         ${avatarMarkup(profile)}
       </span>
-      <div class="reader-card-name">
+      <div class="reader-card-name" data-reader-id="${escapeHtml(profile.id)}">
         <h3>${escapeHtml(profile.displayName || "reader")}</h3>
-        ${profile.id === LIBRARIAN_UID ? '<span class="librarian-badge">librarian</span>' : ""}
         ${profile.selectedTitle ? `<span class="reader-title-chip">${escapeHtml(profile.selectedTitle)}</span>` : ""}
       </div>
       <p>${escapeHtml(profile.bio || "an ink and ivy reader")}</p>
@@ -687,7 +679,7 @@ function renderChatMessage(message) {
     <div>
       <div class="chat-message-meta">
         <a class="chat-author" href="profile.html?uid=${encodeURIComponent(message.userId)}">
-          <span class="reader-name-line">
+          <span class="reader-name-line" data-reader-id="${escapeHtml(message.userId)}">
             <strong>${escapeHtml(message.displayName || "reader")}</strong>
             ${readerTitleMarkup(message.userId)}
           </span>

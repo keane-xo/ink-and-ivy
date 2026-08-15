@@ -536,7 +536,7 @@ function renderAdminReviews() {
       </span>
       <div>
         <h3>${escapeHtml(review.bookTitle || "unknown book")}</h3>
-        <p><strong>${escapeHtml(review.displayName || "reader")}</strong></p>
+        <p data-reader-id="${escapeHtml(review.userId || "")}"><strong>${escapeHtml(review.displayName || "reader")}</strong></p>
         <p class="admin-review-stars">${"★".repeat(Number(review.rating || 0))}${"☆".repeat(Math.max(0, 5 - Number(review.rating || 0)))}</p>
         ${review.comment ? `<p class="admin-review-comment">${escapeHtml(review.comment)}</p>` : ""}
         <p class="meta">${formatDate(review.updatedAt || review.createdAt)}</p>
@@ -592,7 +592,7 @@ function renderReports() {
       <div class="admin-report-top">
         <div>
           <h3>${escapeHtml(report.reason || "community report")}</h3>
-          <p><strong>${escapeHtml(report.targetType || "content")}</strong> · reported by ${escapeHtml(report.reporterName || "reader")}</p>
+          <p><strong>${escapeHtml(report.targetType || "content")}</strong> · reported by <span data-reader-id="${escapeHtml(report.reporterId || "")}">${escapeHtml(report.reporterName || "reader")}</span></p>
           <p class="meta">${formatDate(report.createdAt)} · ${escapeHtml(report.status || "pending")}</p>
         </div>
         <span class="status">${escapeHtml(report.status || "pending")}</span>

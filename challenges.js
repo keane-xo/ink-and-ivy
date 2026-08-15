@@ -274,7 +274,7 @@ function renderLeaderboard() {
       <span class="avatar" style="--avatar-color:${escapeHtml(reader.avatarColor || "#e8b8c5")}">
         ${avatarMarkup(reader)}
       </span>
-      <span class="leaderboard-reader">
+      <span class="leaderboard-reader" data-reader-id="${escapeHtml(reader.userId)}">
         <strong>${escapeHtml(reader.displayName || "reader")}</strong>
         <small>${Number(reader.activeDays || 0)} active days</small>
       </span>
@@ -607,6 +607,11 @@ function renderPreviousResults() {
 
   streakWinnerName.textContent =
     previousCycleDocument.winnerName || "no eligible winner";
+  if (previousCycleDocument.winnerId) {
+    streakWinnerName.dataset.readerId = previousCycleDocument.winnerId;
+  } else {
+    delete streakWinnerName.dataset.readerId;
+  }
   streakWinnerDetail.textContent =
     previousCycleDocument.winnerId
       ? `highest streak reached: ${Number(previousCycleDocument.winnerBestStreak || 0)} days`

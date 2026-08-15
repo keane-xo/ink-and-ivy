@@ -73,8 +73,8 @@ const loginView = document.querySelector("#profile-login-view");
 const profileView = document.querySelector("#public-profile-view");
 const avatar = document.querySelector("#public-avatar");
 const name = document.querySelector("#public-name");
+const publicNameRow = document.querySelector(".public-name-row");
 const readerTitle = document.querySelector("#public-reader-title");
-const librarianBadge = document.querySelector("#public-librarian-badge");
 const bio = document.querySelector("#public-bio");
 const editOwnLink = document.querySelector("#edit-own-profile-link");
 const recommendToReaderLink = document.querySelector("#recommend-to-reader-link");
@@ -82,7 +82,6 @@ const postsContainer = document.querySelector("#profile-posts");
 const postsEmpty = document.querySelector("#profile-posts-empty");
 const toast = document.querySelector("#profile-toast");
 
-const LIBRARIAN_UID = "66iUUKyOu7Rvu2I6Hwtdel82b";
 const profileId = new URLSearchParams(window.location.search).get("uid");
 let currentUser = null;
 let currentProfile = null;
@@ -267,8 +266,8 @@ function attachPostInteractions(post, article) {
           <div>
             <div class="profile-comment-heading">
               <span>
-                <a href="profile.html?uid=${encodeURIComponent(comment.userId)}">
-                  <strong>${escapeHtml(comment.displayName || "reader")}</strong>${comment.userId === LIBRARIAN_UID ? '<span class="librarian-badge librarian-badge-small">librarian</span>' : ""}
+                <a data-reader-id="${escapeHtml(comment.userId)}" href="profile.html?uid=${encodeURIComponent(comment.userId)}">
+                  <strong>${escapeHtml(comment.displayName || "reader")}</strong>
                 </a>
                 <small>${formatDate(comment.createdAt)}</small>
               </span>
@@ -434,10 +433,10 @@ async function loadPage(user) {
   avatar.style.setProperty("--avatar-color", profile.avatarColor || "#e8b8c5");
   avatar.innerHTML = avatarMarkup(profile);
   name.textContent = profile.displayName || "reader";
+  publicNameRow.dataset.readerId = profileId || "";
   bio.textContent = profile.bio || "an ink and ivy reader";
   readerTitle.textContent = profile.selectedTitle || "";
   readerTitle.hidden = !profile.selectedTitle;
-  librarianBadge.hidden = profileId !== LIBRARIAN_UID;
 
   renderPublicBadges(profile.earnedBadges || []);
 

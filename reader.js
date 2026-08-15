@@ -48,7 +48,6 @@ const profileAvatarUrl = document.querySelector("#profile-avatar-url");
 const profileBio = document.querySelector("#profile-bio");
 const profileAvatarPreview = document.querySelector("#profile-avatar-preview");
 const profileNamePreview = document.querySelector("#profile-name-preview");
-const profileLibrarianBadge = document.querySelector("#profile-librarian-badge");
 const profileBioPreview = document.querySelector("#profile-bio-preview");
 const publicProfileLink = document.querySelector("#public-profile-link");
 const readingListSearch = document.querySelector("#reading-list-search");
@@ -75,7 +74,6 @@ let suggestionsUnsubscribe = null;
 let latestLoans = [];
 let latestSuggestions = [];
 
-const LIBRARIAN_UID = "66iUUKyOu7Rvu2I6Hwtdel82b";
 const MAX_CHECKOUTS = 3;
 const MAX_TITLE_SUGGESTIONS_PER_WINDOW = 2;
 const TITLE_SUGGESTION_WINDOW_DAYS = 63;
@@ -294,6 +292,7 @@ function updatePreview() {
   const avatarUrl = profileAvatarUrl.value.trim();
 
   profileNamePreview.textContent = name;
+  if (currentUser) profileNamePreview.dataset.readerId = currentUser.uid;
   profileBioPreview.textContent = bio;
   profileAvatarPreview.style.setProperty("--avatar-color", selectedColor);
 
@@ -500,7 +499,6 @@ async function loadProfile(user) {
 
   publicProfileLink.href = `profile.html?uid=${encodeURIComponent(user.uid)}`;
   publicProfileLink.hidden = false;
-  profileLibrarianBadge.hidden = user.uid !== LIBRARIAN_UID;
   updatePreview();
   renderReadingListBooks();
 }

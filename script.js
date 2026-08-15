@@ -237,10 +237,12 @@ function applyAvatar(element, profile) {
 function updateReaderNavigation() {
   if (currentUser && currentProfile) {
     readerNavLabel.textContent = currentProfile.displayName || "my profile";
+    readerNavLabel.dataset.readerId = currentUser.uid;
     readerNavAvatar.hidden = false;
     applyAvatar(readerNavAvatar, currentProfile);
   } else {
     readerNavLabel.textContent = "reader login";
+    delete readerNavLabel.dataset.readerId;
     readerNavAvatar.hidden = true;
     readerNavAvatar.innerHTML = "";
   }
@@ -353,6 +355,7 @@ function updateReviewFormState() {
   if (!canReview) return;
 
   reviewFormName.textContent = currentProfile.displayName || "reader";
+  reviewFormName.dataset.readerId = currentUser.uid;
   applyAvatar(reviewFormAvatar, currentProfile);
 
   if (currentUserReview) {
@@ -402,7 +405,7 @@ function renderReviews(reviews) {
       </span>
       <div>
         <div class="review-card-heading">
-          <strong>${escapeHtml(review.displayName || "reader")}</strong>
+          <span data-reader-id="${escapeHtml(review.userId || review.id || "")}"><strong>${escapeHtml(review.displayName || "reader")}</strong></span>
           <span class="review-stars" aria-label="${Number(review.rating || 0)} out of 5 stars">
             ${"★".repeat(Number(review.rating || 0))}${"☆".repeat(Math.max(0, 5 - Number(review.rating || 0)))}
           </span>

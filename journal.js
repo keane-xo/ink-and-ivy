@@ -179,6 +179,7 @@ function renderCover() {
   coverTitle.textContent = journalSettings.title;
   coverSubtitle.textContent = journalSettings.subtitle;
   coverOwner.textContent = ownerLabel();
+  if (currentUser) coverOwner.dataset.readerId = currentUser.uid;
   toolbarJournalTitle.textContent = journalSettings.title;
 }
 
@@ -189,6 +190,7 @@ function renderCoverPreview() {
   previewCoverSubtitle.textContent =
     draftSettings.subtitle || "thoughts between the pages";
   previewCoverOwner.textContent = ownerLabel();
+  if (currentUser) previewCoverOwner.dataset.readerId = currentUser.uid;
 
   document.querySelectorAll("[data-cover-color]").forEach((button) => {
     button.classList.toggle(
