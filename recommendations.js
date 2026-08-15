@@ -68,6 +68,8 @@ let unsubscribeReceived = null;
 let unsubscribeSent = null;
 let initialSelectionApplied = false;
 
+const LIBRARIAN_UID = "66iUUKyOu7Rvu2I6Hwtdel82b";
+
 const params = new URLSearchParams(window.location.search);
 const requestedFriendId = params.get("to") || "";
 const requestedBookId =
@@ -292,7 +294,7 @@ function receivedCard(item) {
             })}
           </span>
           <span>
-            <strong>${escapeHtml(item.senderName || "a friend")}</strong>
+            <span class="recommendation-name-line"><strong>${escapeHtml(item.senderName || "a friend")}</strong>${item.senderId === LIBRARIAN_UID ? '<span class="librarian-badge">librarian</span>' : ""}</span>
             <small>picked this for you · ${formatDate(item.createdAt)}</small>
           </span>
         </div>
@@ -359,7 +361,7 @@ function sentCard(item) {
             })}
           </span>
           <span>
-            <strong>for ${escapeHtml(item.recipientName || "a friend")}</strong>
+            <span class="recommendation-name-line"><strong>for ${escapeHtml(item.recipientName || "a friend")}</strong>${item.recipientId === LIBRARIAN_UID ? '<span class="librarian-badge">librarian</span>' : ""}</span>
             <small>sent ${formatDate(item.createdAt)}</small>
           </span>
         </div>

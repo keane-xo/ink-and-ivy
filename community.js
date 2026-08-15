@@ -79,6 +79,8 @@ const reportMessage = document.querySelector("#report-message");
 const submitReportButton = document.querySelector("#submit-report-button");
 const toast = document.querySelector("#toast");
 
+const LIBRARIAN_UID = "66iUUKyOu7Rvu2I6Hwtdel82b";
+
 let currentUser = null;
 let currentProfile = null;
 let books = [];
@@ -138,8 +140,13 @@ function profileSnapshot() {
 
 function readerTitleMarkup(userId) {
   const profile = profiles.find((item) => item.id === userId);
-  if (!profile?.selectedTitle) return "";
-  return `<span class="reader-title-chip">${escapeHtml(profile.selectedTitle)}</span>`;
+  const librarian = userId === LIBRARIAN_UID
+    ? `<span class="librarian-badge">librarian</span>`
+    : "";
+  const title = profile?.selectedTitle
+    ? `<span class="reader-title-chip">${escapeHtml(profile.selectedTitle)}</span>`
+    : "";
+  return `${librarian}${title}`;
 }
 
 async function sendCommunityNotification({
@@ -650,6 +657,7 @@ function renderReaders() {
       </span>
       <div class="reader-card-name">
         <h3>${escapeHtml(profile.displayName || "reader")}</h3>
+        ${profile.id === LIBRARIAN_UID ? '<span class="librarian-badge">librarian</span>' : ""}
         ${profile.selectedTitle ? `<span class="reader-title-chip">${escapeHtml(profile.selectedTitle)}</span>` : ""}
       </div>
       <p>${escapeHtml(profile.bio || "an ink and ivy reader")}</p>

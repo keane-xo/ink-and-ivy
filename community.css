@@ -918,3 +918,22 @@ body.modal-open {
 .reader-card-name h3 {
   margin: 0;
 }
+
+
+/* permanent librarian role badge */
+.librarian-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 23px;
+  padding: 3px 7px;
+  color: #fff8e8;
+  background: #526451;
+  border: 1px solid #c9a65d;
+  border-radius: 999px;
+  font-family: Arial, sans-serif;
+  font-size: .6rem;
+  font-weight: 700;
+  letter-spacing: .05em;
+  line-height: 1.1;
+  text-transform: lowercase;
+}

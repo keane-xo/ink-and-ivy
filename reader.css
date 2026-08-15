@@ -755,3 +755,33 @@ legend {
     box-shadow: none;
   }
 }
+
+
+/* librarian badge in the reader profile preview */
+.profile-name-preview-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.profile-name-preview-row h2 {
+  margin-bottom: 0;
+}
+
+.librarian-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 25px;
+  padding: 4px 8px;
+  color: #fff8e8;
+  background: #526451;
+  border: 1px solid #c9a65d;
+  border-radius: 999px;
+  font-family: Arial, sans-serif;
+  font-size: .64rem;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: lowercase;
+}
