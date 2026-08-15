@@ -21,7 +21,7 @@ import {
   BADGES,
   BADGE_TIERS,
   syncAutomaticBadges
-} from "./badge-engine.js?v=2";
+} from "./badge-engine.js?v=3";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC1dOxo61Z0U9mReJnw7s5Z3x0HFrrfB2k",
@@ -43,6 +43,8 @@ let syncingBadges = false;
 let achievementQueue = [];
 let bannerShowing = false;
 const markingRead = new Set();
+let locallyRead = new Map();
+let localReadStorageKey = "";
 
 function installStyles() {
   if (document.querySelector("#inkivy-notification-styles")) return;
@@ -245,54 +247,68 @@ function queueBadgeSyncResults(result) {
   });
 }
 
-function dotFor(element, key) {
-  let dot = element.querySelector(`.ii-notification-dot[data-dot="${key}"]`);
-  if (!dot) {
-    dot = document.createElement("span");
+function loadLocalReadCache(userId) {
+  localReadStorageKey = `inkivy-notification-read:${userId}`;
+  locallyRead = new Map();
+
+  try {
+    const parsed = JSON.parse(localStorage.getItem(localReadStorageKey) || "{}");
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+
+    Object.entries(parsed).forEach(([id, timestamp]) => {
+      const value = Number(timestamp || 0);
+      if (value >= cutoff) locallyRead.set(id, value);
+    });
+
+    persistLocalReadCache();
+  } catch (error) {
+    console.warn("notification read cache could not be loaded", error);
+  }
+}
+
+function persistLocalReadCache() {
+  if (!localReadStorageKey) return;
+
+  try {
+    const entries = [...locallyRead.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 300);
+
+    locallyRead = new Map(entries);
+    localStorage.setItem(
+      localReadStorageKey,
+      JSON.stringify(Object.fromEntries(entries))
+    );
+  } catch (error) {
+    console.warn("notification read cache could not be saved", error);
+  }
+}
+
+function rememberLocallyRead(items) {
+  const now = Date.now();
+  items.forEach((item) => locallyRead.set(item.id, now));
+  persistLocalReadCache();
+}
+
+function setDots(selector, key, visible) {
+  document.querySelectorAll(selector).forEach((element) => {
+    const existing = element.querySelector(
+      `.ii-notification-dot[data-dot="${key}"]`
+    );
+
+    if (!visible) {
+      existing?.remove();
+      return;
+    }
+
+    if (existing) return;
+
+    const dot = document.createElement("span");
     dot.className = "ii-notification-dot";
     dot.dataset.dot = key;
     dot.setAttribute("aria-hidden", "true");
     element.appendChild(dot);
-  }
-  return dot;
-}
-
-function toggleDots(selector, key, visible) {
-  document.querySelectorAll(selector).forEach((element) => {
-    const dot = dotFor(element, key);
-    dot.hidden = !visible;
   });
-}
-
-function renderNotificationDots(notifications) {
-  const unread = notifications.filter((item) => item.read !== true);
-  const hasCommunity = unread.some((item) => item.category === "community");
-  const hasFriendPicks = unread.some((item) => item.category === "friend-picks");
-  const hasBadges = unread.some((item) => item.category === "badges");
-  const hasMore = hasFriendPicks || hasBadges;
-
-  toggleDots(
-    'header nav a[href^="community.html"], header .community-nav a[href^="community.html"]',
-    "community",
-    hasCommunity
-  );
-  toggleDots(
-    'header nav a[href^="recommendations.html"], header .community-nav a[href^="recommendations.html"]',
-    "friend-picks",
-    hasFriendPicks
-  );
-  toggleDots(
-    'header nav a[href^="challenges.html"], header .community-nav a[href^="challenges.html"]',
-    "badges",
-    hasBadges
-  );
-  toggleDots(
-    "header .more-menu > summary",
-    "more",
-    hasMore
-  );
-
-  markCurrentCategoryRead(unread);
 }
 
 function currentPageCategory() {
@@ -305,36 +321,90 @@ function currentPageCategory() {
   return "";
 }
 
-async function markCurrentCategoryRead(unread) {
-  if (!currentUser) return;
-
-  const category = currentPageCategory();
-  if (!category) return;
-
-  const matches = unread.filter(
+function trulyUnread(notifications) {
+  return notifications.filter(
     (item) =>
-      item.category === category &&
-      !markingRead.has(item.id)
+      item &&
+      item.id &&
+      item.read === false &&
+      !locallyRead.has(item.id) &&
+      ["community", "friend-picks", "badges"].includes(item.category)
+  );
+}
+
+function renderNotificationDots(notifications) {
+  const serverUnread = trulyUnread(notifications);
+  const category = currentPageCategory();
+
+  // Merely arriving on the destination counts as checking that category.
+  // Hide those dots immediately, before waiting for Firestore to finish.
+  const currentCategoryItems = category
+    ? serverUnread.filter((item) => item.category === category)
+    : [];
+
+  if (currentCategoryItems.length) {
+    rememberLocallyRead(currentCategoryItems);
+    markNotificationsRead(currentCategoryItems);
+  }
+
+  const unread = serverUnread.filter(
+    (item) => !currentCategoryItems.some((current) => current.id === item.id)
+  );
+
+  const hasCommunity = unread.some((item) => item.category === "community");
+  const hasFriendPicks = unread.some((item) => item.category === "friend-picks");
+  const hasBadges = unread.some((item) => item.category === "badges");
+  const hasMore = hasFriendPicks || hasBadges;
+
+  setDots(
+    'header nav a[href^="community.html"], header .community-nav a[href^="community.html"]',
+    "community",
+    hasCommunity
+  );
+  setDots(
+    'header nav a[href^="recommendations.html"], header .community-nav a[href^="recommendations.html"]',
+    "friend-picks",
+    hasFriendPicks
+  );
+  setDots(
+    'header nav a[href^="challenges.html"], header .community-nav a[href^="challenges.html"]',
+    "badges",
+    hasBadges
+  );
+  setDots(
+    "header .more-menu > summary",
+    "more",
+    hasMore
+  );
+}
+
+async function markNotificationsRead(items) {
+  if (!currentUser || !items.length) return;
+
+  const matches = items.filter(
+    (item) => item?.id && !markingRead.has(item.id)
   );
 
   if (!matches.length) return;
-
   matches.forEach((item) => markingRead.add(item.id));
 
-  window.setTimeout(async () => {
-    for (const item of matches) {
+  await Promise.all(
+    matches.map(async (item) => {
       try {
         await updateDoc(doc(db, "notifications", item.id), {
           read: true,
           readAt: serverTimestamp()
         });
       } catch (error) {
+        // The local cache intentionally keeps the dot cleared even if a slow
+        // network delays the Firestore acknowledgement. The next successful
+        // visit will attempt the write again from another browser/session.
         console.error("notification could not be marked read", error);
       } finally {
         markingRead.delete(item.id);
       }
-    }
-  }, 900);
+    })
+  );
 }
 
 function stopNotificationListener() {
@@ -423,10 +493,13 @@ onAuthStateChanged(auth, (user) => {
   stopNotificationListener();
 
   if (!user) {
+    locallyRead = new Map();
+    localReadStorageKey = "";
     renderNotificationDots([]);
     return;
   }
 
+  loadLocalReadCache(user.uid);
   startNotificationListener(user);
   maybeSyncBadges(false);
 });

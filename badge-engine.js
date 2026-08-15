@@ -159,22 +159,25 @@ async function writeAchievementNotification(
   notificationId,
   data
 ) {
-  await setDoc(
-    doc(db, "notifications", notificationId),
-    {
-      recipientId: userId,
-      actorId: userId,
-      actorName: "",
-      type: data.type,
-      category: "badges",
-      title: data.title,
-      body: data.body,
-      link: "challenges.html",
-      read: false,
-      createdAt: serverTimestamp()
-    },
-    { merge: true }
-  );
+  const reference = doc(db, "notifications", notificationId);
+  const existing = await getDoc(reference);
+
+  // Achievement notifications use deterministic IDs. If one already exists,
+  // it has already been announced at least once. Never reset it to unread.
+  if (existing.exists()) return;
+
+  await setDoc(reference, {
+    recipientId: userId,
+    actorId: userId,
+    actorName: "",
+    type: data.type,
+    category: "badges",
+    title: data.title,
+    body: data.body,
+    link: "challenges.html",
+    read: false,
+    createdAt: serverTimestamp()
+  });
 }
 
 export async function calculateAutomaticBadgeProgress(db, userId) {
