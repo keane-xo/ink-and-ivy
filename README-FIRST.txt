@@ -1,23 +1,37 @@
-INK AND IVY — LIBRARIAN BADGE STYLE + DUPLICATE FIX
+INK AND IVY — LIBRARIAN BADGE RELIABILITY FIX
 
-This fixes the two things shown in your screenshots:
+I changed the badge logic again based on the screenshots where it disappeared.
 
-1. The Librarian pill was too heavy/tall in Community.
-2. It could duplicate in the More dropdown.
+WHAT WAS WRONG
 
-NEW STYLE
-- pale, almost-transparent red/pink center
+The previous version was still depending too much on surrounding reader-ID
+containers. Some older posts/reviews contain a reader ID that does not match the
+current admin UID, so the username fallback was being skipped.
+
+THIS VERSION DOES NOT DO THAT.
+
+The new script treats the exact visible username "kisseskeane" as the primary
+display anchor. It looks at the element's OWN text node instead of the text of a
+large parent card or dropdown.
+
+That has two benefits:
+1. The badge appears beside "kisseskeane" even on older content.
+2. Parent containers no longer match the username, so the dropdown cannot get
+   a second duplicate Librarian pill.
+
+The admin UID is still supported as a secondary check.
+
+STYLE
+
+The badge remains the subtle style requested:
+- pale almost-transparent red/pink center
 - dark red outline
 - dark red text
+- compact rounded pill
 - no heavy shadow
-- compact rounded pill, modeled after the "picked by me" badge
 
-DUPLICATE FIX
-The script now uses the reader-ID host first and only uses the username fallback
-when no reader-ID host surrounds the name. It also removes extra copies if more
-than one badge gets attached to the same username area.
+UPLOAD AND REPLACE IN GITHUB
 
-UPLOAD AND REPLACE IN GITHUB:
 - librarian-badge.js
 - index.html
 - community.html
@@ -30,8 +44,14 @@ UPLOAD AND REPLACE IN GITHUB:
 
 NO FIREBASE RULES CHANGE IS NEEDED.
 
-After upload:
-1. Wait 1–3 minutes.
-2. Open https://keane-xo.github.io/ink-and-ivy/community.html?v=7
-3. Press Ctrl+Shift+R once.
-4. Check both a Community post and the More dropdown.
+TEST
+
+After GitHub Pages deploys:
+1. Open https://keane-xo.github.io/ink-and-ivy/community.html?v=8
+2. Press Ctrl+Shift+R once.
+3. Check the old "new badge system created!" post.
+4. Check the More dropdown.
+5. Check a review and the public reader profile.
+
+There should be exactly one subtle red Librarian pill beside each visible
+"kisseskeane" username.
