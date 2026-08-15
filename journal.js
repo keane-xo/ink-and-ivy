@@ -1,4 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+import { getApp, getApps, initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
 import {
   browserLocalPersistence,
   getAuth,
@@ -22,6 +22,8 @@ import {
   setDoc,
   updateDoc
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+import { syncAutomaticBadges } from "./badge-engine.js?v=2";
+import { announceBadgeResult } from "./notification-center.js?v=1";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC1dOxo61Z0U9mReJnw7s5Z3x0HFrrfB2k",
@@ -32,7 +34,7 @@ const firebaseConfig = {
   appId: "1:444464034610:web:de9c2c3a33737ae6849d2b"
 };
 
-const app = initializeApp(firebaseConfig);
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 setPersistence(auth, browserLocalPersistence).catch(console.error);
@@ -602,6 +604,9 @@ entryForm.addEventListener("submit", async (event) => {
       selectedEntryId = reference.id;
       showToast("your journal page was saved privately.");
     }
+
+    const badgeResult = await syncAutomaticBadges(db, currentUser.uid);
+    announceBadgeResult(badgeResult);
 
     resetEntryForm();
     showReadingView();

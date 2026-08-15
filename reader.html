@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>reader profile · ink and ivy</title>
   <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml">
-<link rel="stylesheet" href="reader.css?v=18">
-  <script type="module" src="reader.js?v=18"></script>
-  <script type="module" src="streaks.js?v=1"></script>
+<link rel="stylesheet" href="reader.css?v=19">
+  <script type="module" src="reader.js?v=19"></script>
+  <script type="module" src="streaks.js?v=2"></script>
 </head>
 <body>
   <header class="reader-header">
@@ -128,7 +128,7 @@
           <div id="profile-avatar-preview" class="profile-avatar-preview">📚</div>
           <h2 id="profile-name-preview">reader</h2>
           <p id="profile-bio-preview">a little corner for books and thoughts.</p>
-          <span class="profile-badge">ink and ivy reader</span>
+          <span id="profile-title-preview" class="profile-badge">ink and ivy reader</span>
         </aside>
 
         <form id="profile-form" class="profile-form">
@@ -142,6 +142,12 @@
           <label>
             display name
             <input id="profile-display-name" type="text" maxlength="40" required>
+          </label>
+
+          <label id="reader-title-field" hidden>
+            reader title
+            <select id="profile-reader-title"></select>
+            <span class="field-help">complete a full badge level to unlock titles. you can display any title you have earned.</span>
           </label>
 
           <fieldset>

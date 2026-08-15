@@ -1,4 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+import { getApp, getApps, initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
 import {
   browserLocalPersistence,
   getAuth,
@@ -22,6 +22,10 @@ import {
   setDoc,
   updateDoc
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+import {
+  createNotification,
+  removeNotification
+} from "./notification-center.js?v=1";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC1dOxo61Z0U9mReJnw7s5Z3x0HFrrfB2k",
@@ -32,7 +36,7 @@ const firebaseConfig = {
   appId: "1:444464034610:web:de9c2c3a33737ae6849d2b"
 };
 
-const app = initializeApp(firebaseConfig);
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 setPersistence(auth, browserLocalPersistence).catch(console.error);
@@ -131,8 +135,15 @@ function profileSnapshot() {
     displayName: currentProfile?.displayName || "reader",
     avatarEmoji: currentProfile?.avatarEmoji || "📚",
     avatarColor: currentProfile?.avatarColor || "#e8b8c5",
-    avatarUrl: currentProfile?.avatarUrl || ""
+    avatarUrl: currentProfile?.avatarUrl || "",
+    readerTitle: currentProfile?.readerTitle || ""
   };
+}
+
+function readerTitleMarkup(userId, fallbackTitle = "") {
+  const profile = profiles.find((item) => item.id === userId);
+  const title = profile?.readerTitle || fallbackTitle || "";
+  return title ? `<span class="reader-title-chip">${escapeHtml(title)}</span>` : "";
 }
 
 async function loadCurrentProfile(user) {
@@ -392,6 +403,7 @@ function attachComments(post, commentsArea) {
             <a class="comment-author" href="profile.html?uid=${encodeURIComponent(comment.userId)}">
               <strong>${escapeHtml(comment.displayName || "reader")}</strong>
             </a>
+            ${readerTitleMarkup(comment.userId, comment.readerTitle)}
             <div class="comment-actions">
               ${comment.userId === currentUser.uid ? '<button class="inline-action" data-delete-comment type="button">delete</button>' : ""}
               <button class="inline-action" data-report-comment type="button">report</button>
@@ -415,6 +427,7 @@ function attachComments(post, commentsArea) {
       element.querySelector("[data-delete-comment]")?.addEventListener("click", (event) =>
         twoClickDelete(event.currentTarget, async () => {
           await deleteDoc(doc(db, "posts", post.id, "comments", comment.id));
+          await removeNotification(`community-comment-${post.id}-${comment.id}`);
           showToast("your comment was deleted.");
         })
       );
@@ -435,13 +448,26 @@ function attachComments(post, commentsArea) {
     button.disabled = true;
 
     try {
-      await addDoc(collection(db, "posts", post.id, "comments"), {
+      const commentReference = await addDoc(collection(db, "posts", post.id, "comments"), {
         userId: currentUser.uid,
         ...profileSnapshot(),
         text,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
+      if (post.userId !== currentUser.uid) {
+        await createNotification({
+          id: `community-comment-${post.id}-${commentReference.id}`,
+          recipientId: post.userId,
+          type: "community-comment",
+          category: "community",
+          actorId: currentUser.uid,
+          actorName: currentProfile?.displayName || "a reader",
+          message: `${currentProfile?.displayName || "a reader"} commented on your post`,
+          postId: post.id,
+          targetUrl: "community.html"
+        });
+      }
       input.value = "";
     } catch (error) {
       console.error(error);
@@ -482,7 +508,10 @@ function renderPosts() {
             ${avatarMarkup(post)}
           </span>
           <span>
-            <strong>${escapeHtml(post.displayName || "reader")}</strong>
+            <span class="name-with-title">
+              <strong>${escapeHtml(post.displayName || "reader")}</strong>
+              ${readerTitleMarkup(post.userId, post.readerTitle)}
+            </span>
             <small>${formatDate(post.updatedAt || post.createdAt)}</small>
           </span>
         </a>
@@ -533,8 +562,27 @@ function renderPosts() {
     likeButton.addEventListener("click", async () => {
       const ref = doc(db, "posts", post.id, "likes", currentUser.uid);
       try {
-        if (likeButton.dataset.liked === "true") await deleteDoc(ref);
-        else await setDoc(ref, { userId: currentUser.uid, createdAt: serverTimestamp() });
+        if (likeButton.dataset.liked === "true") {
+          await deleteDoc(ref);
+          if (post.userId !== currentUser.uid) {
+            await removeNotification(`community-like-${post.id}-${currentUser.uid}`);
+          }
+        } else {
+          await setDoc(ref, { userId: currentUser.uid, createdAt: serverTimestamp() });
+          if (post.userId !== currentUser.uid) {
+            await createNotification({
+              id: `community-like-${post.id}-${currentUser.uid}`,
+              recipientId: post.userId,
+              type: "community-like",
+              category: "community",
+              actorId: currentUser.uid,
+              actorName: currentProfile?.displayName || "a reader",
+              message: `${currentProfile?.displayName || "a reader"} liked your post`,
+              postId: post.id,
+              targetUrl: "community.html"
+            });
+          }
+        }
       } catch (error) {
         console.error(error);
         showToast("the like could not be updated.");
@@ -587,7 +635,10 @@ function renderReaders() {
       <span class="avatar avatar-large" style="--avatar-color:${escapeHtml(profile.avatarColor || "#e8b8c5")}">
         ${avatarMarkup(profile)}
       </span>
-      <h3>${escapeHtml(profile.displayName || "reader")}</h3>
+      <div class="reader-card-name">
+        <h3>${escapeHtml(profile.displayName || "reader")}</h3>
+        ${readerTitleMarkup(profile.id, profile.readerTitle)}
+      </div>
       <p>${escapeHtml(profile.bio || "an ink and ivy reader")}</p>
       <div class="reader-card-stats">
         <span class="pill">${(profile.favoriteBookIds || []).length} favorites</span>
@@ -615,7 +666,10 @@ function renderChatMessage(message) {
     <div>
       <div class="chat-message-meta">
         <a class="chat-author" href="profile.html?uid=${encodeURIComponent(message.userId)}">
-          <strong>${escapeHtml(message.displayName || "reader")}</strong>
+          <span class="name-with-title">
+            <strong>${escapeHtml(message.displayName || "reader")}</strong>
+            ${readerTitleMarkup(message.userId, message.readerTitle)}
+          </span>
           <small>${formatDate(message.createdAt)}</small>
         </a>
         <div class="chat-message-actions">
@@ -694,6 +748,7 @@ function startListeners() {
       .map((entry) => ({ id: entry.id, ...entry.data() }))
       .sort((a, b) => String(a.displayName || "").localeCompare(String(b.displayName || "")));
     renderReaders();
+    if (posts.length) renderPosts();
   });
 
   unsubscribePosts = onSnapshot(

@@ -1,65 +1,179 @@
 import {
-  arrayUnion,
   collection,
   doc,
   getDoc,
   getDocs,
   query,
-  updateDoc,
+  serverTimestamp,
+  setDoc,
   where
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+
+export const BADGE_TIERS = {
+  sprout: {
+    id: "sprout",
+    label: "sprout",
+    multiplier: 1,
+    title: "Storykeeper",
+    order: 0
+  },
+  bloom: {
+    id: "bloom",
+    label: "bloom",
+    multiplier: 2,
+    title: "Ink Society",
+    order: 1
+  },
+  evergreen: {
+    id: "evergreen",
+    label: "evergreen",
+    multiplier: 4,
+    title: "Keeper of the Stacks",
+    order: 2
+  }
+};
 
 export const BADGES = {
   "page-turner": {
     emoji: "📖",
-    name: "page turner",
-    description: "finished three books",
-    target: 3,
-    unit: "books finished"
+    names: {
+      sprout: "page turner",
+      bloom: "shelf sweeper",
+      evergreen: "library legend"
+    },
+    baseTarget: 3,
+    unit: "books finished",
+    description(target) {
+      return `finished ${target} books`;
+    }
   },
   "genre-explorer": {
     emoji: "🧭",
-    name: "genre explorer",
-    description: "read across three different genres",
-    target: 3,
-    unit: "genres explored"
+    names: {
+      sprout: "genre explorer",
+      bloom: "story wanderer",
+      evergreen: "literary cartographer"
+    },
+    baseTarget: 3,
+    unit: "genres explored",
+    description(target) {
+      return `read across ${target} different genres`;
+    }
   },
   "friends-choice": {
     emoji: "💌",
-    name: "friend's choice",
-    description: "finished a book recommended by a friend",
-    target: 1,
-    unit: "friend pick finished"
+    names: {
+      sprout: "friend's choice",
+      bloom: "trusted pick",
+      evergreen: "circle favorite"
+    },
+    baseTarget: 1,
+    unit: "friend picks finished",
+    description(target) {
+      return `finished ${target} ${target === 1 ? "book" : "books"} recommended by a friend`;
+    }
   },
   "reviewers-quill": {
     emoji: "🪶",
-    name: "reviewer's quill",
-    description: "shared five book reviews",
-    target: 5,
-    unit: "reviews shared"
+    names: {
+      sprout: "reviewer's quill",
+      bloom: "critic's quill",
+      evergreen: "golden quill"
+    },
+    baseTarget: 5,
+    unit: "reviews shared",
+    description(target) {
+      return `shared ${target} book reviews`;
+    }
   },
   "journal-keeper": {
     emoji: "✍️",
-    name: "journal keeper",
-    description: "filled five reading-journal pages",
-    target: 5,
-    unit: "journal pages"
+    names: {
+      sprout: "journal keeper",
+      bloom: "journal devotee",
+      evergreen: "archive keeper"
+    },
+    baseTarget: 5,
+    unit: "journal pages",
+    description(target) {
+      return `filled ${target} reading-journal pages`;
+    }
   },
   "tome-traveler": {
     emoji: "🏰",
-    name: "tome traveler",
-    description: "finished a book longer than 400 pages",
-    target: 1,
-    unit: "long book finished"
+    names: {
+      sprout: "tome traveler",
+      bloom: "epic voyager",
+      evergreen: "tome conqueror"
+    },
+    baseTarget: 1,
+    unit: "long books finished",
+    description(target) {
+      return `finished ${target} ${target === 1 ? "book" : "books"} longer than 400 pages`;
+    }
   },
   "seasonal-reader": {
     emoji: "🍂",
-    name: "seasonal reader",
-    description: "finished four books in one season",
-    target: 4,
-    unit: "books in one season"
+    names: {
+      sprout: "seasonal reader",
+      bloom: "season collector",
+      evergreen: "season sage"
+    },
+    baseTarget: 4,
+    unit: "books in one season",
+    description(target) {
+      return `finished ${target} books in one season`;
+    }
   }
 };
+
+export function badgeId(baseId, tierId) {
+  return `${baseId}:${tierId}`;
+}
+
+export function getBadgeDefinition(baseId, tierId) {
+  const badge = BADGES[baseId];
+  const tier = BADGE_TIERS[tierId];
+  if (!badge || !tier) return null;
+
+  const target = badge.baseTarget * tier.multiplier;
+  return {
+    id: badgeId(baseId, tierId),
+    baseId,
+    tierId,
+    tierLabel: tier.label,
+    tierTitle: tier.title,
+    emoji: badge.emoji,
+    name: badge.names[tierId],
+    target,
+    unit: badge.unit,
+    description: badge.description(target)
+  };
+}
+
+export function getTierBadges(tierId) {
+  return Object.keys(BADGES)
+    .map((baseId) => getBadgeDefinition(baseId, tierId))
+    .filter(Boolean);
+}
+
+export function normalizeEarnedBadgeIds(ids = []) {
+  const normalized = [];
+
+  ids.forEach((id) => {
+    if (BADGES[id]) {
+      normalized.push(badgeId(id, "sprout"));
+      return;
+    }
+
+    const [baseId, tierId] = String(id).split(":");
+    if (BADGES[baseId] && BADGE_TIERS[tierId]) {
+      normalized.push(badgeId(baseId, tierId));
+    }
+  });
+
+  return [...new Set(normalized)];
+}
 
 function timestampDate(value) {
   return value?.toDate ? value.toDate() : null;
@@ -87,6 +201,87 @@ function sameStringArray(a, b) {
   );
 }
 
+function completedTierIds(earnedIds) {
+  const earned = new Set(earnedIds);
+  return Object.keys(BADGE_TIERS).filter((tierId) =>
+    getTierBadges(tierId).every((badge) => earned.has(badge.id))
+  );
+}
+
+function titleOrder(title) {
+  return Object.values(BADGE_TIERS).find((tier) => tier.title === title)?.order ?? -1;
+}
+
+function notificationDocId(value) {
+  return String(value).replace(/[^a-zA-Z0-9_-]/g, "-");
+}
+
+async function writeBadgeNotifications(db, userId, badgeDefinitions, titles) {
+  const writes = [];
+
+  badgeDefinitions.forEach((badge) => {
+    const reference = doc(
+      db,
+      "notifications",
+      notificationDocId(`badge-${userId}-${badge.id}`)
+    );
+
+    writes.push(
+      setDoc(reference, {
+        recipientId: userId,
+        type: "badge",
+        category: "badges",
+        title: "badge unlocked",
+        message: `${badge.name} · ${badge.tierLabel}`,
+        badgeId: badge.id,
+        badgeName: badge.name,
+        badgeTier: badge.tierLabel,
+        badgeEmoji: badge.emoji,
+        badgeDescription: badge.description,
+        targetUrl: "challenges.html",
+        read: false,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      })
+    );
+  });
+
+  titles.forEach((title) => {
+    const tier = Object.values(BADGE_TIERS).find((item) => item.title === title);
+    if (!tier) return;
+
+    const reference = doc(
+      db,
+      "notifications",
+      notificationDocId(`title-${userId}-${tier.id}`)
+    );
+
+    writes.push(
+      setDoc(reference, {
+        recipientId: userId,
+        type: "title",
+        category: "badges",
+        title: "collection complete",
+        message: `new title unlocked: ${title}`,
+        tierId: tier.id,
+        readerTitle: title,
+        targetUrl: "challenges.html",
+        read: false,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      })
+    );
+  });
+
+  if (!writes.length) return;
+
+  try {
+    await Promise.all(writes);
+  } catch (error) {
+    console.warn("badge notifications could not be saved", error);
+  }
+}
+
 export async function calculateAutomaticBadgeProgress(db, userId) {
   const [
     booksSnapshot,
@@ -108,9 +303,7 @@ export async function calculateAutomaticBadgeProgress(db, userId) {
         where("recipientId", "==", userId)
       )
     ),
-    getDocs(
-      collection(db, "profiles", userId, "journalEntries")
-    ),
+    getDocs(collection(db, "profiles", userId, "journalEntries")),
     getDoc(doc(db, "profiles", userId))
   ]);
 
@@ -145,14 +338,14 @@ export async function calculateAutomaticBadgeProgress(db, userId) {
       .filter(Boolean)
   );
 
-  const friendPickFinished = [...completedBookIds].some((bookId) =>
-    recommendedBookIds.has(bookId)
-  );
+  const friendPickFinishedCount = completedCheckouts.filter((item) =>
+    recommendedBookIds.has(item.bookId)
+  ).length;
 
-  const longBookFinished = completedCheckouts.some((item) => {
+  const longBookFinishedCount = completedCheckouts.filter((item) => {
     const pages = Number(bookById.get(item.bookId)?.pageCount || 0);
     return pages > 400;
-  });
+  }).length;
 
   const seasonCounts = new Map();
   completedCheckouts.forEach((item) => {
@@ -172,36 +365,117 @@ export async function calculateAutomaticBadgeProgress(db, userId) {
   const progress = {
     "page-turner": completedCheckouts.length,
     "genre-explorer": completedGenres.size,
-    "friends-choice": friendPickFinished ? 1 : 0,
+    "friends-choice": friendPickFinishedCount,
     "reviewers-quill": reviewCount,
     "journal-keeper": journalSnapshot.size,
-    "tome-traveler": longBookFinished ? 1 : 0,
+    "tome-traveler": longBookFinishedCount,
     "seasonal-reader": mostBooksInASeason
   };
 
-  const earnedBadges = Object.entries(BADGES)
-    .filter(([id, badge]) => Number(progress[id] || 0) >= badge.target)
-    .map(([id]) => id);
-
   const currentProfile = profileSnapshot.exists()
     ? profileSnapshot.data()
-    : null;
+    : {};
+  const rawCurrentEarnedBadges = Array.isArray(currentProfile.earnedBadges)
+    ? currentProfile.earnedBadges
+    : [];
+  const currentEarnedBadges = normalizeEarnedBadgeIds(
+    rawCurrentEarnedBadges
+  );
+  const currentEarnedSet = new Set(currentEarnedBadges);
+
+  const qualifyingBadgeIds = [];
+  Object.keys(BADGE_TIERS).forEach((tierId) => {
+    getTierBadges(tierId).forEach((badge) => {
+      if (Number(progress[badge.baseId] || 0) >= badge.target) {
+        qualifyingBadgeIds.push(badge.id);
+      }
+    });
+  });
+
+  // Badges are achievements: once earned, they stay in the cabinet.
+  const earnedBadges = [...new Set([
+    ...currentEarnedBadges,
+    ...qualifyingBadgeIds
+  ])];
+
+  const newlyEarnedBadges = earnedBadges
+    .filter((id) => !currentEarnedSet.has(id))
+    .map((id) => {
+      const [baseId, tierId] = id.split(":");
+      return getBadgeDefinition(baseId, tierId);
+    })
+    .filter(Boolean);
+
+  const completedTiers = completedTierIds(earnedBadges);
+  const completedTitles = completedTiers.map((tierId) => BADGE_TIERS[tierId].title);
+  const currentUnlockedTitles = (currentProfile.unlockedTitles || [])
+    .filter((title) => Object.values(BADGE_TIERS).some((tier) => tier.title === title));
+  const unlockedTitles = [...new Set([
+    ...currentUnlockedTitles,
+    ...completedTitles
+  ])].sort((a, b) => titleOrder(a) - titleOrder(b));
+  const newlyUnlockedTitles = unlockedTitles.filter(
+    (title) => !currentUnlockedTitles.includes(title)
+  );
+
+  let readerTitle = currentProfile.readerTitle || "";
+  if (newlyUnlockedTitles.length) {
+    readerTitle = [...newlyUnlockedTitles].sort(
+      (a, b) => titleOrder(b) - titleOrder(a)
+    )[0];
+  } else if (readerTitle && !unlockedTitles.includes(readerTitle)) {
+    readerTitle = "";
+  } else if (!readerTitle && unlockedTitles.length) {
+    readerTitle = unlockedTitles[unlockedTitles.length - 1];
+  }
 
   return {
     progress,
     earnedBadges,
-    currentEarnedBadges: currentProfile?.earnedBadges || []
+    currentEarnedBadges,
+    rawCurrentEarnedBadges,
+    newlyEarnedBadges,
+    completedTiers,
+    unlockedTitles,
+    currentUnlockedTitles,
+    newlyUnlockedTitles,
+    readerTitle,
+    currentReaderTitle: currentProfile.readerTitle || ""
   };
 }
 
 export async function syncAutomaticBadges(db, userId) {
   const result = await calculateAutomaticBadgeProgress(db, userId);
 
-  if (!sameStringArray(result.earnedBadges, result.currentEarnedBadges)) {
-    await updateDoc(doc(db, "profiles", userId), {
-      earnedBadges: result.earnedBadges
-    });
+  const badgeChanged =
+    !sameStringArray(result.earnedBadges, result.currentEarnedBadges) ||
+    !sameStringArray(result.currentEarnedBadges, result.rawCurrentEarnedBadges);
+  const titlesChanged = !sameStringArray(
+    result.unlockedTitles,
+    result.currentUnlockedTitles
+  );
+  const readerTitleChanged = result.readerTitle !== result.currentReaderTitle;
+
+  if (badgeChanged || titlesChanged || readerTitleChanged) {
+    await setDoc(
+      doc(db, "profiles", userId),
+      {
+        earnedBadges: result.earnedBadges,
+        unlockedTitles: result.unlockedTitles,
+        readerTitle: result.readerTitle,
+        badgeProgress: result.progress,
+        badgesUpdatedAt: serverTimestamp()
+      },
+      { merge: true }
+    );
   }
+
+  await writeBadgeNotifications(
+    db,
+    userId,
+    result.newlyEarnedBadges,
+    result.newlyUnlockedTitles
+  );
 
   return result;
 }

@@ -23,6 +23,7 @@ import {
   updateDoc,
   writeBatch
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+import { syncAutomaticBadges } from "./badge-engine.js?v=2";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC1dOxo61Z0U9mReJnw7s5Z3x0HFrrfB2k",
@@ -327,6 +328,15 @@ async function completeBorrowingRequest(item) {
   }
 
   await batch.commit();
+
+  if (item.requestType === "checkout" && item.userId) {
+    try {
+      await syncAutomaticBadges(db, item.userId);
+    } catch (error) {
+      console.warn("reader badges will sync on their next visit", error);
+    }
+  }
+
   showToast(
     item.requestType === "checkout"
       ? "book marked returned and checkout completed."

@@ -6,9 +6,9 @@
   <meta name="description" content="reading streaks, community voting, and automatic badges for ink and ivy readers.">
   <title>streaks, votes &amp; badges · ink and ivy</title>
   <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml">
-  <link rel="stylesheet" href="challenges.css?v=3">
-  <script type="module" src="streaks.js?v=1"></script>
-  <script type="module" src="challenges.js?v=3"></script>
+  <link rel="stylesheet" href="challenges.css?v=4">
+  <script type="module" src="streaks.js?v=2"></script>
+  <script type="module" src="challenges.js?v=4"></script>
 </head>
 <body>
   <header class="challenges-header">
@@ -203,12 +203,13 @@
         </div>
 
         <p class="panel-intro">
-          badges celebrate your reading milestones across ink and ivy. completed
-          checkouts, new genres, reviews, journal pages, friend recommendations,
-          seasonal reading, and long books automatically move you toward
-          unlocking them.
+          every badge has three levels: <strong>sprout</strong>, <strong>bloom</strong>, and
+          <strong>evergreen</strong>. each level doubles the goal before it, and completing
+          every badge in a level unlocks a reader title beside your name.
         </p>
 
+        <div id="badge-tier-tabs" class="badge-tier-tabs" role="tablist" aria-label="badge levels"></div>
+        <div id="badge-tier-summary" class="badge-tier-summary"></div>
         <div id="automatic-badge-grid" class="automatic-badge-grid"></div>
         <p id="badge-sync-message" class="form-message" aria-live="polite"></p>
       </section>

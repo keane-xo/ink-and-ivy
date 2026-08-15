@@ -1643,3 +1643,10 @@ body.modal-open {
     text-align: left;
   }
 }
+
+.reviewer-name-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}

@@ -1,4 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+import { getApp, getApps, initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
 import {
   browserLocalPersistence,
   getAuth,
@@ -20,6 +20,8 @@ import {
   setDoc,
   where
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+import { syncAutomaticBadges } from "./badge-engine.js?v=2";
+import { announceBadgeResult } from "./notification-center.js?v=1";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC1dOxo61Z0U9mReJnw7s5Z3x0HFrrfB2k",
@@ -30,7 +32,7 @@ const firebaseConfig = {
   appId: "1:444464034610:web:de9c2c3a33737ae6849d2b"
 };
 
-const app = initializeApp(firebaseConfig);
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 setPersistence(auth, browserLocalPersistence).catch(console.error);
@@ -402,7 +404,10 @@ function renderReviews(reviews) {
       </span>
       <div>
         <div class="review-card-heading">
-          <strong>${escapeHtml(review.displayName || "reader")}</strong>
+          <span class="reviewer-name-line">
+            <strong>${escapeHtml(review.displayName || "reader")}</strong>
+            ${review.readerTitle ? `<span class="reader-title-chip">${escapeHtml(review.readerTitle)}</span>` : ""}
+          </span>
           <span class="review-stars" aria-label="${Number(review.rating || 0)} out of 5 stars">
             ${"★".repeat(Number(review.rating || 0))}${"☆".repeat(Math.max(0, 5 - Number(review.rating || 0)))}
           </span>
@@ -712,6 +717,7 @@ reviewForm.addEventListener("submit", async (event) => {
         avatarEmoji: currentProfile.avatarEmoji || "📚",
         avatarColor: currentProfile.avatarColor || "#e8b8c5",
         avatarUrl: currentProfile.avatarUrl || "",
+        readerTitle: currentProfile.readerTitle || "",
         rating: selectedRating,
         comment,
         createdAt: currentUserReview?.createdAt || serverTimestamp(),
@@ -721,6 +727,8 @@ reviewForm.addEventListener("submit", async (event) => {
     );
 
     showToast(currentUserReview ? "your review was updated." : "your review was posted.");
+    const badgeResult = await syncAutomaticBadges(db, currentUser.uid);
+    announceBadgeResult(badgeResult);
   } catch (error) {
     console.error(error);
     reviewFormMessage.textContent = "your review could not be saved.";

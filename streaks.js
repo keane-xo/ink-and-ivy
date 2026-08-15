@@ -16,7 +16,8 @@ import {
   runTransaction,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
-import { syncAutomaticBadges } from "./badge-engine.js";
+import { syncAutomaticBadges } from "./badge-engine.js?v=2";
+import { announceBadgeResult } from "./notification-center.js?v=1";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC1dOxo61Z0U9mReJnw7s5Z3x0HFrrfB2k",
@@ -149,7 +150,8 @@ async function recordDailyVisit(user) {
       displayName: profile.displayName || "reader",
       avatarEmoji: profile.avatarEmoji || "📚",
       avatarColor: profile.avatarColor || "#e8b8c5",
-      avatarUrl: profile.avatarUrl || ""
+      avatarUrl: profile.avatarUrl || "",
+      readerTitle: profile.readerTitle || ""
     };
 
     transaction.set(
@@ -200,7 +202,8 @@ async function recordDailyVisit(user) {
   const badgeKey = `inkIvyBadges:${user.uid}:${todayKey}`;
   if (localStorage.getItem(badgeKey) !== "done") {
     try {
-      await syncAutomaticBadges(db, user.uid);
+      const result = await syncAutomaticBadges(db, user.uid);
+      announceBadgeResult(result);
       localStorage.setItem(badgeKey, "done");
     } catch (error) {
       console.warn("automatic badge sync skipped", error);

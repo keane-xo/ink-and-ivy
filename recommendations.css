@@ -517,3 +517,10 @@ textarea { resize:vertical; }
     box-shadow: none;
   }
 }
+
+.recommendation-name-line {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}

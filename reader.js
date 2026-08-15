@@ -1,4 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+import { getApp, getApps, initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
 import {
   browserLocalPersistence,
   createUserWithEmailAndPassword,
@@ -30,7 +30,7 @@ const firebaseConfig = {
   appId: "1:444464034610:web:de9c2c3a33737ae6849d2b"
 };
 
-const app = initializeApp(firebaseConfig);
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 setPersistence(auth, browserLocalPersistence).catch(console.error);
@@ -44,6 +44,9 @@ const signupMessage = document.querySelector("#signup-message");
 const profileForm = document.querySelector("#profile-form");
 const profileMessage = document.querySelector("#profile-message");
 const profileDisplayName = document.querySelector("#profile-display-name");
+const profileReaderTitle = document.querySelector("#profile-reader-title");
+const readerTitleField = document.querySelector("#reader-title-field");
+const profileTitlePreview = document.querySelector("#profile-title-preview");
 const profileAvatarUrl = document.querySelector("#profile-avatar-url");
 const profileBio = document.querySelector("#profile-bio");
 const profileAvatarPreview = document.querySelector("#profile-avatar-preview");
@@ -64,6 +67,7 @@ let currentUser = null;
 let profileExists = false;
 let selectedAvatar = "📚";
 let selectedColor = "#e8b8c5";
+let unlockedTitles = [];
 let books = [];
 let activeList = "favoriteBookIds";
 let favoriteBookIds = new Set();
@@ -293,6 +297,8 @@ function updatePreview() {
 
   profileNamePreview.textContent = name;
   profileBioPreview.textContent = bio;
+  profileTitlePreview.textContent = profileReaderTitle.value || "ink and ivy reader";
+  profileTitlePreview.classList.toggle("achievement-title", Boolean(profileReaderTitle.value));
   profileAvatarPreview.style.setProperty("--avatar-color", selectedColor);
 
   if (avatarUrl) {
@@ -451,6 +457,9 @@ signupForm.addEventListener("submit", async (event) => {
       favoriteBookIds: [],
       tbrBookIds: [],
       currentlyReadingBookIds: [],
+      earnedBadges: [],
+      unlockedTitles: [],
+      readerTitle: "",
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
@@ -476,7 +485,9 @@ async function loadProfile(user) {
         bio: "",
         favoriteBookIds: [],
         tbrBookIds: [],
-        currentlyReadingBookIds: []
+        currentlyReadingBookIds: [],
+        unlockedTitles: [],
+        readerTitle: ""
       };
 
   selectedAvatar = profile.avatarEmoji || "📚";
@@ -484,8 +495,20 @@ async function loadProfile(user) {
   favoriteBookIds = new Set(profile.favoriteBookIds || []);
   tbrBookIds = new Set(profile.tbrBookIds || []);
   currentlyReadingBookIds = new Set(profile.currentlyReadingBookIds || []);
+  unlockedTitles = Array.isArray(profile.unlockedTitles) ? profile.unlockedTitles : [];
 
   profileDisplayName.value = profile.displayName || "";
+  profileReaderTitle.innerHTML = "";
+  unlockedTitles.forEach((title) => {
+    const option = document.createElement("option");
+    option.value = title;
+    option.textContent = title;
+    profileReaderTitle.appendChild(option);
+  });
+  profileReaderTitle.value = unlockedTitles.includes(profile.readerTitle)
+    ? profile.readerTitle
+    : unlockedTitles[unlockedTitles.length - 1] || "";
+  readerTitleField.hidden = unlockedTitles.length === 0;
   profileAvatarUrl.value = profile.avatarUrl || "";
   profileBio.value = profile.bio || "";
 
@@ -523,6 +546,7 @@ document.querySelectorAll("[data-color]").forEach((button) => {
 profileDisplayName.addEventListener("input", updatePreview);
 profileAvatarUrl.addEventListener("input", updatePreview);
 profileBio.addEventListener("input", updatePreview);
+profileReaderTitle.addEventListener("change", updatePreview);
 
 profileForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -554,6 +578,11 @@ profileForm.addEventListener("submit", async (event) => {
       currentlyReadingBookIds: [...currentlyReadingBookIds],
       updatedAt: serverTimestamp()
     };
+    if (unlockedTitles.length) {
+      profileData.readerTitle = unlockedTitles.includes(profileReaderTitle.value)
+        ? profileReaderTitle.value
+        : unlockedTitles[unlockedTitles.length - 1];
+    }
     if (!profileExists) profileData.createdAt = serverTimestamp();
 
     await setDoc(doc(db, "profiles", currentUser.uid), profileData, { merge: true });

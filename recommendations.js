@@ -1,4 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+import { getApp, getApps, initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
 import {
   browserLocalPersistence,
   getAuth,
@@ -30,7 +30,7 @@ const firebaseConfig = {
   appId: "1:444464034610:web:de9c2c3a33737ae6849d2b"
 };
 
-const app = initializeApp(firebaseConfig);
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 setPersistence(auth, browserLocalPersistence).catch(console.error);
@@ -110,6 +110,12 @@ function avatarMarkup(person) {
 
 function timestampValue(timestamp) {
   return timestamp?.seconds || 0;
+}
+
+function readerTitleMarkup(userId, fallbackTitle = "") {
+  const profile = profiles.find((item) => item.id === userId);
+  const title = profile?.readerTitle || fallbackTitle || "";
+  return title ? `<span class="reader-title-chip">${escapeHtml(title)}</span>` : "";
 }
 
 function setTab(name) {
@@ -292,7 +298,10 @@ function receivedCard(item) {
             })}
           </span>
           <span>
-            <strong>${escapeHtml(item.senderName || "a friend")}</strong>
+            <span class="recommendation-name-line">
+              <strong>${escapeHtml(item.senderName || "a friend")}</strong>
+              ${readerTitleMarkup(item.senderId, item.senderReaderTitle)}
+            </span>
             <small>picked this for you · ${formatDate(item.createdAt)}</small>
           </span>
         </div>
@@ -359,7 +368,10 @@ function sentCard(item) {
             })}
           </span>
           <span>
-            <strong>for ${escapeHtml(item.recipientName || "a friend")}</strong>
+            <span class="recommendation-name-line">
+              <strong>for ${escapeHtml(item.recipientName || "a friend")}</strong>
+              ${readerTitleMarkup(item.recipientId, item.recipientReaderTitle)}
+            </span>
             <small>sent ${formatDate(item.createdAt)}</small>
           </span>
         </div>
@@ -453,11 +465,13 @@ form.addEventListener("submit", async (event) => {
       senderAvatarEmoji: currentProfile.avatarEmoji || "📚",
       senderAvatarColor: currentProfile.avatarColor || "#e8b8c5",
       senderAvatarUrl: currentProfile.avatarUrl || "",
+      senderReaderTitle: currentProfile.readerTitle || "",
       recipientId: recipient.id,
       recipientName: recipient.displayName || "reader",
       recipientAvatarEmoji: recipient.avatarEmoji || "📚",
       recipientAvatarColor: recipient.avatarColor || "#e8b8c5",
       recipientAvatarUrl: recipient.avatarUrl || "",
+      recipientReaderTitle: recipient.readerTitle || "",
       bookId: book.id,
       bookTitle: book.title || "",
       bookAuthor: book.author || "",
@@ -518,6 +532,8 @@ async function startForUser(user) {
         ...entry.data()
       }));
       populateFriendSelect();
+      renderReceived();
+      renderSent();
       applyInitialSelections();
     }
   );
