@@ -755,10 +755,3 @@ legend {
     box-shadow: none;
   }
 }
-
-.profile-badge.achievement-title {
-  color: #7b3f52;
-  background: #f7dbe2;
-  border-color: #e6aabd;
-  font-weight: 700;
-}

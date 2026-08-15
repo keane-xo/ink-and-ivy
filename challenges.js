@@ -25,11 +25,9 @@ import {
   where
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import {
-  BADGE_TIERS,
-  getTierBadges,
+  BADGES,
   syncAutomaticBadges
-} from "./badge-engine.js?v=2";
-import { announceBadgeResult } from "./notification-center.js?v=1";
+} from "./badge-engine.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC1dOxo61Z0U9mReJnw7s5Z3x0HFrrfB2k",
@@ -80,8 +78,6 @@ const winnerSuggestionSelect = document.querySelector("#winner-suggestion-select
 const saveWinnerChoiceButton = document.querySelector("#save-winner-choice-button");
 const winnerChoiceMessage = document.querySelector("#winner-choice-message");
 const publicProfileLink = document.querySelector("#challenge-public-profile-link");
-const badgeTierTabs = document.querySelector("#badge-tier-tabs");
-const badgeTierSummary = document.querySelector("#badge-tier-summary");
 const badgeGrid = document.querySelector("#automatic-badge-grid");
 const badgeSyncMessage = document.querySelector("#badge-sync-message");
 const toast = document.querySelector("#challenges-toast");
@@ -109,9 +105,6 @@ let myGlobalStreak = {};
 let myCycleMember = {};
 let leaderboard = [];
 let automaticProgress = {};
-let automaticEarnedBadges = [];
-let automaticUnlockedTitles = [];
-let selectedBadgeTier = "sprout";
 
 function showToast(message) {
   toast.textContent = message;
@@ -272,10 +265,7 @@ function renderLeaderboard() {
         ${avatarMarkup(reader)}
       </span>
       <span class="leaderboard-reader">
-        <span class="leaderboard-name-line">
-          <strong>${escapeHtml(reader.displayName || "reader")}</strong>
-          ${reader.readerTitle ? `<span class="reader-title-chip">${escapeHtml(reader.readerTitle)}</span>` : ""}
-        </span>
+        <strong>${escapeHtml(reader.displayName || "reader")}</strong>
         <small>${Number(reader.activeDays || 0)} active days</small>
       </span>
       <span class="leaderboard-score">🔥 ${Number(reader.bestStreak || 0)}</span>
@@ -638,82 +628,21 @@ function renderPreviousResults() {
   }
 }
 
-function badgeTierComplete(tierId) {
-  const earned = new Set(automaticEarnedBadges);
-  return getTierBadges(tierId).every((badge) => earned.has(badge.id));
-}
-
-function chooseDefaultBadgeTier() {
-  const tierIds = Object.keys(BADGE_TIERS);
-  selectedBadgeTier =
-    tierIds.find((tierId) => !badgeTierComplete(tierId)) || "evergreen";
-}
-
-function renderBadgeTierTabs() {
-  badgeTierTabs.innerHTML = "";
-  const earned = new Set(automaticEarnedBadges);
-
-  Object.values(BADGE_TIERS).forEach((tier) => {
-    const badges = getTierBadges(tier.id);
-    const count = badges.filter((badge) => earned.has(badge.id)).length;
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = `badge-tier-tab tier-${tier.id}`;
-    button.classList.toggle("active", selectedBadgeTier === tier.id);
-    button.setAttribute("role", "tab");
-    button.setAttribute("aria-selected", String(selectedBadgeTier === tier.id));
-    button.innerHTML = `
-      <span>${tier.label}</span>
-      <small>${count}/${badges.length}</small>
-    `;
-    button.addEventListener("click", () => {
-      selectedBadgeTier = tier.id;
-      renderBadges();
-    });
-    badgeTierTabs.appendChild(button);
-  });
-}
-
-function renderBadgeTierSummary() {
-  const tier = BADGE_TIERS[selectedBadgeTier];
-  const badges = getTierBadges(selectedBadgeTier);
-  const earned = new Set(automaticEarnedBadges);
-  const count = badges.filter((badge) => earned.has(badge.id)).length;
-  const complete = count === badges.length;
-
-  badgeTierSummary.className = `badge-tier-summary tier-${selectedBadgeTier} ${complete ? "complete" : ""}`;
-  badgeTierSummary.innerHTML = `
-    <div>
-      <p class="eyebrow">${tier.label} collection</p>
-      <strong>${count} of ${badges.length} badges complete</strong>
-    </div>
-    <div class="tier-title-reward">
-      <small>${complete ? "title unlocked" : "complete this level to unlock"}</small>
-      <span>${tier.title}</span>
-    </div>
-  `;
-}
-
 function renderBadges() {
   badgeGrid.innerHTML = "";
-  renderBadgeTierTabs();
-  renderBadgeTierSummary();
 
-  const earnedSet = new Set(automaticEarnedBadges);
-  const tierBadges = getTierBadges(selectedBadgeTier);
-
-  tierBadges.forEach((badge) => {
-    const value = Number(automaticProgress[badge.baseId] || 0);
+  Object.entries(BADGES).forEach(([id, badge]) => {
+    const value = Number(automaticProgress[id] || 0);
     const displayValue = Math.min(value, badge.target);
-    const earned = earnedSet.has(badge.id);
+    const earned = value >= badge.target;
     const percent = Math.min(100, Math.round((value / badge.target) * 100));
 
     const card = document.createElement("article");
-    card.className = `automatic-badge-card tier-${badge.tierId} ${earned ? "earned" : ""}`;
+    card.className = `automatic-badge-card ${earned ? "earned" : ""}`;
     card.innerHTML = `
       <div class="badge-card-top">
         <span aria-hidden="true">${badge.emoji}</span>
-        <span class="badge-state">${earned ? "badge earned" : badge.tierLabel}</span>
+        <span class="badge-state">${earned ? "badge earned" : "automatic"}</span>
       </div>
       <h3>${badge.name}</h3>
       <p>${badge.description}</p>
@@ -735,13 +664,9 @@ async function loadAutomaticBadges() {
   try {
     const result = await syncAutomaticBadges(db, currentUser.uid);
     automaticProgress = result.progress;
-    automaticEarnedBadges = result.earnedBadges;
-    automaticUnlockedTitles = result.unlockedTitles;
-    chooseDefaultBadgeTier();
     renderBadges();
-    announceBadgeResult(result);
     badgeSyncMessage.textContent =
-      "your badge levels, titles, and progress are current.";
+      "your badges and progress are current.";
   } catch (error) {
     console.error(error);
     badgeSyncMessage.textContent =

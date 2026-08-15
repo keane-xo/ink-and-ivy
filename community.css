@@ -879,23 +879,3 @@ body.modal-open {
     box-shadow: none;
   }
 }
-
-/* Reader achievement titles */
-.name-with-title,
-.reader-card-name {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  flex-wrap: wrap;
-}
-
-.reader-card-name {
-  justify-content: center;
-  margin-top: 8px;
-}
-
-.reader-card-name h3 { margin: 0; }
-
-.comment-heading .reader-title-chip {
-  margin-right: auto;
-}
