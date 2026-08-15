@@ -1,72 +1,60 @@
-INK AND IVY — GLOBAL RED LIBRARIAN BADGE
+INK AND IVY — LIBRARIAN BADGE VISIBILITY FIX
 
-This replaces the earlier Librarian implementation with one global role-badge
-system so the Librarian badge is not dependent on one particular page.
+WHY YOU DIDN'T SEE IT
+
+The first global version primarily identified the Librarian by the reader UID
+stored on each rendered item. Your Community screenshot shows the username
+"kisseskeane" correctly, but the badge did not appear beside it.
+
+This update makes the system deliberately redundant:
+1. It recognizes the Librarian by the admin reader UID.
+2. It ALSO recognizes the exact displayed username "kisseskeane".
+
+That means the red badge can still appear even on older Community posts or
+other records whose stored userId does not match the current admin UID.
 
 THE BADGE
-- text: librarian
-- color: rich red
-- permanent role badge tied only to the librarian/admin UID
-- separate from Storykeeper / Ink Society / Keeper of the Stacks
 
-WHERE IT NOW APPEARS
-Whenever the librarian username is actually shown, the red Librarian badge is
-attached beside it, including:
+kisseskeane  [librarian]
 
-- Homepage account/menu username
-- Homepage book reviews
-- Review form name
-- Public reader profile
-- Community posts
-- Community comments
-- Community reader directory
-- Community chat
-- Reader-account profile preview
-- Friend Picks sender/recipient names
-- Streak leaderboard
-- Previous streak-winner name
-- Reading-journal owner line
-- Admin review/report displays when the librarian name appears there
+The badge is a rich red pill and is separate from earned reading titles.
 
-HOW IT WORKS
-A new global file, librarian-badge.js, watches the page for any username tagged
-with the librarian's reader ID. This also handles Firestore content that appears
-after the page has already loaded.
+GLOBAL COVERAGE
 
-This is much more reliable than hardcoding a badge independently on each page.
+Every Ink & Ivy HTML page loads the same global librarian-badge.js file.
+The script watches the page continuously, including Firestore content that
+appears after page load.
 
-UPLOAD AND REPLACE IN GITHUB
+It scans for the exact Librarian username and for the Librarian UID, so the
+badge follows the username anywhere it is rendered.
 
-NEW FILE:
+UPLOAD TO GITHUB
+
+NEW/REPLACEMENT:
 - librarian-badge.js
 
-REPLACE:
+REPLACE THESE HTML FILES:
 - index.html
-- script.js
 - community.html
-- community.js
-- profile.html
-- profile.js
-- reader.html
-- reader.js
 - recommendations.html
-- recommendations.js
 - challenges.html
-- challenges.js
 - journal.html
-- journal.js
+- profile.html
+- reader.html
 - admin.html
-- admin.js
+
+WHY THE HTML FILES ARE INCLUDED:
+They change the script URL from ?v=1 to ?v=2 so Chrome/GitHub Pages cannot keep
+serving the cached first version.
 
 NO FIREBASE RULES CHANGE IS NEEDED.
 
-After GitHub Pages redeploys:
-1. Press Ctrl+Shift+R once.
-2. Open the homepage while signed into the Librarian account.
-3. Check the username in More.
-4. Open the Librarian public profile.
-5. Check a Community post/comment/chat message from the Librarian.
-6. Check the streak leaderboard if the Librarian is listed there.
+AFTER UPLOAD
 
-The red Librarian badge should now follow the librarian username anywhere the
-site renders it.
+1. Wait 1–3 minutes for GitHub Pages.
+2. Open:
+   https://keane-xo.github.io/ink-and-ivy/community.html?v=6
+3. Press Ctrl+Shift+R once.
+4. Look at the same "kisseskeane" post shown in your screenshot.
+
+You should now see the red Librarian badge directly beside the username.

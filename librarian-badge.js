@@ -1,5 +1,6 @@
 (() => {
   const LIBRARIAN_UID = "66iUUKyOu7Rvu2I6Hwtdel82b";
+  const LIBRARIAN_NAME = "kisseskeane".toLowerCase();
   const BADGE_CLASS = "ii-librarian-role-badge";
   const STYLE_ID = "ii-librarian-role-style";
 
@@ -17,13 +18,13 @@
         min-height: 22px;
         margin-left: 7px;
         padding: 3px 8px;
-        color: #fff8f5;
-        background: #a93f4f;
-        border: 1px solid #7f2936;
+        color: #fff9f7;
+        background: #b64050;
+        border: 1px solid #8d2d3b;
         border-radius: 999px;
         box-shadow:
-          inset 0 0 0 1px rgba(255,255,255,.10),
-          0 2px 7px rgba(93,31,42,.12);
+          inset 0 0 0 1px rgba(255,255,255,.12),
+          0 2px 8px rgba(110,32,45,.14);
         font-family: Arial, sans-serif;
         font-size: .60rem;
         font-weight: 800;
@@ -34,16 +35,15 @@
         white-space: nowrap;
       }
 
-      h1 > .ii-librarian-role-badge,
-      h2 > .ii-librarian-role-badge,
-      h3 > .ii-librarian-role-badge {
-        transform: translateY(-2px);
-      }
-
       .ii-librarian-name-host {
         display: inline-flex;
         align-items: center;
         flex-wrap: wrap;
+      }
+
+      h1.ii-librarian-name-host,
+      h2.ii-librarian-name-host,
+      h3.ii-librarian-name-host {
         gap: 0;
       }
     `;
@@ -52,31 +52,64 @@
 
   function directBadge(host) {
     return Array.from(host.children || []).find(
-      (child) => child.classList?.contains(BADGE_CLASS)
+      child => child.classList?.contains(BADGE_CLASS)
     );
   }
 
-  function decorateHost(host) {
-    if (!(host instanceof Element)) return;
+  function visibleTextWithoutBadge(element) {
+    if (!(element instanceof Element)) return "";
+    const clone = element.cloneNode(true);
+    clone.querySelectorAll(`.${BADGE_CLASS}`).forEach(node => node.remove());
+    return (clone.textContent || "").trim().toLowerCase();
+  }
 
-    const readerId = host.dataset.readerId || "";
-    const existing = directBadge(host);
-
-    if (readerId !== LIBRARIAN_UID) {
-      existing?.remove();
-      return;
-    }
-
-    host.classList.add("ii-librarian-name-host");
-
-    if (existing) return;
-
+  function makeBadge() {
     const badge = document.createElement("span");
     badge.className = BADGE_CLASS;
     badge.textContent = "librarian";
     badge.setAttribute("aria-label", "librarian");
     badge.title = "ink and ivy librarian";
-    host.appendChild(badge);
+    return badge;
+  }
+
+  function decorateHost(host) {
+    if (!(host instanceof Element)) return;
+
+    const readerId = (host.dataset.readerId || "").trim();
+    const exactNameMatch = visibleTextWithoutBadge(host) === LIBRARIAN_NAME;
+    const isLibrarian = readerId === LIBRARIAN_UID || exactNameMatch;
+
+    if (!isLibrarian) return;
+    if (directBadge(host)) return;
+
+    host.classList.add("ii-librarian-name-host");
+    host.appendChild(makeBadge());
+  }
+
+  function bestHostForName(element) {
+    return (
+      element.closest(
+        "[data-reader-id], .reader-name-line, .comment-author, " +
+        ".reader-card-name, .public-name-row, .profile-name-preview-row"
+      ) || element
+    );
+  }
+
+  function decorateByUsername(root = document) {
+    const candidates = root.querySelectorAll?.(
+      "strong, h1, h2, h3, a, span, button, p"
+    ) || [];
+
+    candidates.forEach(element => {
+      if (element.classList.contains(BADGE_CLASS)) return;
+      if (visibleTextWithoutBadge(element) !== LIBRARIAN_NAME) return;
+
+      const host = bestHostForName(element);
+      if (!directBadge(host)) {
+        host.classList.add("ii-librarian-name-host");
+        host.appendChild(makeBadge());
+      }
+    });
   }
 
   function decorate(root = document) {
@@ -87,16 +120,18 @@
     }
 
     root.querySelectorAll?.("[data-reader-id]").forEach(decorateHost);
+    decorateByUsername(root);
   }
 
-  const observer = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
+  const observer = new MutationObserver(mutations => {
+    mutations.forEach(mutation => {
       if (mutation.type === "attributes") {
         decorateHost(mutation.target);
+        decorateByUsername(document);
         return;
       }
 
-      mutation.addedNodes.forEach((node) => {
+      mutation.addedNodes.forEach(node => {
         if (node instanceof Element) decorate(node);
       });
     });
@@ -120,6 +155,7 @@
 
   window.InkIvyLibrarianBadge = {
     uid: LIBRARIAN_UID,
+    displayName: LIBRARIAN_NAME,
     decorate
   };
 })();
