@@ -603,6 +603,7 @@ entryForm.addEventListener("submit", async (event) => {
       showToast("your journal page was saved privately.");
     }
 
+    window.dispatchEvent(new CustomEvent("inkivy:activity-changed"));
     resetEntryForm();
     showReadingView();
   } catch (error) {

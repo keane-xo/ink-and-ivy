@@ -637,3 +637,290 @@ select {
   .leaderboard-row { grid-template-columns: 30px auto 1fr; }
   .leaderboard-score { grid-column: 3; }
 }
+
+
+/* badge tiers + reader titles */
+.tier-rewards {
+  margin: 26px 0 30px;
+  padding: 22px;
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+}
+
+.tier-rewards-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: end;
+  margin-bottom: 18px;
+}
+
+.tier-rewards-heading h3,
+.title-picker-box h3 {
+  margin: 4px 0 0;
+  color: var(--brown);
+  font-size: 1.45rem;
+  font-weight: normal;
+}
+
+.tier-rewards-heading > p {
+  max-width: 430px;
+  margin: 0;
+  color: #7c6658;
+  line-height: 1.55;
+}
+
+.tier-completion-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 13px;
+}
+
+.tier-completion-card {
+  min-height: 190px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.tier-completion-card.locked {
+  opacity: .72;
+}
+
+.tier-completion-card.unlocked {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 25px rgba(74, 51, 40, .08);
+}
+
+.tier-completion-card.tier-sprout {
+  background: #fff7ef;
+  border-color: #dec5b8;
+}
+
+.tier-completion-card.tier-bloom {
+  background: #f8dce4;
+  border-color: #d59aae;
+}
+
+.tier-completion-card.tier-evergreen {
+  color: #fff8ed;
+  background: #526451;
+  border-color: #3f5240;
+}
+
+.tier-completion-card.tier-evergreen strong,
+.tier-completion-card.tier-evergreen .tier-title-reward span {
+  color: #fff8ed;
+}
+
+.tier-completion-card.tier-evergreen p,
+.tier-completion-card.tier-evergreen .tier-title-reward small {
+  color: #e6dfcc;
+}
+
+.tier-completion-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.tier-completion-top > span:first-child {
+  font-size: 1.8rem;
+}
+
+.tier-completion-top > span:last-child {
+  padding: 5px 9px;
+  background: rgba(255,255,255,.56);
+  border: 1px solid rgba(104, 78, 66, .15);
+  border-radius: 999px;
+  font-family: Arial, sans-serif;
+  font-size: .7rem;
+  letter-spacing: .06em;
+  text-transform: lowercase;
+}
+
+.tier-completion-card.tier-evergreen .tier-completion-top > span:last-child {
+  color: #3f5240;
+  background: #f2e9cf;
+}
+
+.tier-completion-card > strong {
+  display: block;
+  color: var(--brown);
+  font-size: 1.2rem;
+  font-weight: normal;
+}
+
+.tier-completion-card > p {
+  margin: 5px 0 19px;
+  color: #826d60;
+  font-size: .83rem;
+  line-height: 1.4;
+}
+
+.tier-title-reward {
+  padding-top: 13px;
+  border-top: 1px solid rgba(108, 79, 66, .16);
+}
+
+.tier-title-reward small {
+  display: block;
+  margin-bottom: 4px;
+  color: #8a7467;
+  font-family: Arial, sans-serif;
+  font-size: .66rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.tier-title-reward span {
+  color: var(--brown);
+  font-size: 1rem;
+}
+
+.title-picker-box {
+  display: grid;
+  grid-template-columns: 1fr minmax(260px, 420px);
+  gap: 18px 26px;
+  align-items: end;
+  margin-top: 16px;
+  padding: 18px;
+  background: var(--paper);
+  border: 1px dashed var(--rose);
+  border-radius: 16px;
+}
+
+.title-picker-controls {
+  display: flex;
+  gap: 9px;
+  align-items: end;
+}
+
+.title-picker-controls select {
+  margin: 0;
+}
+
+.title-picker-controls button {
+  white-space: nowrap;
+}
+
+.title-picker-box .form-message {
+  grid-column: 1 / -1;
+  margin: -7px 0 0;
+}
+
+.automatic-badge-card {
+  position: relative;
+  overflow: hidden;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.automatic-badge-card.working {
+  background: #fffaf4;
+  border-color: #decfc3;
+}
+
+.automatic-badge-card.tier-sprout.earned {
+  background: #fff3e9;
+  border-color: #d9b7a6;
+}
+
+.automatic-badge-card.tier-bloom.earned {
+  background: #f8dce4;
+  border-color: #cf8fa5;
+}
+
+.automatic-badge-card.tier-evergreen.earned {
+  color: #fff9ee;
+  background: #526451;
+  border-color: #3f5240;
+  box-shadow: 0 12px 28px rgba(63, 82, 64, .16);
+}
+
+.automatic-badge-card.tier-evergreen h3,
+.automatic-badge-card.tier-evergreen > p,
+.automatic-badge-card.tier-evergreen .progress-label {
+  color: #fff9ee;
+}
+
+.automatic-badge-card.tier-evergreen .badge-state {
+  color: #3f5240;
+  background: #f1e8cf;
+  border-color: #d7c99e;
+}
+
+.badge-tier-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 15px 0 16px;
+}
+
+.badge-tier-pill {
+  padding: 5px 8px;
+  color: #8b796e;
+  background: rgba(255,255,255,.45);
+  border: 1px solid rgba(119, 94, 81, .15);
+  border-radius: 999px;
+  font-family: Arial, sans-serif;
+  font-size: .66rem;
+  opacity: .5;
+}
+
+.badge-tier-pill.earned {
+  opacity: 1;
+  font-weight: 700;
+}
+
+.badge-tier-pill.tier-sprout.earned {
+  color: #765a4a;
+  background: #f6e3d6;
+  border-color: #d8b7a5;
+}
+
+.badge-tier-pill.tier-bloom.earned {
+  color: #8d4f63;
+  background: #f3ccd8;
+  border-color: #d391a6;
+}
+
+.badge-tier-pill.tier-evergreen.earned {
+  color: #3f5240;
+  background: #efe6c8;
+  border-color: #d4c28e;
+}
+
+.automatic-badge-card.tier-evergreen .progress-track {
+  background: rgba(255,255,255,.18);
+  border-color: rgba(255,255,255,.25);
+}
+
+.automatic-badge-card.tier-evergreen .progress-fill {
+  background: #e6d39b;
+}
+
+@media (max-width: 860px) {
+  .tier-completion-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .title-picker-box {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .tier-rewards-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .title-picker-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

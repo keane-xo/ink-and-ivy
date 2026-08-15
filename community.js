@@ -84,6 +84,7 @@ let currentProfile = null;
 let books = [];
 let profiles = [];
 let posts = [];
+let chatItems = [];
 let reportTarget = null;
 let unsubscribePosts = null;
 let unsubscribeProfiles = null;
@@ -133,6 +134,39 @@ function profileSnapshot() {
     avatarColor: currentProfile?.avatarColor || "#e8b8c5",
     avatarUrl: currentProfile?.avatarUrl || ""
   };
+}
+
+function readerTitleMarkup(userId) {
+  const profile = profiles.find((item) => item.id === userId);
+  if (!profile?.selectedTitle) return "";
+  return `<span class="reader-title-chip">${escapeHtml(profile.selectedTitle)}</span>`;
+}
+
+async function sendCommunityNotification({
+  recipientId,
+  type,
+  title,
+  body,
+  link
+}) {
+  if (!currentUser || !recipientId || recipientId === currentUser.uid) return;
+
+  try {
+    await addDoc(collection(db, "notifications"), {
+      recipientId,
+      actorId: currentUser.uid,
+      actorName: currentProfile?.displayName || "reader",
+      type,
+      category: "community",
+      title,
+      body,
+      link: link || "community.html",
+      read: false,
+      createdAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.error("community notification could not be saved", error);
+  }
 }
 
 async function loadCurrentProfile(user) {
@@ -391,6 +425,7 @@ function attachComments(post, commentsArea) {
           <div class="comment-heading">
             <a class="comment-author" href="profile.html?uid=${encodeURIComponent(comment.userId)}">
               <strong>${escapeHtml(comment.displayName || "reader")}</strong>
+              ${readerTitleMarkup(comment.userId)}
             </a>
             <div class="comment-actions">
               ${comment.userId === currentUser.uid ? '<button class="inline-action" data-delete-comment type="button">delete</button>' : ""}
@@ -442,6 +477,15 @@ function attachComments(post, commentsArea) {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
+
+      await sendCommunityNotification({
+        recipientId: post.userId,
+        type: "comment",
+        title: "new comment on your post",
+        body: `${currentProfile?.displayName || "a reader"} commented on your community post.`,
+        link: "community.html"
+      });
+
       input.value = "";
     } catch (error) {
       console.error(error);
@@ -482,7 +526,10 @@ function renderPosts() {
             ${avatarMarkup(post)}
           </span>
           <span>
-            <strong>${escapeHtml(post.displayName || "reader")}</strong>
+            <span class="reader-name-line">
+              <strong>${escapeHtml(post.displayName || "reader")}</strong>
+              ${readerTitleMarkup(post.userId)}
+            </span>
             <small>${formatDate(post.updatedAt || post.createdAt)}</small>
           </span>
         </a>
@@ -533,8 +580,22 @@ function renderPosts() {
     likeButton.addEventListener("click", async () => {
       const ref = doc(db, "posts", post.id, "likes", currentUser.uid);
       try {
-        if (likeButton.dataset.liked === "true") await deleteDoc(ref);
-        else await setDoc(ref, { userId: currentUser.uid, createdAt: serverTimestamp() });
+        if (likeButton.dataset.liked === "true") {
+          await deleteDoc(ref);
+        } else {
+          await setDoc(ref, {
+            userId: currentUser.uid,
+            createdAt: serverTimestamp()
+          });
+
+          await sendCommunityNotification({
+            recipientId: post.userId,
+            type: "like",
+            title: "someone liked your post",
+            body: `${currentProfile?.displayName || "a reader"} liked one of your community posts.`,
+            link: "community.html"
+          });
+        }
       } catch (error) {
         console.error(error);
         showToast("the like could not be updated.");
@@ -587,7 +648,10 @@ function renderReaders() {
       <span class="avatar avatar-large" style="--avatar-color:${escapeHtml(profile.avatarColor || "#e8b8c5")}">
         ${avatarMarkup(profile)}
       </span>
-      <h3>${escapeHtml(profile.displayName || "reader")}</h3>
+      <div class="reader-card-name">
+        <h3>${escapeHtml(profile.displayName || "reader")}</h3>
+        ${profile.selectedTitle ? `<span class="reader-title-chip">${escapeHtml(profile.selectedTitle)}</span>` : ""}
+      </div>
       <p>${escapeHtml(profile.bio || "an ink and ivy reader")}</p>
       <div class="reader-card-stats">
         <span class="pill">${(profile.favoriteBookIds || []).length} favorites</span>
@@ -615,7 +679,10 @@ function renderChatMessage(message) {
     <div>
       <div class="chat-message-meta">
         <a class="chat-author" href="profile.html?uid=${encodeURIComponent(message.userId)}">
-          <strong>${escapeHtml(message.displayName || "reader")}</strong>
+          <span class="reader-name-line">
+            <strong>${escapeHtml(message.displayName || "reader")}</strong>
+            ${readerTitleMarkup(message.userId)}
+          </span>
           <small>${formatDate(message.createdAt)}</small>
         </a>
         <div class="chat-message-actions">
@@ -650,6 +717,15 @@ function renderChatMessage(message) {
   );
 
   return element;
+}
+
+function renderChat() {
+  chatMessages.innerHTML = "";
+  chatEmpty.hidden = chatItems.length !== 0;
+  chatItems.forEach((message) =>
+    chatMessages.appendChild(renderChatMessage(message))
+  );
+  chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
 chatForm.addEventListener("submit", async (event) => {
@@ -694,6 +770,8 @@ function startListeners() {
       .map((entry) => ({ id: entry.id, ...entry.data() }))
       .sort((a, b) => String(a.displayName || "").localeCompare(String(b.displayName || "")));
     renderReaders();
+    if (posts.length) renderPosts();
+    if (chatItems.length) renderChat();
   });
 
   unsubscribePosts = onSnapshot(
@@ -711,12 +789,11 @@ function startListeners() {
   unsubscribeChat = onSnapshot(
     query(collection(db, "chatMessages"), orderBy("createdAt", "asc"), limitToLast(100)),
     (snapshot) => {
-      chatMessages.innerHTML = "";
-      chatEmpty.hidden = snapshot.size !== 0;
-      snapshot.docs.forEach((entry) =>
-        chatMessages.appendChild(renderChatMessage({ id: entry.id, ...entry.data() }))
-      );
-      chatMessages.scrollTop = chatMessages.scrollHeight;
+      chatItems = snapshot.docs.map((entry) => ({
+        id: entry.id,
+        ...entry.data()
+      }));
+      renderChat();
     },
     (error) => {
       console.error(error);

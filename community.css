@@ -879,3 +879,42 @@ body.modal-open {
     box-shadow: none;
   }
 }
+
+
+/* unlocked reader titles */
+.reader-name-line {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.reader-title-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 23px;
+  padding: 3px 7px;
+  color: #7e4c5d;
+  background: #f7dce4;
+  border: 1px solid #dca1b3;
+  border-radius: 999px;
+  font-family: Arial, sans-serif;
+  font-size: .6rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  line-height: 1.1;
+  text-transform: lowercase;
+}
+
+.reader-card-name {
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 7px;
+}
+
+.reader-card-name h3 {
+  margin: 0;
+}

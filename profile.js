@@ -15,6 +15,13 @@ import {
   serverTimestamp,
   setDoc
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+import {
+  BADGES,
+  BADGE_TIERS,
+  badgeTierId,
+  highestEarnedTier,
+  targetForTier
+} from "./badge-engine.js?v=2";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC1dOxo61Z0U9mReJnw7s5Z3x0HFrrfB2k",
@@ -29,61 +36,32 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const BADGES = {
-  "page-turner": {
-    emoji: "📖",
-    name: "page turner",
-    description: "finished three books"
-  },
-  "genre-explorer": {
-    emoji: "🧭",
-    name: "genre explorer",
-    description: "read across three different genres"
-  },
-  "friends-choice": {
-    emoji: "💌",
-    name: "friend's choice",
-    description: "finished a book recommended by a friend"
-  },
-  "reviewers-quill": {
-    emoji: "🪶",
-    name: "reviewer's quill",
-    description: "shared five book reviews"
-  },
-  "journal-keeper": {
-    emoji: "✍️",
-    name: "journal keeper",
-    description: "filled five reading-journal pages"
-  },
-  "tome-traveler": {
-    emoji: "🏰",
-    name: "tome traveler",
-    description: "finished a book longer than 400 pages"
-  },
-  "seasonal-reader": {
-    emoji: "🍂",
-    name: "seasonal reader",
-    description: "finished four books in one season"
-  }
-};
-
 function renderPublicBadges(ids) {
   const container = document.querySelector("#public-badges");
   const empty = document.querySelector("#public-badges-empty");
-  const validIds = (ids || []).filter((id) => BADGES[id]);
+  const earned = new Set(ids || []);
+  const collected = Object.entries(BADGES)
+    .map(([id, badge]) => ({
+      id,
+      badge,
+      tier: highestEarnedTier(ids || [], id)
+    }))
+    .filter((item) => item.tier);
 
   container.innerHTML = "";
-  empty.hidden = validIds.length !== 0;
+  empty.hidden = collected.length !== 0;
 
-  validIds.forEach((id) => {
-    const badge = BADGES[id];
+  collected.forEach(({ id, badge, tier }) => {
     const element = document.createElement("article");
-    element.className = "public-badge";
+    element.className = `public-badge tier-${tier.id}`;
     element.innerHTML = `
       <span aria-hidden="true">${badge.emoji}</span>
       <div>
-        <strong>${badge.name}</strong>
-        <small>${badge.description}</small>
+        <div class="public-badge-heading">
+          <strong>${badge.name}</strong>
+          <span class="public-badge-tier">${tier.emoji} ${tier.name}</span>
+        </div>
+        <small>${targetForTier(badge, tier)} ${badge.unit}</small>
       </div>
     `;
     container.appendChild(element);
@@ -95,6 +73,7 @@ const loginView = document.querySelector("#profile-login-view");
 const profileView = document.querySelector("#public-profile-view");
 const avatar = document.querySelector("#public-avatar");
 const name = document.querySelector("#public-name");
+const readerTitle = document.querySelector("#public-reader-title");
 const bio = document.querySelector("#public-bio");
 const editOwnLink = document.querySelector("#edit-own-profile-link");
 const recommendToReaderLink = document.querySelector("#recommend-to-reader-link");
@@ -133,6 +112,33 @@ function currentProfileSnapshot() {
     avatarColor: currentProfile?.avatarColor || "#e8b8c5",
     avatarUrl: currentProfile?.avatarUrl || ""
   };
+}
+
+async function sendCommunityNotification({
+  recipientId,
+  type,
+  title,
+  body,
+  link
+}) {
+  if (!currentUser || !recipientId || recipientId === currentUser.uid) return;
+
+  try {
+    await addDoc(collection(db, "notifications"), {
+      recipientId,
+      actorId: currentUser.uid,
+      actorName: currentProfile?.displayName || "reader",
+      type,
+      category: "community",
+      title,
+      body,
+      link: link || "community.html",
+      read: false,
+      createdAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.error("community notification could not be saved", error);
+  }
 }
 
 function formatDate(timestamp) {
@@ -223,6 +229,14 @@ function attachPostInteractions(post, article) {
           userId: currentUser.uid,
           createdAt: serverTimestamp()
         });
+
+        await sendCommunityNotification({
+          recipientId: post.userId,
+          type: "like",
+          title: "someone liked your post",
+          body: `${currentProfile?.displayName || "a reader"} liked one of your community posts.`,
+          link: `profile.html?uid=${encodeURIComponent(post.userId)}`
+        });
       }
     } catch (error) {
       console.error(error);
@@ -312,6 +326,15 @@ function attachPostInteractions(post, article) {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
+
+      await sendCommunityNotification({
+        recipientId: post.userId,
+        type: "comment",
+        title: "new comment on your post",
+        body: `${currentProfile?.displayName || "a reader"} commented on your community post.`,
+        link: `profile.html?uid=${encodeURIComponent(post.userId)}`
+      });
+
       input.value = "";
     } catch (error) {
       console.error(error);
@@ -410,6 +433,8 @@ async function loadPage(user) {
   avatar.innerHTML = avatarMarkup(profile);
   name.textContent = profile.displayName || "reader";
   bio.textContent = profile.bio || "an ink and ivy reader";
+  readerTitle.textContent = profile.selectedTitle || "";
+  readerTitle.hidden = !profile.selectedTitle;
 
   renderPublicBadges(profile.earnedBadges || []);
 

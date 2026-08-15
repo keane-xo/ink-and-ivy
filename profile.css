@@ -401,3 +401,88 @@ h1,h2,h3,p{margin-top:0}h1{margin-bottom:12px;color:var(--brown);font-size:clamp
 .profile-streak-section small {
   color: #826d60;
 }
+
+
+/* reader title + tiered badge cabinet */
+.public-name-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.public-name-row h1 {
+  margin-right: 2px;
+}
+
+.reader-title-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 5px 10px;
+  color: #7e4c5d;
+  background: #f7dce4;
+  border: 1px solid #dca1b3;
+  border-radius: 999px;
+  font-family: Arial, sans-serif;
+  font-size: .69rem;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: lowercase;
+}
+
+.public-badge {
+  position: relative;
+  overflow: hidden;
+}
+
+.public-badge.tier-sprout {
+  background: #fff4ea;
+  border-color: #dcbbaa;
+}
+
+.public-badge.tier-bloom {
+  background: #f8dce4;
+  border-color: #cf91a6;
+}
+
+.public-badge.tier-evergreen {
+  color: #fff9ee;
+  background: #526451;
+  border-color: #3f5240;
+}
+
+.public-badge.tier-evergreen strong,
+.public-badge.tier-evergreen small {
+  color: #fff9ee;
+}
+
+.public-badge-heading {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 3px;
+}
+
+.public-badge-tier {
+  padding: 4px 7px;
+  color: #765a4a;
+  background: rgba(255,255,255,.58);
+  border: 1px solid rgba(107,78,66,.16);
+  border-radius: 999px;
+  font-family: Arial, sans-serif;
+  font-size: .62rem;
+}
+
+.public-badge.tier-evergreen .public-badge-tier {
+  color: #3f5240;
+  background: #f0e7cc;
+  border-color: #d7c697;
+}
+
+@media(max-width:850px) {
+  .public-name-row {
+    justify-content: center;
+  }
+}

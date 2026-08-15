@@ -6,9 +6,10 @@
   <meta name="description" content="reading streaks, community voting, and automatic badges for ink and ivy readers.">
   <title>streaks, votes &amp; badges · ink and ivy</title>
   <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml">
-  <link rel="stylesheet" href="challenges.css?v=3">
-  <script type="module" src="streaks.js?v=1"></script>
-  <script type="module" src="challenges.js?v=3"></script>
+  <link rel="stylesheet" href="challenges.css?v=4">
+  <script type="module" src="streaks.js?v=2"></script>
+  <script type="module" src="challenges.js?v=4"></script>
+  <script type="module" src="notification-center.js?v=1"></script>
 </head>
 <body>
   <header class="challenges-header">
@@ -208,6 +209,36 @@
           seasonal reading, and long books automatically move you toward
           unlocking them.
         </p>
+
+        <section class="tier-rewards">
+          <div class="tier-rewards-heading">
+            <div>
+              <p class="eyebrow">complete the whole level</p>
+              <h3>collection titles</h3>
+            </div>
+            <p>
+              finish all seven badges in a tier to unlock a permanent reader title.
+            </p>
+          </div>
+
+          <div id="tier-completion-grid" class="tier-completion-grid"></div>
+
+          <div class="title-picker-box">
+            <div>
+              <p class="eyebrow">display beside my name</p>
+              <h3>reader title</h3>
+            </div>
+            <div class="title-picker-controls">
+              <select id="reader-title-picker" aria-label="reader title">
+                <option value="">no title displayed</option>
+              </select>
+              <button id="save-reader-title-button" class="secondary-button compact" type="button">
+                save title
+              </button>
+            </div>
+            <p id="title-picker-message" class="form-message" aria-live="polite"></p>
+          </div>
+        </section>
 
         <div id="automatic-badge-grid" class="automatic-badge-grid"></div>
         <p id="badge-sync-message" class="form-message" aria-live="polite"></p>

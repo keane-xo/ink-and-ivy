@@ -26,8 +26,13 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import {
   BADGES,
-  syncAutomaticBadges
-} from "./badge-engine.js";
+  BADGE_TIERS,
+  badgeTierId,
+  completedBadgesForTier,
+  syncAutomaticBadges,
+  targetForTier,
+  unlockedTitlesFromEarned
+} from "./badge-engine.js?v=2";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC1dOxo61Z0U9mReJnw7s5Z3x0HFrrfB2k",
@@ -38,7 +43,7 @@ const firebaseConfig = {
   appId: "1:444464034610:web:de9c2c3a33737ae6849d2b"
 };
 
-const ADMIN_UID = "66iUUKyOu7Rvu2I6Hwtdel82b122";
+const ADMIN_UID = "66iUUKyOu7Rvu2I6Hwtdel82b";
 const START_DAY = Math.floor(Date.UTC(2026, 7, 13) / 86400000);
 const CYCLE_DAYS = 63;
 const VOTING_DAYS = 7;
@@ -80,6 +85,10 @@ const winnerChoiceMessage = document.querySelector("#winner-choice-message");
 const publicProfileLink = document.querySelector("#challenge-public-profile-link");
 const badgeGrid = document.querySelector("#automatic-badge-grid");
 const badgeSyncMessage = document.querySelector("#badge-sync-message");
+const tierCompletionGrid = document.querySelector("#tier-completion-grid");
+const titlePicker = document.querySelector("#reader-title-picker");
+const saveTitleButton = document.querySelector("#save-reader-title-button");
+const titlePickerMessage = document.querySelector("#title-picker-message");
 const toast = document.querySelector("#challenges-toast");
 
 let currentUser = null;
@@ -105,6 +114,7 @@ let myGlobalStreak = {};
 let myCycleMember = {};
 let leaderboard = [];
 let automaticProgress = {};
+let earnedBadgeIds = [];
 
 function showToast(message) {
   toast.textContent = message;
@@ -628,27 +638,118 @@ function renderPreviousResults() {
   }
 }
 
+function renderTierCompletions() {
+  if (!tierCompletionGrid || !titlePicker) return;
+
+  tierCompletionGrid.innerHTML = "";
+  const unlockedTitles = unlockedTitlesFromEarned(earnedBadgeIds);
+
+  BADGE_TIERS.forEach((tier) => {
+    const completed = completedBadgesForTier(earnedBadgeIds, tier.id);
+    const unlocked = completed === Object.keys(BADGES).length;
+
+    const card = document.createElement("article");
+    card.className =
+      `tier-completion-card tier-${tier.id} ${unlocked ? "unlocked" : "locked"}`;
+    card.innerHTML = `
+      <div class="tier-completion-top">
+        <span aria-hidden="true">${tier.emoji}</span>
+        <span>${tier.name}</span>
+      </div>
+      <strong>${completed} of ${Object.keys(BADGES).length} badges</strong>
+      <p>${unlocked ? "collection complete" : "complete every badge at this level"}</p>
+      <div class="tier-title-reward">
+        <small>title reward</small>
+        <span>${tier.title}</span>
+      </div>
+    `;
+    tierCompletionGrid.appendChild(card);
+  });
+
+  const currentSelected = currentProfile?.selectedTitle || "";
+  titlePicker.innerHTML = '<option value="">no title displayed</option>';
+
+  unlockedTitles.forEach((title) => {
+    const option = document.createElement("option");
+    option.value = title;
+    option.textContent = title;
+    titlePicker.appendChild(option);
+  });
+
+  titlePicker.value = unlockedTitles.includes(currentSelected)
+    ? currentSelected
+    : "";
+
+  saveTitleButton.disabled = unlockedTitles.length === 0;
+  titlePickerMessage.textContent = unlockedTitles.length
+    ? "choose any title you have unlocked."
+    : "complete every sprout badge to unlock your first title.";
+}
+
 function renderBadges() {
   badgeGrid.innerHTML = "";
+  const earned = new Set(earnedBadgeIds);
 
   Object.entries(BADGES).forEach(([id, badge]) => {
     const value = Number(automaticProgress[id] || 0);
-    const displayValue = Math.min(value, badge.target);
-    const earned = value >= badge.target;
-    const percent = Math.min(100, Math.round((value / badge.target) * 100));
+    const earnedTiers = BADGE_TIERS.filter((tier) =>
+      earned.has(badgeTierId(id, tier.id))
+    );
+    const highestTier = earnedTiers[earnedTiers.length - 1] || null;
+    const nextTier =
+      BADGE_TIERS.find((tier) => !earned.has(badgeTierId(id, tier.id))) ||
+      BADGE_TIERS[BADGE_TIERS.length - 1];
+
+    const target = targetForTier(badge, nextTier);
+    const percent = Math.min(
+      100,
+      Math.round((value / Math.max(1, target)) * 100)
+    );
 
     const card = document.createElement("article");
-    card.className = `automatic-badge-card ${earned ? "earned" : ""}`;
+    const visualTier = highestTier?.id || "sprout";
+    card.className =
+      `automatic-badge-card tier-${visualTier} ${highestTier ? "earned" : "working"}`;
+
+    const tierPills = BADGE_TIERS.map((tier) => {
+      const tierEarned = earned.has(badgeTierId(id, tier.id));
+      return `
+        <span class="badge-tier-pill tier-${tier.id} ${tierEarned ? "earned" : ""}">
+          ${tier.emoji} ${tier.name}
+        </span>
+      `;
+    }).join("");
+
+    const stateText =
+      highestTier?.id === "evergreen"
+        ? "evergreen complete"
+        : highestTier
+          ? `${highestTier.name} earned`
+          : "working toward sprout";
+
+    const progressText =
+      highestTier?.id === "evergreen"
+        ? `${value} ${badge.unit}`
+        : `${Math.min(value, target)} of ${target}`;
+
+    const nextLabel =
+      highestTier?.id === "evergreen"
+        ? "all three levels complete"
+        : `next: ${nextTier.name}`;
+
     card.innerHTML = `
       <div class="badge-card-top">
         <span aria-hidden="true">${badge.emoji}</span>
-        <span class="badge-state">${earned ? "badge earned" : "automatic"}</span>
+        <span class="badge-state">${stateText}</span>
       </div>
       <h3>${badge.name}</h3>
       <p>${badge.description}</p>
+
+      <div class="badge-tier-row">${tierPills}</div>
+
       <div class="progress-label">
-        <span>${displayValue} of ${badge.target}</span>
-        <span>${badge.unit}</span>
+        <span>${progressText}</span>
+        <span>${nextLabel}</span>
       </div>
       <div class="progress-track">
         <div class="progress-fill" style="--progress:${percent}%"></div>
@@ -656,7 +757,48 @@ function renderBadges() {
     `;
     badgeGrid.appendChild(card);
   });
+
+  renderTierCompletions();
 }
+
+saveTitleButton.addEventListener("click", async () => {
+  if (!currentUser || !currentProfile) return;
+
+  const unlockedTitles = unlockedTitlesFromEarned(earnedBadgeIds);
+  const selectedTitle = titlePicker.value;
+
+  if (selectedTitle && !unlockedTitles.includes(selectedTitle)) {
+    titlePickerMessage.textContent = "that title is not unlocked yet.";
+    return;
+  }
+
+  saveTitleButton.disabled = true;
+  saveTitleButton.textContent = "saving...";
+  titlePickerMessage.textContent = "";
+
+  try {
+    await updateDoc(doc(db, "profiles", currentUser.uid), {
+      selectedTitle,
+      updatedAt: serverTimestamp()
+    });
+
+    currentProfile = {
+      ...currentProfile,
+      selectedTitle
+    };
+
+    titlePickerMessage.textContent = selectedTitle
+      ? `${selectedTitle} is now displayed beside your name.`
+      : "your title is hidden.";
+    showToast("reader title updated.");
+  } catch (error) {
+    console.error(error);
+    titlePickerMessage.textContent = "your title could not be saved.";
+  } finally {
+    saveTitleButton.disabled = false;
+    saveTitleButton.textContent = "save title";
+  }
+});
 
 async function loadAutomaticBadges() {
   badgeSyncMessage.textContent = "checking your reading activity...";
@@ -664,9 +806,20 @@ async function loadAutomaticBadges() {
   try {
     const result = await syncAutomaticBadges(db, currentUser.uid);
     automaticProgress = result.progress;
+    earnedBadgeIds = result.earnedBadges || [];
+    currentProfile = {
+      ...currentProfile,
+      earnedBadges: earnedBadgeIds,
+      selectedTitle: result.selectedTitle || ""
+    };
     renderBadges();
     badgeSyncMessage.textContent =
       "your badges and progress are current.";
+
+    window.__inkIvyPendingBadgeResult = result;
+    window.dispatchEvent(
+      new CustomEvent("inkivy:badge-sync-result", { detail: result })
+    );
   } catch (error) {
     console.error(error);
     badgeSyncMessage.textContent =
@@ -847,6 +1000,7 @@ onAuthStateChanged(auth, async (user) => {
   previousWinnerSelection = null;
   pendingSuggestions = [];
   winnerSuggestions = [];
+  earnedBadgeIds = [];
 
   if (!user) return;
 

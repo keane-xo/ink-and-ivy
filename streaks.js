@@ -16,8 +16,6 @@ import {
   runTransaction,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
-import { syncAutomaticBadges } from "./badge-engine.js";
-
 const firebaseConfig = {
   apiKey: "AIzaSyC1dOxo61Z0U9mReJnw7s5Z3x0HFrrfB2k",
   authDomain: "ink-and-ivy-d0ff3.firebaseapp.com",
@@ -27,7 +25,7 @@ const firebaseConfig = {
   appId: "1:444464034610:web:de9c2c3a33737ae6849d2b"
 };
 
-const ADMIN_UID = "66iUUKyOu7Rvu2I6Hwtdel82b122";
+const ADMIN_UID = "66iUUKyOu7Rvu2I6Hwtdel82b";
 const START_DAY = Math.floor(Date.UTC(2026, 7, 13) / 86400000);
 const CYCLE_DAYS = 63;
 const TIME_ZONE = "America/Chicago";
@@ -197,15 +195,6 @@ async function recordDailyVisit(user) {
 
   localStorage.setItem(localKey, "done");
 
-  const badgeKey = `inkIvyBadges:${user.uid}:${todayKey}`;
-  if (localStorage.getItem(badgeKey) !== "done") {
-    try {
-      await syncAutomaticBadges(db, user.uid);
-      localStorage.setItem(badgeKey, "done");
-    } catch (error) {
-      console.warn("automatic badge sync skipped", error);
-    }
-  }
 }
 
 onAuthStateChanged(auth, (user) => {

@@ -447,7 +447,7 @@ form.addEventListener("submit", async (event) => {
   formMessage.textContent = "";
 
   try {
-    await addDoc(collection(db, "recommendations"), {
+    const recommendationReference = await addDoc(collection(db, "recommendations"), {
       senderId: currentUser.uid,
       senderName: currentProfile.displayName || "reader",
       senderAvatarEmoji: currentProfile.avatarEmoji || "📚",
@@ -467,6 +467,24 @@ form.addEventListener("submit", async (event) => {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
+
+    try {
+      await addDoc(collection(db, "notifications"), {
+        recipientId: recipient.id,
+        actorId: currentUser.uid,
+        actorName: currentProfile.displayName || "reader",
+        type: "friend-pick",
+        category: "friend-picks",
+        title: "a friend picked a book for you",
+        body: `${currentProfile.displayName || "a reader"} recommended ${book.title || "a book"} to you.`,
+        link: "recommendations.html",
+        sourceId: recommendationReference.id,
+        read: false,
+        createdAt: serverTimestamp()
+      });
+    } catch (notificationError) {
+      console.error("friend-pick notification could not be saved", notificationError);
+    }
 
     const recipientName = recipient.displayName || "your friend";
     form.reset();

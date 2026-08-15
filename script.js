@@ -721,6 +721,7 @@ reviewForm.addEventListener("submit", async (event) => {
     );
 
     showToast(currentUserReview ? "your review was updated." : "your review was posted.");
+    window.dispatchEvent(new CustomEvent("inkivy:activity-changed"));
   } catch (error) {
     console.error(error);
     reviewFormMessage.textContent = "your review could not be saved.";
