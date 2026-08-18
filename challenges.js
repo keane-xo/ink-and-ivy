@@ -43,7 +43,7 @@ const firebaseConfig = {
   appId: "1:444464034610:web:de9c2c3a33737ae6849d2b"
 };
 
-const ADMIN_UID = "66iUUKyOu7Rvu2I6Hwtdel82b";
+const ADMIN_UID = "66iUUKyOu7Rvu2I6Hwtdel82b122";
 const START_DAY = Math.floor(Date.UTC(2026, 7, 13) / 86400000);
 const CYCLE_DAYS = 63;
 const VOTING_DAYS = 7;

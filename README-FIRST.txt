@@ -1,37 +1,51 @@
-INK AND IVY — LIBRARIAN BADGE RELIABILITY FIX
+INK AND IVY — CRITICAL ADMIN UID REPAIR
 
-I changed the badge logic again based on the screenshots where it disappeared.
+THE SCREENSHOT CONFIRMED THE ACTUAL FIREBASE AUTH UID:
 
-WHAT WAS WRONG
+66iUUKyOu7Rvu2I6Hwtdel82b122
 
-The previous version was still depending too much on surrounding reader-ID
-containers. Some older posts/reviews contain a reader ID that does not match the
-current admin UID, so the username fallback was being skipped.
+The earlier badge/notification build incorrectly removed the final "122".
+That was the cause of the Admin page saying:
 
-THIS VERSION DOES NOT DO THAT.
+"the login worked, but this account has uid ..."
 
-The new script treats the exact visible username "kisseskeane" as the primary
-display anchor. It looks at the element's OWN text node instead of the text of a
-large parent card or dropdown.
+This package restores the correct UID everywhere the recent updates had changed it.
 
-That has two benefits:
-1. The badge appears beside "kisseskeane" even on older content.
-2. Parent containers no longer match the username, so the dropdown cannot get
-   a second duplicate Librarian pill.
+FILES REPAIRED
+- admin.js
+- challenges.js
+- streaks.js
+- librarian-badge.js
+- FIRESTORE_RULES.txt
 
-The admin UID is still supported as a secondary check.
+HTML FILES ARE INCLUDED ONLY TO CACHE-BUST THE REPAIRED JS:
+- index.html
+- community.html
+- recommendations.html
+- challenges.html
+- journal.html
+- profile.html
+- reader.html
+- admin.html
 
-STYLE
+The profile.html in this package PRESERVES:
+- the Librarian badge system
+- "owner of ink and ivy" above the public profile name
 
-The badge remains the subtle style requested:
-- pale almost-transparent red/pink center
-- dark red outline
-- dark red text
-- compact rounded pill
-- no heavy shadow
+INSTALL IN THIS ORDER
 
-UPLOAD AND REPLACE IN GITHUB
+1. FIREBASE
+Open FIRESTORE_RULES.txt.
+Go to Firebase > Firestore Database > Rules.
+Replace the current rules completely and click Publish.
 
+DO NOT upload FIRESTORE_RULES.txt to GitHub.
+
+2. GITHUB
+Upload and replace:
+- admin.js
+- challenges.js
+- streaks.js
 - librarian-badge.js
 - index.html
 - community.html
@@ -42,16 +56,22 @@ UPLOAD AND REPLACE IN GITHUB
 - reader.html
 - admin.html
 
-NO FIREBASE RULES CHANGE IS NEEDED.
+3. WAIT 1–3 MINUTES.
 
-TEST
+4. TEST ADMIN
+Open:
+https://keane-xo.github.io/ink-and-ivy/admin.html?v=17
 
-After GitHub Pages deploys:
-1. Open https://keane-xo.github.io/ink-and-ivy/community.html?v=8
-2. Press Ctrl+Shift+R once.
-3. Check the old "new badge system created!" post.
-4. Check the More dropdown.
-5. Check a review and the public reader profile.
+Press Ctrl+Shift+R once, then sign in.
 
-There should be exactly one subtle red Librarian pill beside each visible
-"kisseskeane" username.
+The Admin dashboard should now accept the account with UID:
+66iUUKyOu7Rvu2I6Hwtdel82b122
+
+5. TEST READER FEATURES
+Also check:
+- Librarian badge
+- Challenges/streaks
+- Community
+- Friend Picks
+
+No paid Firebase services are involved.

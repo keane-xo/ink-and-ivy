@@ -33,7 +33,7 @@ const firebaseConfig = {
   appId: "1:444464034610:web:de9c2c3a33737ae6849d2b"
 };
 
-const ADMIN_UID = "66iUUKyOu7Rvu2I6Hwtdel82b";
+const ADMIN_UID = "66iUUKyOu7Rvu2I6Hwtdel82b122";
 
 const starterBooks = [
   {

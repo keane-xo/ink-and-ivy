@@ -1,5 +1,5 @@
 (() => {
-  const LIBRARIAN_UID = "66iUUKyOu7Rvu2I6Hwtdel82b";
+  const LIBRARIAN_UID = "66iUUKyOu7Rvu2I6Hwtdel82b122";
   const LIBRARIAN_NAME = "kisseskeane";
   const BADGE_CLASS = "ii-librarian-role-badge";
   const STYLE_ID = "ii-librarian-role-style";
