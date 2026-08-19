@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="choose your next ink and ivy read without seeing the title or cover first.">
+  <title>blind date with a book · ink and ivy</title>
+  <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css?v=21">
+  <link rel="stylesheet" href="blind-date.css?v=1">
+  <script type="module" src="blind-date.js?v=1"></script>
+  <script type="module" src="streaks.js?v=3"></script>
+  <script type="module" src="notification-center.js?v=2"></script>
+  <script defer src="librarian-badge.js?v=5"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="ink and ivy home">
+      <span class="brand-mark" aria-hidden="true">🌿</span>
+      <span>ink and ivy</span>
+    </a>
+
+    <button class="menu-button" type="button" aria-expanded="false" aria-controls="main-nav">
+      menu
+    </button>
+
+    <nav id="main-nav" class="main-nav" aria-label="main navigation">
+      <a href="index.html#shelves">the shelves</a>
+      <a href="index.html#how-it-works">how it works</a>
+      <a href="index.html#request">suggest a new title</a>
+      <a href="community.html">community</a>
+
+      <details class="more-menu">
+        <summary>more</summary>
+        <div class="more-menu-panel">
+          <a href="journal.html">reading journal</a>
+          <a href="recommendations.html">friend picks</a>
+          <a href="challenges.html">streaks, votes &amp; badges</a>
+          <a href="reader.html">reader account</a>
+        </div>
+      </details>
+    </nav>
+  </header>
+
+  <main class="blind-date-page">
+    <section class="blind-date-hero">
+      <div class="blind-date-hero-copy">
+        <p class="eyebrow">don't judge a book by its cover</p>
+        <h1>blind date<br>with a book</h1>
+        <p class="blind-date-intro">
+          no title. no author. no cover. choose only by the feeling of the story,
+          then unwrap your date when you're ready.
+        </p>
+
+        <div class="blind-date-hero-actions">
+          <a class="button button-primary" href="#dates">meet the mystery books</a>
+          <button id="surprise-me-button" class="button button-secondary" type="button">
+            surprise me
+          </button>
+        </div>
+      </div>
+
+      <div class="blind-date-hero-art" aria-hidden="true">
+        <div class="wrapped-book wrapped-book-large">
+          <span class="paper-flower">❦</span>
+          <span class="vertical-ribbon"></span>
+          <span class="horizontal-ribbon"></span>
+          <span class="wax-seal">🌿</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="blind-date-rules" aria-label="how blind date with a book works">
+      <article>
+        <span>01</span>
+        <h2>read the clues</h2>
+        <p>you'll get a genre, a mood, a few hints, and a sense of the reading commitment.</p>
+      </article>
+      <article>
+        <span>02</span>
+        <h2>choose by instinct</h2>
+        <p>pick the story that sounds like your kind of night without seeing its identity.</p>
+      </article>
+      <article>
+        <span>03</span>
+        <h2>unwrap your date</h2>
+        <p>reveal the cover, title, and author, then meet the book on the shelves.</p>
+      </article>
+    </section>
+
+    <section id="dates" class="dates-section" aria-labelledby="dates-title">
+      <div class="dates-heading">
+        <div>
+          <p class="eyebrow">currently wrapped</p>
+          <h2 id="dates-title">choose your date</h2>
+          <p id="blind-date-subtitle">
+            the wrapping table changes whenever the librarian finds something worth hiding.
+          </p>
+        </div>
+        <span class="dates-flourish" aria-hidden="true">❧</span>
+      </div>
+
+      <div id="blind-date-loading" class="blind-date-state">
+        <span aria-hidden="true">🌿</span>
+        <p>checking the wrapping table...</p>
+      </div>
+
+      <div id="blind-date-grid" class="blind-date-grid" hidden></div>
+
+      <div id="blind-date-empty" class="blind-date-state" hidden>
+        <span aria-hidden="true">🎀</span>
+        <h3>nothing is wrapped right now</h3>
+        <p>check back soon. the librarian is always finding another story worth keeping secret.</p>
+        <a class="button button-secondary" href="index.html#shelves">browse the shelves instead</a>
+      </div>
+    </section>
+
+    <section class="blind-date-footer-note">
+      <span aria-hidden="true">💌</span>
+      <p>
+        a bad first impression isn't possible here. the cover doesn't get a vote until after you do.
+      </p>
+    </section>
+  </main>
+</body>
+</html>

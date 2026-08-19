@@ -1,52 +1,72 @@
-INK AND IVY — CRITICAL ADMIN UID REPAIR
+INK AND IVY — BLIND DATE WITH A BOOK
 
-THE SCREENSHOT CONFIRMED THE ACTUAL FIREBASE AUTH UID:
+Built on top of the latest repaired Ink & Ivy version, including:
+- correct admin UID ending in 122
+- notification fixes
+- red Librarian badge
+- "owner of ink and ivy" public-profile label
+- Sprout / Bloom / Evergreen badges
 
-66iUUKyOu7Rvu2I6Hwtdel82b122
+WHAT IT ADDS
 
-The earlier badge/notification build incorrectly removed the final "122".
-That was the cause of the Admin page saying:
+A new immersive page:
+blind-date.html
 
-"the login worked, but this account has uid ..."
+Readers see mystery wrapped books instead of covers/titles/authors.
 
-This package restores the correct UID everywhere the recent updates had changed it.
+Each mystery date shows:
+- the real genre
+- a mood chosen by the Librarian
+- an approximate reading commitment
+- two custom clues
+- a "perfect for..." note
 
-FILES REPAIRED
-- admin.js
-- challenges.js
-- streaks.js
-- librarian-badge.js
-- FIRESTORE_RULES.txt
+Readers click "unwrap this book" to reveal:
+- cover
+- title
+- author
+- page count
+- availability
 
-HTML FILES ARE INCLUDED ONLY TO CACHE-BUST THE REPAIRED JS:
-- index.html
-- community.html
-- recommendations.html
-- challenges.html
-- journal.html
-- profile.html
-- reader.html
-- admin.html
+Then "meet it on the shelves" opens that exact book in the normal Ink & Ivy
+book-detail popup, where the existing checkout/waitlist system continues to work.
 
-The profile.html in this package PRESERVES:
-- the Librarian badge system
-- "owner of ink and ivy" above the public profile name
+There is also a "surprise me" button that randomly chooses and unwraps a date.
+
+ADMIN CONTROL
+
+Admin now has a new "blind date" tab.
+
+You can:
+- turn the whole feature on/off without deleting the setup
+- choose up to six books from the existing catalog
+- control their order
+- add mood
+- add two clues
+- add a "perfect for..." note
+- change the page note
+
+All reader-facing More menus now include:
+blind date with a book
 
 INSTALL IN THIS ORDER
 
-1. FIREBASE
+1. FIREBASE FIRST
 Open FIRESTORE_RULES.txt.
 Go to Firebase > Firestore Database > Rules.
-Replace the current rules completely and click Publish.
+Replace the current rules completely.
+Click Publish.
 
 DO NOT upload FIRESTORE_RULES.txt to GitHub.
 
-2. GITHUB
-Upload and replace:
-- admin.js
-- challenges.js
-- streaks.js
-- librarian-badge.js
+2. GITHUB — NEW FILES
+Upload:
+- blind-date.html
+- blind-date.css
+- blind-date.js
+
+3. GITHUB — REPLACE
+Replace:
 - index.html
 - community.html
 - recommendations.html
@@ -55,23 +75,25 @@ Upload and replace:
 - profile.html
 - reader.html
 - admin.html
+- admin.css
+- admin.js
 
-3. WAIT 1–3 MINUTES.
+4. WAIT 1–3 MINUTES.
 
-4. TEST ADMIN
+5. SET UP YOUR FIRST DATES
 Open:
-https://keane-xo.github.io/ink-and-ivy/admin.html?v=17
+https://keane-xo.github.io/ink-and-ivy/admin.html?v=18
 
-Press Ctrl+Shift+R once, then sign in.
+Sign in.
+Open the new "blind date" tab.
+Choose your mystery books and write the clues.
+Click "save blind dates."
 
-The Admin dashboard should now accept the account with UID:
-66iUUKyOu7Rvu2I6Hwtdel82b122
+6. VIEW IT
+Open:
+https://keane-xo.github.io/ink-and-ivy/blind-date.html?v=1
 
-5. TEST READER FEATURES
-Also check:
-- Librarian badge
-- Challenges/streaks
-- Community
-- Friend Picks
+If needed, press Ctrl+Shift+R once.
 
-No paid Firebase services are involved.
+NO PAID FIREBASE SERVICES ARE USED.
+Everything runs on the existing GitHub Pages + Firebase Spark setup.

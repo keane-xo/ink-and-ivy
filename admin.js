@@ -152,6 +152,27 @@ const featuredBookNotes = Array.from(
 );
 const featuredBooksMessage = document.querySelector("#featured-books-message");
 const saveFeaturedBooksButton = document.querySelector("#save-featured-books-button");
+const blindDateForm = document.querySelector("#blind-date-form");
+const blindDateActive = document.querySelector("#blind-date-active");
+const blindDateSubtitleInput = document.querySelector("#blind-date-subtitle-input");
+const blindDateBookSelects = Array.from(
+  document.querySelectorAll(".blind-date-book-select")
+);
+const blindDateMoods = Array.from(
+  document.querySelectorAll(".blind-date-mood")
+);
+const blindDateClueOnes = Array.from(
+  document.querySelectorAll(".blind-date-clue-one")
+);
+const blindDateClueTwos = Array.from(
+  document.querySelectorAll(".blind-date-clue-two")
+);
+const blindDatePerfectFors = Array.from(
+  document.querySelectorAll(".blind-date-perfect-for")
+);
+const blindDateMessage = document.querySelector("#blind-date-message");
+const saveBlindDateButton = document.querySelector("#save-blind-date-button");
+
 
 let borrowingRequests = [];
 let bookSuggestions = [];
@@ -159,6 +180,7 @@ let books = [];
 let readerReviews = [];
 let communityReports = [];
 let featuredBooksConfig = [];
+let blindDateConfig = { active: true, subtitle: "", picks: [] };
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -638,6 +660,117 @@ function renderReports() {
 }
 
 
+
+function populateBlindDateBookOptions() {
+  blindDateBookSelects.forEach((select, index) => {
+    const currentValue =
+      blindDateConfig.picks[index]?.bookId || select.value || "";
+
+    select.innerHTML = '<option value="">leave this date empty</option>';
+
+    books.forEach((book) => {
+      const option = document.createElement("option");
+      option.value = book.id;
+      option.textContent = `${book.title} — ${book.author || "unknown author"}`;
+      select.appendChild(option);
+    });
+
+    select.value = books.some((book) => book.id === currentValue)
+      ? currentValue
+      : "";
+  });
+}
+
+function renderBlindDateEditor() {
+  populateBlindDateBookOptions();
+
+  blindDateActive.checked = blindDateConfig.active !== false;
+  blindDateSubtitleInput.value = blindDateConfig.subtitle || "";
+
+  blindDateMoods.forEach((input, index) => {
+    input.value = blindDateConfig.picks[index]?.mood || "";
+  });
+
+  blindDateClueOnes.forEach((input, index) => {
+    input.value = blindDateConfig.picks[index]?.clueOne || "";
+  });
+
+  blindDateClueTwos.forEach((input, index) => {
+    input.value = blindDateConfig.picks[index]?.clueTwo || "";
+  });
+
+  blindDatePerfectFors.forEach((textarea, index) => {
+    textarea.value = blindDateConfig.picks[index]?.perfectFor || "";
+  });
+}
+
+blindDateForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const picks = blindDateBookSelects
+    .map((select, index) => ({
+      bookId: select.value,
+      mood: blindDateMoods[index].value.trim(),
+      clueOne: blindDateClueOnes[index].value.trim(),
+      clueTwo: blindDateClueTwos[index].value.trim(),
+      perfectFor: blindDatePerfectFors[index].value.trim()
+    }))
+    .filter((pick) => pick.bookId);
+
+  const ids = picks.map((pick) => pick.bookId);
+
+  if (new Set(ids).size !== ids.length) {
+    blindDateMessage.textContent =
+      "choose each mystery book only once.";
+    return;
+  }
+
+  const missingClues = picks.some(
+    (pick) => !pick.mood || !pick.clueOne || !pick.clueTwo || !pick.perfectFor
+  );
+
+  if (missingClues) {
+    blindDateMessage.textContent =
+      "give every selected mystery book a mood, two clues, and a perfect-for note.";
+    return;
+  }
+
+  saveBlindDateButton.disabled = true;
+  saveBlindDateButton.textContent = "wrapping...";
+  blindDateMessage.textContent = "";
+
+  try {
+    const nextConfig = {
+      active: blindDateActive.checked,
+      subtitle: blindDateSubtitleInput.value.trim(),
+      picks
+    };
+
+    await setDoc(
+      doc(db, "siteSettings", "blindDate"),
+      {
+        ...nextConfig,
+        updatedAt: serverTimestamp()
+      },
+      { merge: true }
+    );
+
+    blindDateConfig = nextConfig;
+    blindDateMessage.textContent =
+      picks.length
+        ? `${picks.length} blind date${picks.length === 1 ? "" : "s"} saved.`
+        : "the wrapping table is empty.";
+    showToast("blind date with a book updated.");
+  } catch (error) {
+    console.error(error);
+    blindDateMessage.textContent =
+      "the blind date setup could not be saved.";
+  } finally {
+    saveBlindDateButton.disabled = false;
+    saveBlindDateButton.textContent = "save blind dates";
+  }
+});
+
 function populateFeaturedBookOptions() {
   featuredBookSelects.forEach((select, index) => {
     const currentValue =
@@ -893,13 +1026,15 @@ async function loadData() {
       suggestionSnapshot,
       booksSnapshot,
       reportsSnapshot,
-      homepageSettingsSnapshot
+      homepageSettingsSnapshot,
+      blindDateSettingsSnapshot
     ] = await Promise.all([
       getDocs(query(collection(db, "checkoutRequests"), orderBy("createdAt", "desc"))),
       getDocs(query(collection(db, "bookSuggestions"), orderBy("createdAt", "desc"))),
       getDocs(collection(db, "books")),
       getDocs(query(collection(db, "reports"), orderBy("createdAt", "desc"))),
-      getDoc(doc(db, "siteSettings", "homepage"))
+      getDoc(doc(db, "siteSettings", "homepage")),
+      getDoc(doc(db, "siteSettings", "blindDate"))
     ]);
 
     borrowingRequests = borrowingSnapshot.docs.map((entry) => ({
@@ -921,6 +1056,17 @@ async function loadData() {
       Array.isArray(homepageSettingsSnapshot.data().featuredBooks)
         ? homepageSettingsSnapshot.data().featuredBooks.slice(0, 4)
         : [];
+
+    if (blindDateSettingsSnapshot.exists()) {
+      const blindData = blindDateSettingsSnapshot.data();
+      blindDateConfig = {
+        active: blindData.active !== false,
+        subtitle: typeof blindData.subtitle === "string" ? blindData.subtitle : "",
+        picks: Array.isArray(blindData.picks) ? blindData.picks.slice(0, 6) : []
+      };
+    } else {
+      blindDateConfig = { active: true, subtitle: "", picks: [] };
+    }
 
     const reviewSnapshots = await Promise.all(
       books.map((book) =>
@@ -948,6 +1094,7 @@ async function loadData() {
     renderSuggestions();
     renderBooks();
     renderFeaturedBookEditor();
+    renderBlindDateEditor();
     renderAdminReviews();
     renderReports();
   } catch (error) {

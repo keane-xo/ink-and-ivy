@@ -6,8 +6,8 @@
   <meta name="robots" content="noindex, nofollow">
   <title>ink and ivy admin</title>
   <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml">
-<link rel="stylesheet" href="admin.css?v=14">
-  <script type="module" src="admin.js?v=17"></script>
+<link rel="stylesheet" href="admin.css?v=15">
+  <script type="module" src="admin.js?v=18"></script>
   <script defer src="librarian-badge.js?v=5"></script>
 </head>
 <body>
@@ -89,6 +89,7 @@
         <button class="tab" type="button" data-tab="suggestions">book suggestions</button>
         <button class="tab" type="button" data-tab="books">manage books</button>
         <button class="tab" type="button" data-tab="featured">homepage features</button>
+        <button class="tab" type="button" data-tab="blind-date">blind date</button>
         <button class="tab" type="button" data-tab="reviews">reader reviews</button>
         <button class="tab" type="button" data-tab="reports">reports</button>
       </div>
@@ -284,6 +285,259 @@
               save homepage features
             </button>
             <p id="featured-books-message" class="message" aria-live="polite"></p>
+          </div>
+        </form>
+      </section>
+
+
+
+      <section id="blind-date-panel" class="panel" hidden>
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">mystery-book editor</p>
+            <h2>blind date with a book</h2>
+            <p class="panel-intro">
+              wrap up to six books at a time. readers see only the clues you give them
+              until they choose to reveal the book.
+            </p>
+          </div>
+        </div>
+
+        <form id="blind-date-form" class="blind-date-admin-form">
+          <div class="blind-date-admin-settings">
+            <label class="blind-date-toggle">
+              <input id="blind-date-active" type="checkbox" checked>
+              <span>
+                <strong>blind date is open</strong>
+                <small>turn this off to temporarily hide every mystery book without deleting your setup.</small>
+              </span>
+            </label>
+
+            <label>
+              page note
+              <input id="blind-date-subtitle-input" type="text" maxlength="180"
+                placeholder="the wrapping table changes whenever the librarian finds something worth hiding.">
+            </label>
+          </div>
+
+          <div class="blind-date-admin-grid">
+            
+            <article class="blind-date-admin-slot">
+              <span class="slot-number">01</span>
+
+              <label>
+                mystery book
+                <select class="blind-date-book-select" data-blind-date-slot="0">
+                  <option value="">leave this date empty</option>
+                </select>
+              </label>
+
+              <label>
+                mood
+                <input class="blind-date-mood" data-blind-date-mood="0" type="text" maxlength="60"
+                  placeholder="moody, romantic, tense, cozy...">
+              </label>
+
+              <label>
+                clue one
+                <input class="blind-date-clue-one" data-blind-date-clue-one="0" type="text" maxlength="120"
+                  placeholder="a secret no one was supposed to uncover">
+              </label>
+
+              <label>
+                clue two
+                <input class="blind-date-clue-two" data-blind-date-clue-two="0" type="text" maxlength="120"
+                  placeholder="friendship, danger, and one very bad decision">
+              </label>
+
+              <label>
+                perfect for...
+                <textarea class="blind-date-perfect-for" data-blind-date-perfect-for="0" rows="3" maxlength="180"
+                  placeholder="readers who want a story they cannot put down."></textarea>
+              </label>
+            </article>
+            
+            <article class="blind-date-admin-slot">
+              <span class="slot-number">02</span>
+
+              <label>
+                mystery book
+                <select class="blind-date-book-select" data-blind-date-slot="1">
+                  <option value="">leave this date empty</option>
+                </select>
+              </label>
+
+              <label>
+                mood
+                <input class="blind-date-mood" data-blind-date-mood="1" type="text" maxlength="60"
+                  placeholder="moody, romantic, tense, cozy...">
+              </label>
+
+              <label>
+                clue one
+                <input class="blind-date-clue-one" data-blind-date-clue-one="1" type="text" maxlength="120"
+                  placeholder="a secret no one was supposed to uncover">
+              </label>
+
+              <label>
+                clue two
+                <input class="blind-date-clue-two" data-blind-date-clue-two="1" type="text" maxlength="120"
+                  placeholder="friendship, danger, and one very bad decision">
+              </label>
+
+              <label>
+                perfect for...
+                <textarea class="blind-date-perfect-for" data-blind-date-perfect-for="1" rows="3" maxlength="180"
+                  placeholder="readers who want a story they cannot put down."></textarea>
+              </label>
+            </article>
+            
+            <article class="blind-date-admin-slot">
+              <span class="slot-number">03</span>
+
+              <label>
+                mystery book
+                <select class="blind-date-book-select" data-blind-date-slot="2">
+                  <option value="">leave this date empty</option>
+                </select>
+              </label>
+
+              <label>
+                mood
+                <input class="blind-date-mood" data-blind-date-mood="2" type="text" maxlength="60"
+                  placeholder="moody, romantic, tense, cozy...">
+              </label>
+
+              <label>
+                clue one
+                <input class="blind-date-clue-one" data-blind-date-clue-one="2" type="text" maxlength="120"
+                  placeholder="a secret no one was supposed to uncover">
+              </label>
+
+              <label>
+                clue two
+                <input class="blind-date-clue-two" data-blind-date-clue-two="2" type="text" maxlength="120"
+                  placeholder="friendship, danger, and one very bad decision">
+              </label>
+
+              <label>
+                perfect for...
+                <textarea class="blind-date-perfect-for" data-blind-date-perfect-for="2" rows="3" maxlength="180"
+                  placeholder="readers who want a story they cannot put down."></textarea>
+              </label>
+            </article>
+            
+            <article class="blind-date-admin-slot">
+              <span class="slot-number">04</span>
+
+              <label>
+                mystery book
+                <select class="blind-date-book-select" data-blind-date-slot="3">
+                  <option value="">leave this date empty</option>
+                </select>
+              </label>
+
+              <label>
+                mood
+                <input class="blind-date-mood" data-blind-date-mood="3" type="text" maxlength="60"
+                  placeholder="moody, romantic, tense, cozy...">
+              </label>
+
+              <label>
+                clue one
+                <input class="blind-date-clue-one" data-blind-date-clue-one="3" type="text" maxlength="120"
+                  placeholder="a secret no one was supposed to uncover">
+              </label>
+
+              <label>
+                clue two
+                <input class="blind-date-clue-two" data-blind-date-clue-two="3" type="text" maxlength="120"
+                  placeholder="friendship, danger, and one very bad decision">
+              </label>
+
+              <label>
+                perfect for...
+                <textarea class="blind-date-perfect-for" data-blind-date-perfect-for="3" rows="3" maxlength="180"
+                  placeholder="readers who want a story they cannot put down."></textarea>
+              </label>
+            </article>
+            
+            <article class="blind-date-admin-slot">
+              <span class="slot-number">05</span>
+
+              <label>
+                mystery book
+                <select class="blind-date-book-select" data-blind-date-slot="4">
+                  <option value="">leave this date empty</option>
+                </select>
+              </label>
+
+              <label>
+                mood
+                <input class="blind-date-mood" data-blind-date-mood="4" type="text" maxlength="60"
+                  placeholder="moody, romantic, tense, cozy...">
+              </label>
+
+              <label>
+                clue one
+                <input class="blind-date-clue-one" data-blind-date-clue-one="4" type="text" maxlength="120"
+                  placeholder="a secret no one was supposed to uncover">
+              </label>
+
+              <label>
+                clue two
+                <input class="blind-date-clue-two" data-blind-date-clue-two="4" type="text" maxlength="120"
+                  placeholder="friendship, danger, and one very bad decision">
+              </label>
+
+              <label>
+                perfect for...
+                <textarea class="blind-date-perfect-for" data-blind-date-perfect-for="4" rows="3" maxlength="180"
+                  placeholder="readers who want a story they cannot put down."></textarea>
+              </label>
+            </article>
+            
+            <article class="blind-date-admin-slot">
+              <span class="slot-number">06</span>
+
+              <label>
+                mystery book
+                <select class="blind-date-book-select" data-blind-date-slot="5">
+                  <option value="">leave this date empty</option>
+                </select>
+              </label>
+
+              <label>
+                mood
+                <input class="blind-date-mood" data-blind-date-mood="5" type="text" maxlength="60"
+                  placeholder="moody, romantic, tense, cozy...">
+              </label>
+
+              <label>
+                clue one
+                <input class="blind-date-clue-one" data-blind-date-clue-one="5" type="text" maxlength="120"
+                  placeholder="a secret no one was supposed to uncover">
+              </label>
+
+              <label>
+                clue two
+                <input class="blind-date-clue-two" data-blind-date-clue-two="5" type="text" maxlength="120"
+                  placeholder="friendship, danger, and one very bad decision">
+              </label>
+
+              <label>
+                perfect for...
+                <textarea class="blind-date-perfect-for" data-blind-date-perfect-for="5" rows="3" maxlength="180"
+                  placeholder="readers who want a story they cannot put down."></textarea>
+              </label>
+            </article>
+          </div>
+
+          <div class="featured-admin-actions">
+            <button id="save-blind-date-button" class="primary-button" type="submit">
+              save blind dates
+            </button>
+            <p id="blind-date-message" class="message" aria-live="polite"></p>
           </div>
         </form>
       </section>

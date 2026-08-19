@@ -1,0 +1,542 @@
+:root {
+  --blind-paper: #f6e2d8;
+  --blind-paper-deep: #e9c6bc;
+  --blind-ribbon: #bf6f84;
+  --blind-ribbon-deep: #985064;
+  --blind-ink: #6f4c3a;
+}
+
+.blind-date-page {
+  overflow: hidden;
+}
+
+.blind-date-hero {
+  min-height: 72vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr);
+  align-items: center;
+  gap: 70px;
+  max-width: 1180px;
+  margin: auto;
+  padding: 88px 7% 72px;
+}
+
+.blind-date-hero-copy {
+  max-width: 690px;
+}
+
+.blind-date-hero h1 {
+  margin: 0;
+  color: var(--brown);
+  font-size: clamp(4rem, 8vw, 7.8rem);
+  font-weight: normal;
+  line-height: 0.83;
+  letter-spacing: -0.045em;
+}
+
+.blind-date-intro {
+  max-width: 650px;
+  margin: 30px 0 0;
+  color: #765f50;
+  font-size: clamp(1.1rem, 2vw, 1.32rem);
+  line-height: 1.75;
+}
+
+.blind-date-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.blind-date-hero-actions button {
+  cursor: pointer;
+}
+
+.blind-date-hero-art {
+  display: grid;
+  place-items: center;
+  min-height: 430px;
+}
+
+.wrapped-book {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(105deg, transparent 0 20%, rgba(255,255,255,.18) 20.5% 21%, transparent 21.5%),
+    repeating-linear-gradient(0deg, rgba(118,83,63,.025) 0 1px, transparent 1px 5px),
+    var(--blind-paper);
+  border: 1px solid #d7b9aa;
+  border-radius: 9px 14px 14px 9px;
+  box-shadow:
+    14px 18px 0 rgba(118,83,63,.05),
+    0 28px 60px rgba(74,51,40,.17);
+}
+
+.wrapped-book::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 13px;
+  background: rgba(118,83,63,.08);
+  border-right: 1px solid rgba(118,83,63,.12);
+}
+
+.wrapped-book-large {
+  width: min(310px, 74vw);
+  aspect-ratio: 0.69;
+  transform: rotate(4deg);
+}
+
+.paper-flower {
+  position: absolute;
+  top: 11%;
+  left: 13%;
+  color: rgba(118,83,63,.42);
+  font-size: 3.5rem;
+}
+
+.vertical-ribbon,
+.horizontal-ribbon {
+  position: absolute;
+  background: linear-gradient(90deg, var(--blind-ribbon-deep), var(--blind-ribbon), var(--blind-ribbon-deep));
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.12);
+}
+
+.vertical-ribbon {
+  top: 0;
+  bottom: 0;
+  left: 55%;
+  width: 36px;
+}
+
+.horizontal-ribbon {
+  left: 0;
+  right: 0;
+  top: 58%;
+  height: 36px;
+  background: linear-gradient(0deg, var(--blind-ribbon-deep), var(--blind-ribbon), var(--blind-ribbon-deep));
+}
+
+.wax-seal {
+  position: absolute;
+  top: calc(58% - 22px);
+  left: calc(55% - 4px);
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #a94d5c;
+  border: 4px double #7f3442;
+  box-shadow: 0 4px 10px rgba(74,51,40,.22);
+  font-size: 1.05rem;
+}
+
+.blind-date-rules {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 1120px;
+  margin: 0 auto 86px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  overflow: hidden;
+  background: rgba(255,250,242,.72);
+  box-shadow: var(--shadow);
+}
+
+.blind-date-rules article {
+  padding: 29px 31px 32px;
+}
+
+.blind-date-rules article + article {
+  border-left: 1px solid var(--line);
+}
+
+.blind-date-rules span {
+  color: var(--rose);
+  font-family: Arial, sans-serif;
+  font-size: .72rem;
+  font-weight: bold;
+  letter-spacing: .18em;
+}
+
+.blind-date-rules h2 {
+  margin: 10px 0 8px;
+  color: var(--brown);
+  font-size: 1.55rem;
+  font-weight: normal;
+}
+
+.blind-date-rules p {
+  margin: 0;
+  color: #7c6658;
+  line-height: 1.65;
+}
+
+.dates-section {
+  padding: 84px 7% 92px;
+  background:
+    radial-gradient(circle at 13% 5%, rgba(232,184,197,.20), transparent 25%),
+    radial-gradient(circle at 90% 82%, rgba(95,112,88,.11), transparent 28%),
+    var(--paper);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.dates-heading {
+  max-width: 1120px;
+  margin: 0 auto 38px;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.dates-heading h2 {
+  margin: 0 0 10px;
+  color: var(--brown);
+  font-size: clamp(2.7rem, 5vw, 4.5rem);
+  font-weight: normal;
+}
+
+.dates-heading p:last-child {
+  max-width: 680px;
+  margin: 0;
+  color: #7c6658;
+  font-size: 1.07rem;
+  line-height: 1.65;
+}
+
+.dates-flourish {
+  color: var(--rose);
+  font-size: 3.5rem;
+}
+
+.blind-date-grid {
+  max-width: 1120px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.date-card {
+  position: relative;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 172px minmax(0, 1fr);
+  gap: 25px;
+  align-items: stretch;
+  padding: 24px;
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  box-shadow: 0 16px 38px rgba(74,51,40,.07);
+}
+
+.date-card.is-revealed {
+  grid-template-columns: 165px minmax(0, 1fr);
+  background: #fffaf4;
+}
+
+.date-book-wrap {
+  min-height: 245px;
+  display: flex;
+}
+
+.date-book-wrap .wrapped-book {
+  width: 100%;
+  min-height: 245px;
+}
+
+.date-card-number {
+  position: absolute;
+  top: 16px;
+  right: 17px;
+  color: var(--rose);
+  font-family: Arial, sans-serif;
+  font-size: .67rem;
+  font-weight: bold;
+  letter-spacing: .13em;
+}
+
+.date-clues {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.date-clues h3 {
+  margin: 0 0 12px;
+  color: var(--brown);
+  font-size: 1.65rem;
+  font-weight: normal;
+}
+
+.date-clue-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 15px;
+}
+
+.date-clue-pills span {
+  padding: 5px 9px;
+  color: var(--green);
+  background: rgba(215,225,200,.34);
+  border: 1px solid rgba(95,112,88,.22);
+  border-radius: 999px;
+  font-family: Arial, sans-serif;
+  font-size: .68rem;
+  letter-spacing: .03em;
+}
+
+.date-hints {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 17px;
+  padding: 0;
+  list-style: none;
+  color: #6e584a;
+  line-height: 1.5;
+}
+
+.date-hints li::before {
+  content: "❧";
+  margin-right: 8px;
+  color: var(--rose);
+}
+
+.date-perfect-for {
+  margin: 0 0 19px;
+  padding: 12px 14px;
+  color: #6f5748;
+  line-height: 1.55;
+  background: rgba(245,220,227,.43);
+  border-left: 3px solid var(--rose);
+  border-radius: 0 10px 10px 0;
+}
+
+.date-perfect-for strong {
+  color: var(--brown);
+  font-weight: normal;
+}
+
+.unwrap-button {
+  align-self: flex-start;
+  cursor: pointer;
+}
+
+.reveal-cover {
+  min-height: 245px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: #f4e7d8;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 12px 25px rgba(74,51,40,.13);
+}
+
+.reveal-cover img {
+  width: 100%;
+  height: 100%;
+  min-height: 245px;
+  object-fit: cover;
+}
+
+.reveal-cover span {
+  font-size: 2.5rem;
+}
+
+.reveal-details {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.reveal-label {
+  margin: 0 0 8px;
+  color: var(--rose);
+  font-family: Arial, sans-serif;
+  font-size: .7rem;
+  font-weight: bold;
+  letter-spacing: .15em;
+}
+
+.reveal-details h3 {
+  margin: 0 0 5px;
+  color: var(--brown);
+  font-size: 2rem;
+  font-weight: normal;
+  line-height: 1.08;
+}
+
+.reveal-author {
+  margin: 0 0 16px;
+  color: #826b5d;
+  font-style: italic;
+}
+
+.reveal-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 18px;
+}
+
+.reveal-meta span {
+  padding: 5px 9px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--brown);
+  font-family: Arial, sans-serif;
+  font-size: .7rem;
+}
+
+.reveal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.rewrap-button {
+  padding: 9px 13px;
+  color: var(--brown);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.blind-date-state {
+  max-width: 700px;
+  margin: 45px auto;
+  padding: 45px 30px;
+  text-align: center;
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+}
+
+.blind-date-state > span {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 2.2rem;
+}
+
+.blind-date-state h3 {
+  margin: 0 0 8px;
+  color: var(--brown);
+  font-size: 1.8rem;
+  font-weight: normal;
+}
+
+.blind-date-state p {
+  margin: 0 auto 18px;
+  max-width: 560px;
+  color: #7c6658;
+  line-height: 1.65;
+}
+
+.blind-date-footer-note {
+  max-width: 820px;
+  margin: 74px auto;
+  padding: 0 7%;
+  text-align: center;
+}
+
+.blind-date-footer-note span {
+  font-size: 1.8rem;
+}
+
+.blind-date-footer-note p {
+  margin: 11px 0 0;
+  color: #755d4e;
+  font-size: 1.12rem;
+  line-height: 1.7;
+}
+
+@media (max-width: 900px) {
+  .blind-date-hero {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .blind-date-hero-copy {
+    margin: auto;
+  }
+
+  .blind-date-hero-actions {
+    justify-content: center;
+  }
+
+  .blind-date-hero-art {
+    min-height: 330px;
+  }
+
+  .wrapped-book-large {
+    width: min(250px, 68vw);
+  }
+
+  .blind-date-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .blind-date-rules {
+    grid-template-columns: 1fr;
+    margin-inline: 7%;
+  }
+
+  .blind-date-rules article + article {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .dates-heading {
+    align-items: flex-start;
+  }
+
+  .dates-flourish {
+    display: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .blind-date-hero {
+    padding-top: 65px;
+    gap: 30px;
+  }
+
+  .blind-date-hero h1 {
+    font-size: clamp(3.6rem, 19vw, 5rem);
+  }
+
+  .date-card,
+  .date-card.is-revealed {
+    grid-template-columns: 1fr;
+  }
+
+  .date-book-wrap,
+  .reveal-cover {
+    width: min(185px, 65vw);
+    min-height: 270px;
+    margin: auto;
+  }
+
+  .date-book-wrap .wrapped-book,
+  .reveal-cover img {
+    min-height: 270px;
+  }
+
+  .date-clues,
+  .reveal-details {
+    text-align: left;
+  }
+}

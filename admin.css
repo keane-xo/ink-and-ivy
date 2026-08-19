@@ -772,3 +772,105 @@ select:focus {
     width: 100%;
   }
 }
+
+
+/* blind date with a book editor */
+.blind-date-admin-form {
+  max-width: 1120px;
+}
+
+.blind-date-admin-settings {
+  display: grid;
+  grid-template-columns: minmax(260px, .8fr) minmax(320px, 1.2fr);
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.blind-date-admin-settings > label {
+  padding: 18px;
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.blind-date-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.blind-date-toggle input {
+  width: 19px;
+  height: 19px;
+  flex: 0 0 auto;
+  accent-color: var(--rose);
+}
+
+.blind-date-toggle span {
+  display: grid;
+  gap: 3px;
+}
+
+.blind-date-toggle strong {
+  color: var(--brown);
+  font-weight: normal;
+}
+
+.blind-date-toggle small {
+  color: #826d60;
+  line-height: 1.4;
+}
+
+.blind-date-admin-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.blind-date-admin-slot {
+  padding: 22px;
+  background:
+    linear-gradient(rgba(245,220,227,.18), rgba(245,220,227,.18)),
+    var(--cream);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+}
+
+.blind-date-admin-slot label {
+  display: block;
+  margin-bottom: 13px;
+}
+
+.blind-date-admin-slot input,
+.blind-date-admin-slot select,
+.blind-date-admin-slot textarea,
+.blind-date-admin-settings input[type="text"] {
+  width: 100%;
+  margin-top: 7px;
+  padding: 12px 14px;
+  color: var(--dark-brown);
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  outline: none;
+}
+
+.blind-date-admin-slot textarea {
+  resize: vertical;
+}
+
+.blind-date-admin-slot input:focus,
+.blind-date-admin-slot select:focus,
+.blind-date-admin-slot textarea:focus,
+.blind-date-admin-settings input[type="text"]:focus {
+  border-color: var(--rose);
+  box-shadow: 0 0 0 3px rgba(200,132,152,.14);
+}
+
+@media (max-width: 800px) {
+  .blind-date-admin-settings,
+  .blind-date-admin-grid {
+    grid-template-columns: 1fr;
+  }
+}
